@@ -1,0 +1,101 @@
+body {overflow-x: hidden;}
+.aboutContainer {
+  width:100%;
+  height: auto;
+}
+/* .aboutContainer .introSection {background-color:#ffebd1; background-image: linear-gradient(120deg, #f6d365 0%, #fda085 100%);} */
+.aboutContainer .introSection {
+  background-color: #000;
+}
+.box-1,
+.box-2,
+.box-3,
+.box-4 {
+  background: rgb(255, 255, 255, 15%);
+  border: solid 1px #fff;
+  border-radius: 8px;
+  transition: 1s;
+}
+.box-1:hover,
+.box-2:hover,
+.box-3:hover,
+.box-4:hover {
+  background-color: #fff;
+}
+.box-11 {
+  background-color: #ffd29a;
+  background: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);
+}
+.aboutContainer .box-21 {
+  background-color: #ffbfbf;
+  background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+}
+.aboutContainer .box-31 {
+  background-color: #83cdff;
+  background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+}
+.aboutContainer .box-41 {
+  background-color: #82eecb;
+  background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+}
+.aboutContainer i.iconItem {
+  color: #000;
+  border-radius: 12px;
+  font-size: 32px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(255, 255, 255, 50%);
+}
+
+.inputContainer {
+  width: 50%;
+  display: inline-block;
+  padding:4px 16px;
+}
+.inputContainer label {
+  display: flex;
+}
+.inputContainer input {
+  display: flex;
+  width: 100%;
+  border: solid 1px #ccc;
+  padding: 14px 16px;
+}
+/* .aboutContainer .box-1 i.iconItem {background:#ffffff; padding: 18px 22px;} .aboutContainer .box-2 i.iconItem {background:#ffffff;} .aboutContainer .box-3 i.iconItem {background:#ffffff; padding: 18px 22px;} .aboutContainer .box-4 i.iconItem {background:#ffffff;} */
+.slick-slider {
+  height: 100%;
+  display: grid;
+}
+.slick-next {
+  right: 30px !important;
+}
+.slick-prev {
+  left: 8px !important;
+  z-index: 9999;
+}
+.slick-prev:before,
+.slick-next:before {
+  font-size: 32px !important;
+}
+.slick-dots {
+  bottom: 14px !important;
+}
+.slick-dots li button:before {
+  font-size: 12px !important;
+  color: white !important;
+}
+
+.bannerRightContainer {background-image: url("https://rvsdoc1.s3.ap-south-1.amazonaws.com/about-2.jpg"); background-size: cover;}
+button:disabled {cursor:not-allowed}
+a.Link {color:burlywood;}
+a.Link:hover {color:rgb(80, 80, 255); text-decoration: underline;}
+.z-9999 {z-index: 9999;}
+
+
+@media screen and (max-width:768px) {
+  .inputContainer {width: 100%;}
+}

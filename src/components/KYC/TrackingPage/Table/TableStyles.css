@@ -1,0 +1,148 @@
+/* TableStyles.css */
+/* .tracking-table-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tracking-table-container.dark {
+  background-color: #2d3748;
+}
+
+.tracking-table-container.light {
+  background-color: #fff;
+} */
+
+/* Handsontable custom styles */
+/* .handsontable {
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.handsontable th {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.handsontable td {
+  padding: 4px 8px;
+  vertical-align: middle;
+}
+
+.handsontable .htCheckboxRendererInput {
+  margin: 0 auto;
+  cursor: pointer;
+} */
+
+/* Dark theme adjustments */
+/* .ht-theme-dark {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.ht-theme-dark th {
+  background-color: #1a202c;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.ht-theme-dark td {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.ht-theme-dark .wtHolder {
+  background-color: #2d3748;
+} */
+
+/* Light theme adjustments */
+/* .ht-theme-light {
+  background-color: #fff;
+  color: #1a202c;
+}
+
+.ht-theme-light th {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border-color: #e2e8f0;
+}
+
+.ht-theme-light td {
+  background-color: #fff;
+  color: #1a202c;
+  border-color: #e2e8f0;
+} */
+
+/* Selection styles */
+/* .handsontable .currentRow {
+  background-color: rgba(66, 153, 225, 0.1) !important;
+}
+
+.handsontable .currentCol {
+  background-color: rgba(66, 153, 225, 0.05) !important;
+}
+
+/* Scrollbar styles */
+/* .handsontable ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.handsontable ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.handsontable ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.handsontable ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+} */
+
+/* Dark theme scrollbars */
+/* .ht-theme-dark ::-webkit-scrollbar-track {
+  background: #4a5568;
+}
+
+.ht-theme-dark ::-webkit-scrollbar-thumb {
+  background: #718096;
+}
+
+.ht-theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+} */
+
+/* Context menu styles */
+/* .handsontable .htContextMenu .ht_master .wtHolder {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+} */
+
+/* Frozen columns highlight */
+/* .handsontable .ht_clone_left th {
+  background-color: rgba(247, 250, 252, 0.9);
+}
+
+.ht-theme-dark .ht_clone_left th {
+  background-color: rgba(26, 32, 44, 0.9);
+} */
+
+
+
+.handsontable th {padding:4px 10px !important;}
+.handsontable th div span:has( >☑) {display: none !important;}
+.handsontable-light .handsontable .wtHolder td {font-size:14px !important; height:42px !important; padding:0px 10px !important;}
+.handsontable .handsontable .wtHolder td {font-size:14px !important; height:24px !important; vertical-align: middle; padding:0px 10px !important;}
+.handsontable .wtHolder td.htSeparator {height: 0px !important;}
+.handsontable-dark .handsontable .wtHolder td {height:42px !important;  font-size: 14px !important; padding:0px 10px !important;}
+.handsontable span.colHeader {font-size: 14px !important;}
+.handsontable td:has( >input.custom-checkbox) {vertical-align:middle; text-align: center;}
+.handsontable td input.custom-checkbox {width:16px; height:16px;}
+.handsontable .changeType {background:#fff; border:1px solid #000; color: #000;}
