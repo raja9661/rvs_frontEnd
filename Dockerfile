@@ -1,25 +1,24 @@
-# Build Phase
+# Build stage
 FROM node:alpine3.20 as build
 
 ARG VITE_Backend_Base_URL
 ENV VITE_Backend_Base_URL=${VITE_Backend_Base_URL}
 
 WORKDIR /app
-COPY package.json ./
+
+COPY package.json .
 RUN npm install
+
 COPY . .
 RUN npm run build
 
-# Serve Phase
+# Production stage with NGINX
 FROM nginx:1.23-alpine
 
-# Set working directory to serve files from here
 WORKDIR /usr/share/nginx/html
+RUN rm -rf *
 
-# Clean default static files (optional)
-RUN rm -rf ./*
-
-# Copy built files
+# Copy built React app
 COPY --from=build /app/dist .
 
 # Copy custom nginx config
@@ -27,7 +26,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
 
 
 
