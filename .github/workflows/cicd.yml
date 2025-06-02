@@ -1,4 +1,4 @@
-name: Deploy Node Application
+name: Deploy Frontend
 
 on:
   push:
@@ -18,31 +18,29 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
+      - name: Build Docker Image
         run: |
-          docker build -t raja9661/rvs_frontend:latest
+          docker build -t raja9661/rvs_frontend:latest \
           --build-arg VITE_Backend_Base_URL=/api .
 
-      - name: Publish Image to Docker Hub
+      - name: Push Docker Image
         run: docker push raja9661/rvs_frontend:latest
 
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Clean Image
+      - name: Clean Docker System
         run: docker system prune -af
 
-      - name: Pull image from Docker Hub
+      - name: Pull Docker Image
         run: docker pull raja9661/rvs_frontend:latest
 
-      - name: Delete Old container
-        run: docker rm -f reactjs-container
-
-      - name: Stop existing container (if running)
+      - name: Stop and Remove Old Container
         run: |
           docker stop reactjs-container || true
           docker rm reactjs-container || true
-        continue-on-error: true
 
-      - name: Run Docker Container
-        run: docker run -d --name reactjs-container -p 5173:80 raja9661/rvs_frontend:latest
+      - name: Run New Container
+        run: |
+          docker run -d --name reactjs-container -p 5173:80 raja9661/rvs_frontend:latest
