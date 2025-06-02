@@ -32,7 +32,9 @@ jobs:
         run: docker system prune -af
 
       - name: Build Docker Image
-        run: docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL=http://13.126.216.112:8080 .
+        run: |
+          cd rvs_frontEnd
+          docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL=http://13.126.216.112:8080 .
 
       - name: Stop & Remove Old Container
         run: |
