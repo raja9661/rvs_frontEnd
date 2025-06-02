@@ -20,10 +20,9 @@ jobs:
           password: ${{ secrets.DOCKER_PASS }}
 
       - name: Build Docker Image
-        working-directory: ./rvs_frontEnd
         run: |
           docker build -t raja9661/rvs_frontend:latest \
-            --build-arg VITE_Backend_Base_URL=${{ secrets.VITE_Backend_Base_URL }} .
+            --build-arg VITE_Backend_Base_URL=${{ secrets.VITE_Backend_Base_URL }} rvs_frontEnd
 
       - name: Push Docker Image
         run: docker push raja9661/rvs_frontend:latest
