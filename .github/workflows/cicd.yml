@@ -18,8 +18,9 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Build Docker Image
-        run: docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL='${{secrets.VITE_Backend_Base_URL}}' .
+        run: |
+          docker build -t raja9661/rvs_frontend:latest \
+          --build-arg VITE_Backend_Base_URL=/api .
 
       - name: Publish Image to Docker Hub
         run: docker push raja9661/rvs_frontend:latest

@@ -1,32 +1,69 @@
-# Build stage
-FROM node:alpine3.20 as build
+# Build Stage
+FROM node:alpine3.20 AS build
 
 ARG VITE_Backend_Base_URL
-ENV VITE_Backend_Base_URL=${VITE_Backend_Base_URL}
+ENV VITE_Backend_Base_URL=$VITE_Backend_Base_URL
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json ./
 RUN npm install
 
 COPY . .
+
+# Confirm env is passed
+RUN echo "Backend URL: $VITE_Backend_Base_URL"
+
 RUN npm run build
 
-# Production stage with NGINX
+# Production Stage
 FROM nginx:1.23-alpine
 
 WORKDIR /usr/share/nginx/html
 RUN rm -rf *
 
-# Copy built React app
+# Copy React build output
 COPY --from=build /app/dist .
 
-# Copy custom nginx config
+# Replace default nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
+
+
+
+
+# # Build stage
+# FROM node:alpine3.20 as build
+
+# ARG VITE_Backend_Base_URL
+# ENV VITE_Backend_Base_URL=${VITE_Backend_Base_URL}
+
+# WORKDIR /app
+
+# COPY package.json .
+# RUN npm install
+
+# COPY . .
+# RUN npm run build
+
+# # Production stage with NGINX
+# FROM nginx:1.23-alpine
+
+# WORKDIR /usr/share/nginx/html
+# RUN rm -rf *
+
+# # Copy built React app
+# COPY --from=build /app/dist .
+
+# # Copy custom nginx config
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# EXPOSE 80
+
+# ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 
 
