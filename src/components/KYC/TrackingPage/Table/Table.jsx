@@ -1602,7 +1602,7 @@ const sendUpdateToBackend = debounce(async (update) => {
   
             <div className={`flex flex-col md:flex-row justify-between items-stretch md:items-center p-1.5 rounded gap-2 ${isDarkMode ? "bg-gray-700" : "bg-gray-50"}`}>
               <div className="flex items-center gap-2">
-                <button
+                {/* <button
   onClick={() => {
     // Calculate if all filtered rows are currently selected
     const allFilteredSelected = filteredData.every((item, index) => {
@@ -1652,7 +1652,72 @@ const sendUpdateToBackend = debounce(async (update) => {
   disabled={filteredData.length === 0}
 >
   {selectedRows.length === filteredData.length ? '✕' : '✓'}
-</button>
+</button> */}
+
+<button
+                    onClick={() => {
+                      const startIndex = (currentPage - 1) * pageSize;
+                      const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+
+                      const visibleRows = filteredData.slice(startIndex, endIndex);
+
+                      const visibleRowIndices = visibleRows.map(row =>
+                        data.findIndex(d => d.caseId === row.caseId)
+                      );
+
+                      const allVisibleSelected = visibleRowIndices.every(index =>
+                        selectedRows.includes(index)
+                      );
+
+                      if (allVisibleSelected) {
+                        // Deselect only visible rows
+                        const newSelected = selectedRows.filter(
+                          index => !visibleRowIndices.includes(index)
+                        );
+                        setSelectedRows(newSelected);
+
+                        if (hotInstanceRef.current) {
+                          visibleRowIndices.forEach(index => {
+                            const filteredIndex = filteredData.findIndex(d => d.caseId === data[index]?.caseId);
+                            if (filteredIndex !== -1) {
+                              const hotRowIndex = startIndex + filteredIndex - startIndex;
+                              hotInstanceRef.current.setDataAtCell(hotRowIndex, 0, false);
+                            }
+                          });
+                        }
+                      } else {
+                        // Select only visible rows
+                        const newSelected = Array.from(new Set([...selectedRows, ...visibleRowIndices]));
+                        setSelectedRows(newSelected);
+
+                        if (hotInstanceRef.current) {
+                          visibleRowIndices.forEach(index => {
+                            const filteredIndex = filteredData.findIndex(d => d.caseId === data[index]?.caseId);
+                            if (filteredIndex !== -1) {
+                              const hotRowIndex = startIndex + filteredIndex - startIndex;
+                              hotInstanceRef.current.setDataAtCell(hotRowIndex, 0, true);
+                            }
+                          });
+                        }
+                      }
+                    }}
+                    className={`px-3 py-1.5 text-sm rounded ${
+                      isDarkMode ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                    disabled={filteredData.length === 0}
+                  >
+                    {(() => {
+                      const startIndex = (currentPage - 1) * pageSize;
+                      const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+                      const visibleRows = filteredData.slice(startIndex, endIndex);
+                      const visibleIndices = visibleRows.map(row =>
+                        data.findIndex(d => d.caseId === row.caseId)
+                      );
+                      const allVisibleSelected = visibleIndices.every(index =>
+                        selectedRows.includes(index)
+                      );
+                      return allVisibleSelected ? '✕' : '✓';
+                    })()}
+                </button>
   
                 <input
                   type="text"
@@ -1790,7 +1855,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                     setCurrentPage(1);
                   }}
                 >
-                  {[5, 10, 20, 50, 100,500].map(size => (
+                  {[50,100,200,300,400,500].map(size => (
                     <option key={size} value={size}>{size}</option>
                   ))}
                 </select>

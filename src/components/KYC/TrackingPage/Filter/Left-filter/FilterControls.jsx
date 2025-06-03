@@ -606,6 +606,7 @@ const FilterControls = ({
   const [vendorNames, setVendorNames] = useState([]);
   const [role, setRole] = useState("");
   const productRef = useRef(null);
+  const [attachmentFileName, setAttachmentFileName] = useState('');
 
   useEffect(() => {
       const getUser = localStorage.getItem("loginUser");
@@ -643,101 +644,7 @@ const FilterControls = ({
   return moment().format("DD-MM-YYYY, hh:mm:ss A");
 };
 
-  // const handleUpdate = async () => {
-  //   if (selectedRows.length === 0) {
-  //     toast.warning("Please select at least one row to update");
-  //     return;
-  //   }
 
-  //   setIsUpdating(true);
-
-  //   try {
-  //     const caseIds = selectedRows.map(rowIndex => data[rowIndex]?.caseId).filter(Boolean);
-      
-  //     if (caseIds.length === 0) {
-  //       toast.error("No valid records selected for update");
-  //       return;
-  //     }
-
-  //     const getUser = localStorage.getItem("loginUser");
-  //     const user = getUser ? JSON.parse(getUser) : null;
-      
-  //     const updates = {
-  //       vendorName: updateFields.vendorName,
-  //       caseStatus: updateFields.caseStatus,
-  //       vendorStatus: updateFields.vendorStatus,
-  //       remarks: updateFields.remarks,
-  //       status: updateFields.status
-  //     };
-
-  //     // Handle Closed status for both status and vendorStatus
-  //     if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
-  //       updates.dateOut = getFormattedDateTime();
-  //       updates.caseDoneBy = user.name;
-  //     }
-
-  //     if (updates.caseStatus === "Sent" && user) {
-  //       updates.sentBy = user.name;
-  //       updates.sentDate = getFormattedDateTime();
-  //     }
-
-  //     const nonEmptyUpdates = Object.fromEntries(
-  //       Object.entries(updates).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
-  //     );
-
-  //     if (Object.keys(nonEmptyUpdates).length === 0 && !updateFields.attachment) {
-  //       toast.warning("No update fields filled");
-  //       return;
-  //     }
-
-  //     // Handle attachment upload first
-  //     if (updateFields.attachment) {
-  //       const formData = new FormData();
-  //       formData.append('file', updateFields.attachment);
-  //       console.log("updateFields.attachment:",updateFields.attachment)
-  //       console.log("caseIds:",caseIds)
-  //       formData.append('caseId', caseIds[0]); // Attach to first case in bulk
-        
-  //       await axios.post(
-  //         `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
-  //         formData,
-  //         { headers: { 'Content-Type': 'multipart/form-data' } }
-  //       );
-  //     }
-
-  //     // Handle other updates
-  //     if (Object.keys(nonEmptyUpdates).length > 0) {
-  //       const response = await axios.post(
-  //         `${import.meta.env.VITE_Backend_Base_URL}/kyc/batch-update`,
-  //         { caseIds, updates: nonEmptyUpdates }
-  //       );
-        
-  //       if (response.data?.success) {
-  //         const count = response.data.updatedCount ?? 0;
-  //         toast.success(`Updated ${count} records successfully`);
-  //       } else {
-  //         toast.error(response.data?.message || "Update failed");
-  //       }
-  //     } else {
-  //       toast.success("Attachment uploaded successfully");
-  //     }
-
-  //     setUpdateFields({
-  //       vendorName: '',
-  //       caseStatus: '',
-  //       vendorStatus: '',
-  //       remarks: '',
-  //       status: '',
-  //       attachment: null
-  //     });
-  //     fetchTrackerData();
-  //   } catch (error) {
-  //     console.error("Update error:", error);
-  //     toast.error(error.response?.data?.message || error.message || "Update failed");
-  //   } finally {
-  //     setIsUpdating(false);
-  //   }
-  // };
   
   
   const handleUpdate = async () => {
@@ -818,17 +725,7 @@ const FilterControls = ({
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
 }
-      // if (updateFields.attachment) {
-      //   const formData = new FormData();
-      //   formData.append('file', updateFields.attachment);
-      //   formData.append('caseIds', JSON.stringify(caseIds)); // Send all case IDs
-        
-      //   await axios.post(
-      //     `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
-      //     formData,
-      //     { headers: { 'Content-Type': 'multipart/form-data' } }
-      //   );
-      // }
+
 
       // Process other updates if any
       if (Object.keys(nonEmptyUpdates).length > 0) {
@@ -877,27 +774,52 @@ const FilterControls = ({
     setFilters({ ...filters, [name]: value });
   };
 
-  const resetFields = () => {
-    if (viewMode === 'filter') {
-      setFilters({
-        product: "",
-        productType: "",
-        dateIn: "",//update line
-        dateOut: "",//update line
-        status: "",
-        caseStatus: "",
-      });
-    } else {
-      setUpdateFields({
-        vendorName: '',
-        caseStatus: '',
-        vendorStatus: '',
-        remarks: '',
-        status: '',
-        attachment: null
-      });
-    }
-  };
+  // const resetFields = () => {
+  //   if (viewMode === 'filter') {
+  //     setFilters({
+  //       product: "",
+  //       productType: "",
+  //       dateIn: "",//update line
+  //       dateOut: "",//update line
+  //       status: "",
+  //       caseStatus: "",
+  //     });
+  //   } else {
+  //     setUpdateFields({
+  //       vendorName: '',
+  //       caseStatus: '',
+  //       vendorStatus: '',
+  //       remarks: '',
+  //       status: '',
+  //       attachment: null
+  //     });
+  //   }
+  // };
+
+
+  // Update the resetFields function to reset the attachment field
+const resetFields = () => {
+  if (viewMode === 'filter') {
+    setFilters({
+      product: "",
+      productType: "",
+      dateIn: "",
+      dateOut: "",
+      status: "",
+      caseStatus: "",
+    });
+  } else {
+    setUpdateFields({
+      vendorName: '',
+      caseStatus: '',
+      vendorStatus: '',
+      remarks: '',
+      status: '',
+      attachment: null // Reset attachment here
+    });
+    setAttachmentFileName(''); // Reset file name here
+  }
+};
 
   const toggleButtonClass = (active) => 
     `px-4 py-2 rounded-t-lg transition-colors ${
@@ -1277,12 +1199,12 @@ const FilterControls = ({
             </div>
 
             {/* Attachment */}
-            <div className="mb-2">
+            {/*<div className="mb-2">
               <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                 Attachment
               </label>
-              <div className="flex items-center">
-                <input
+              <div className="flex items-center">*/}
+                {/* <input
                   type="file"
                   onChange={(e) => setUpdateFields({...updateFields, attachment: e.target.files[0]})}
                   className={`w-full px-3 py-2 text-sm rounded border ${
@@ -1290,9 +1212,50 @@ const FilterControls = ({
                       ? "bg-gray-700 border-gray-600 text-gray-200"
                       : "bg-white border-gray-300 text-gray-700"
                   }`}
-                />
+                /> */}
+              {/*    <input
+     type="file"
+     onChange={(e) => {
+       const file = e.target.files[0];
+       setUpdateFields({...updateFields, attachment: file});
+       setAttachmentFileName(file ? file.name : '');
+     }}
+     className={`w-full px-3 py-2 text-sm rounded border ${
+       isDarkMode
+         ? "bg-gray-700 border-gray-600 text-gray-200"
+         : "bg-white border-gray-300 text-gray-700"
+     }`}
+   />
+    <div className="mt-1 text-sm text-gray-500">
+     {attachmentFileName || "No file chosen"}
+   </div>
               </div>
-            </div>
+            </div> */}
+
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 transition-colors duration-150 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+    Attachment
+  </label>
+  <div className="flex items-center gap-2">
+    <input
+      type="file"
+      onChange={(e) => {
+        const file = e.target.files[0];
+        setUpdateFields({ ...updateFields, attachment: file });
+        setAttachmentFileName(file ? file.name : '');
+      }}
+      className={`w-full px-3 py-1 text-sm rounded border shadow-sm transition-all duration-150 cursor-pointer file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium ${
+        isDarkMode
+          ? "bg-gray-700 border-gray-600 text-gray-200 file:bg-gray-600 file:text-gray-200"
+          : "bg-white border-gray-300 text-gray-700 file:bg-gray-100 file:text-gray-700"
+      }`}
+    />
+    <div className="mt-1 text-m text-gray-500 truncate">
+      {attachmentFileName || "No file chosen"}
+    </div>
+  </div>
+</div>
+
           </div>
 
           <div className={`text-sm pt-2 border-t border-gray-200 dark:border-gray-700 ${
