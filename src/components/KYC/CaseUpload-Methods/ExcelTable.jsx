@@ -4925,6 +4925,11 @@ if (response.status === 200) {
         
         // Reset the table after successful upload
         // resetTable();
+
+        // Reset the table after successful upload with delay to show results
+        setTimeout(() => {
+          resetTable();
+        }, 2000); // 2 second delay to allow user to see the results
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -5191,7 +5196,7 @@ if (response.status === 200) {
           </div>
 
           {/* Upload Results Display */}
-{uploadResults && (
+{/* {uploadResults && (
   <div className={`mb-6 p-4 rounded-lg ${
     isDarkMode ? 'bg-gray-700' : 'bg-green-50'
   } border ${isDarkMode ? 'border-gray-600' : 'border-green-200'}`}>
@@ -5234,9 +5239,9 @@ if (response.status === 200) {
       </div>
     )}
   </div>
-)}
+)} */}
 
-{/* {uploadResults && (
+{uploadResults && (
   <div
     className={`p-4 rounded-lg ${
       isDarkMode ? 'bg-gray-700' : 'bg-green-50'
@@ -5262,7 +5267,7 @@ if (response.status === 200) {
       </div>
     </div>
   </div>
-)} */}
+)}
 
           
           {/* Enhanced Instructions */}

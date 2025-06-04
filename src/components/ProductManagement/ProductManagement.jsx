@@ -718,6 +718,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////Confirm while deleting //////////////////////////////////
+
 import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import Layout from '../Layout/Layout';
@@ -881,7 +882,8 @@ const ProductManagement = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-4">
+      {/* <div className="max-w-7xl mx-auto space-y-4"> */}
+      <div className="w-auto mx-auto space-y-4">
         {/* Add/Edit Product Form */}
         <div className={`${
           isDarkMode 

@@ -832,7 +832,7 @@ const VendorManagement = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="w-auto mx-auto space-y-4">
         {/* Add New Vendor Section */}
         <div className={`${
           isDarkMode 

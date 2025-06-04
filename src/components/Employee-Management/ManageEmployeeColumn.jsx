@@ -680,7 +680,7 @@ const ManageEmployeeColumn = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="w-auto mx-auto space-y-4">
         {/* Form Section */}
         <div className={`${
           isDarkMode 

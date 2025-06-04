@@ -198,7 +198,7 @@ const UserManagement = () => {
 
   return (
     <Layout>
-      <div className={`container mx-auto px-4 py-8 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
+      <div className={` mx-auto py-2 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h1 className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"} mb-4 md:mb-0`}>

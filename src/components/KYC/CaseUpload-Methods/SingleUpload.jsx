@@ -1180,7 +1180,7 @@ function SingleUpload({ isDarkMode }) {
   const hasFormData = Object.values(formData).some(value => value.trim() !== "");
 
   return (
-    <div className="space-y-5 relative">
+       <div className="space-y-5 relative">
       {/* Toast Notification */}
       {toast.show && (
         <div 

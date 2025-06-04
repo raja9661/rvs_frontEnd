@@ -287,7 +287,7 @@ const CreateUser = () => {
 
   return (
     <Layout>
-      <div className={`container mx-auto px-4 py-8  ${
+      <div className={`mx-auto py-4  ${
         isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'
       } rounded-xl shadow-xl mt-8 transition-all duration-300 hover:shadow-2xl`}>
         
