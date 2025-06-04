@@ -27,7 +27,7 @@ const KYCform = () => {
 
   return (
     <Layout>
-        <div className="max-w-7xl mx-auto space-y-2">   
+        <div className="w-auto mx-auto space-y-2">   
 
           
           {/* Application Type Selection */}

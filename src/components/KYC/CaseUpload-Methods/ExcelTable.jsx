@@ -4957,7 +4957,7 @@ if (response.status === 200) {
   return (
     <Layout>
       <div className={`p-4 md:p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto">
+        <div className="w-auto mx-auto">
           {/* Header */}
           <div className={`mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
             <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
