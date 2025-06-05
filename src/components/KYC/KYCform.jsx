@@ -16,7 +16,6 @@ const KYCform = () => {
     // Check localStorage for theme
     setIsDarkMode(localStorage.getItem("theme") === "dark");
     
-    // Listen for theme changes
     const handleStorageChange = () => {
       setIsDarkMode(localStorage.getItem("theme") === "dark");
     };
