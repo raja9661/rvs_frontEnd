@@ -807,7 +807,7 @@ const UserManagement = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    id="password"
+                    id="new-password"
                     value={formData.showPassword}
                     readOnly={true}
                     onChange={handleInputChange}
@@ -999,7 +999,7 @@ const UserManagement = () => {
                 <input
                   type="text"
                   name="createdBy"
-                  id="createdBy"
+                  id="createdat"
                   value={formData.createdAt}
                   readOnly={true}
                   onChange={handleInputChange}
