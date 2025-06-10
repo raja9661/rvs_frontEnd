@@ -1525,12 +1525,11 @@ const handleClientIdChange = (e) => {
       : "bg-white border-gray-300 text-gray-700"
   }`}
 >
-  <option value="">All Statuses</option>
+  <option value="">All Status</option>
   <option value="New Data">New Data</option>
   <option value="New Pending">New Pending</option>
   <option value="Sent">Sent</option>
   <option value="Closed">Closed</option>
-  <option value="true">Recheck Records</option>
 </select>
 
         {/* <select

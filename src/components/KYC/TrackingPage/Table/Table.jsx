@@ -224,7 +224,7 @@ const createCustomCheckboxRenderer = useCallback(() => {
       });
       
       checkbox.checked = allSelected;
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       checkbox.onclick = (e) => {
         e.stopPropagation();
         const selectAll = checkbox.checked;
@@ -1653,10 +1653,10 @@ const sendUpdateToBackend = debounce(async (update) => {
 >
   {selectedRows.length === filteredData.length ? '✕' : '✓'}
 </button> */}
-
+{/* ////////////////////////////////////////////////////////////////// */}
 <button
-                    onClick={() => {
-                      const startIndex = (currentPage - 1) * pageSize;
+                      onClick={() => {
+                       const startIndex = (currentPage - 1) * pageSize;
                       const endIndex = Math.min(startIndex + pageSize, filteredData.length);
 
                       const visibleRows = filteredData.slice(startIndex, endIndex);
@@ -1718,7 +1718,13 @@ const sendUpdateToBackend = debounce(async (update) => {
                       return allVisibleSelected ? '✕' : '✓';
                     })()}
                 </button>
-  
+
+
+
+{/* //////////////////////////////////////////////////////////////////////////////// */}
+
+
+{/* /////////////////////////////////////////// */}
                 <input
                   type="text"
                   placeholder="Search"
@@ -1817,7 +1823,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                         </svg>
                         Processing...
                       </>
-                    ) : 'Deduce'}
+                    ) : 'Dedup'}
                   </button>
                   </>
                 )}
