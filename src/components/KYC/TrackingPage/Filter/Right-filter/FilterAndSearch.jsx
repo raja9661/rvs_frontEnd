@@ -1530,6 +1530,7 @@ const handleClientIdChange = (e) => {
   <option value="New Pending">New Pending</option>
   <option value="Sent">Sent</option>
   <option value="Closed">Closed</option>
+  {/* <option value="true">Recheck Records</option> */}
 </select>
 
         {/* <select

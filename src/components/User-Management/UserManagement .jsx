@@ -794,7 +794,7 @@ const UserManagement = () => {
 
 
               {/* Current-Password */}
-              <div>
+              <div >
                 <label
                   htmlFor="curr-password"
                   className={`block text-sm font-medium ${
@@ -807,7 +807,7 @@ const UserManagement = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    id="password"
+                    id="new-password"
                     value={formData.showPassword}
                     readOnly={true}
                     onChange={handleInputChange}
@@ -862,7 +862,7 @@ const UserManagement = () => {
               </div>
               
                   {/* New-Password */}
-              <div>
+              <div >
                 <label
                   htmlFor="password"
                   className={`block text-sm font-medium ${
@@ -1001,7 +1001,7 @@ const UserManagement = () => {
                 <input
                   type="text"
                   name="createdBy"
-                  id="createdBy"
+                  id="createdat"
                   value={formData.createdAt}
                   readOnly={true}
                   onChange={handleInputChange}

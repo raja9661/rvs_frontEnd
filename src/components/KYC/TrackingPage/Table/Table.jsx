@@ -868,7 +868,8 @@ const createCustomCheckboxRenderer = useCallback(() => {
     "List By Employee": "listByEmployee",
     "Auto or Manual": "autoOrManual",
     "Role": "role",
-    "Name":"name"
+    "Name":"name",
+    "Account Number":"accountNumber",
     // Add more as needed based on your actual column headers
   };
 
@@ -1260,7 +1261,7 @@ const sendUpdateToBackend = debounce(async (update) => {
       });
       
       saveAs(blob, `export_${dateString}.xlsx`);
-      handleMasterReset()
+      
     };
     const exportToText = (data, headers, dateString) => {
       const formatField = (key, value) => value;
@@ -1291,7 +1292,6 @@ const sendUpdateToBackend = debounce(async (update) => {
     
       const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
       saveAs(blob, `export_${dateString}.txt`);
-      handleMasterReset();
     };
     
   
@@ -1307,7 +1307,6 @@ const sendUpdateToBackend = debounce(async (update) => {
       
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       saveAs(blob, `export_${dateString}.csv`);
-      handleMasterReset()
     };
 
     const handleDeletePermanently = async () => {
@@ -1851,55 +1850,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                     "Reset all"
                   )}
                 </button>
-{/* ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */}
-               
-{/* ////////////////////////////////main dedault without custom code ///////////////////////////////// */}
-                {/* <select
-                  className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
-                    isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
-                  }`}
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                >
-                  {[50,100,200,300,400,500].map(size => (
-                    <option key={size} value={size}>{size}</option>
-                  ))}
-
-                </select> */}
-
-
-{/* ///////////working with edit popup message///////////////////////////// */}
-                {/* <select
-  className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
-    isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
-  }`}
-  value={pageSize}
-  onChange={(e) => {
-    if (e.target.value === 'custom') {
-      const customSize = prompt("Enter custom page size:");
-      if (customSize !== null && !isNaN(customSize) && parseInt(customSize) > 0) {
-        setPageSize(parseInt(customSize));
-        setCurrentPage(1);
-      } else {
-        alert("Invalid page size. Please enter a valid number.");
-      }
-    } else {
-      setPageSize(Number(e.target.value));
-      setCurrentPage(1);
-    }
-  }}
->
-  {[50, 100, 200, 300, 400, 500].map(size => (
-    <option key={size} value={size}>{size}</option>
-  ))}
-  <option value="custom">Custom</option>
-</select> */}
-
-{/* /////main custom edit with proper functionality////// */}
-<select
+                <select
   className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
     isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
   }`}
@@ -1951,8 +1902,20 @@ const sendUpdateToBackend = debounce(async (update) => {
   ))}
   <option value="custom">Custom</option>
 </select>
-
-                {/* //////////////////////////////////////////////////////////////////////// */}
+                {/* <select
+                  className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
+                    isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
+                  }`}
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  {[50,100,200,300,400,500].map(size => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select> */}
               </div>
             </div>
   
