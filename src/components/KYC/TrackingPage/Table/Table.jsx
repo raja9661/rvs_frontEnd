@@ -867,7 +867,8 @@ const createCustomCheckboxRenderer = useCallback(() => {
     "List By Employee": "listByEmployee",
     "Auto or Manual": "autoOrManual",
     "Role": "role",
-    "Name":"name"
+    "Name":"name",
+    "Account Number":"accountNumber",
     // Add more as needed based on your actual column headers
   };
 
@@ -1259,7 +1260,7 @@ const sendUpdateToBackend = debounce(async (update) => {
       });
       
       saveAs(blob, `export_${dateString}.xlsx`);
-      handleMasterReset()
+      
     };
     const exportToText = (data, headers, dateString) => {
       const formatField = (key, value) => value;
@@ -1290,7 +1291,6 @@ const sendUpdateToBackend = debounce(async (update) => {
     
       const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
       saveAs(blob, `export_${dateString}.txt`);
-      handleMasterReset();
     };
     
   
@@ -1306,7 +1306,6 @@ const sendUpdateToBackend = debounce(async (update) => {
       
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       saveAs(blob, `export_${dateString}.csv`);
-      handleMasterReset()
     };
 
     const handleDeletePermanently = async () => {
@@ -1817,7 +1816,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                         </svg>
                         Processing...
                       </>
-                    ) : 'Deduce'}
+                    ) : 'Dedup'}
                   </button>
                   </>
                 )}
@@ -1844,8 +1843,59 @@ const sendUpdateToBackend = debounce(async (update) => {
                     "Reset all"
                   )}
                 </button>
-  
                 <select
+  className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
+    isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
+  }`}
+  value={pageSize}
+  onChange={(e) => {
+    if (e.target.value === 'custom') {
+      const inputElement = document.createElement('input');
+      inputElement.type = 'number';
+      inputElement.className = `border p-1 py-0.5 px-1 text-xs rounded ${isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"}`;
+      inputElement.placeholder = 'Enter size';
+      inputElement.style.width = '75px'; // Adjust width as needed
+      inputElement.style.height = '30px'; // Adjust height as needed
+
+            // **Highlight: Add keydown event listener for Enter key**
+      inputElement.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          const customSize = parseInt(inputElement.value);
+          if (!isNaN(customSize) && customSize > 0) {
+            setPageSize(customSize);
+            setCurrentPage(1);
+          } else {
+            alert("Invalid page size.");
+          }
+          e.target.replaceWith(e.target); // Revert to the select element
+        }
+      });
+
+      inputElement.addEventListener('blur', () => {
+        const customSize = parseInt(inputElement.value);
+        if (!isNaN(customSize) && customSize > 0) {
+          setPageSize(customSize);
+          setCurrentPage(1);
+        } else {
+          alert("Invalid page size.");
+          // Optionally reset the dropdown to a valid value
+        }
+        e.target.replaceWith(e.target); // Revert to the select element
+      });
+      e.target.replaceWith(inputElement);
+      inputElement.focus();
+    } else {
+      setPageSize(Number(e.target.value));
+      setCurrentPage(1);
+    }
+  }}
+>
+  {[50, 100, 200, 300, 400, 500].map(size => (
+    <option key={size} value={size}>{size}</option>
+  ))}
+  <option value="custom">Custom</option>
+</select>
+                {/* <select
                   className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
                     isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
                   }`}
@@ -1858,7 +1908,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                   {[50,100,200,300,400,500].map(size => (
                     <option key={size} value={size}>{size}</option>
                   ))}
-                </select>
+                </select> */}
               </div>
             </div>
   

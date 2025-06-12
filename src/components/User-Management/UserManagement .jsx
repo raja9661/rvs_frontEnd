@@ -794,7 +794,7 @@ const UserManagement = () => {
 
 
               {/* Current-Password */}
-              <div className="relative">
+              <div >
                 <label
                   htmlFor="curr-password"
                   className={`block text-sm font-medium ${
@@ -862,7 +862,7 @@ const UserManagement = () => {
               </div>
               
                   {/* New-Password */}
-              <div className="relative">
+              <div >
                 <label
                   htmlFor="password"
                   className={`block text-sm font-medium ${

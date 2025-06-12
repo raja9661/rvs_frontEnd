@@ -193,8 +193,7 @@ const FilterControls = ({
       });
       setAttachmentFileName('')
       setSelectedRows([]);
-      // Refresh data
-      fetchTrackerData();
+      fetchTrackerData(true);
     } catch (error) {
       console.error("Update error:", error);
       toast.error(error.response?.data?.message || error.message || "Update failed");

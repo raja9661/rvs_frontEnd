@@ -365,64 +365,155 @@ const [originalData, setOriginalData] = useState([]);
     }
   }, []);
 
-  const fetchTrackerData = async () => {
-    setIsLoading(true);
-    try {
-      const endpoint = filterType === "deleted" 
+  // const fetchTrackerData = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const endpoint = filterType === "deleted" 
+  //     ? "/kyc/deleted-items" 
+  //     : "/kyc/tracker-data";
+    
+  //   const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}${endpoint}`, {
+  //     params: { role, userId, name }
+  //   });
+
+  //   let fetchedData = response.data?.data || response.data || [];
+  //   setOriginalData(fetchedData); // Store original data
+
+
+  //     let columns = response.data?.editableColumns || [];
+
+  //     if (columns.length > 0) setEditableColumns(columns);
+
+  //     if (fetchedData.length > 0) {
+  //       const extractedHeaders = [
+  //         //"☑",
+  //         "&nbsp;",
+  //         "caseId",
+  //         ...Object.keys(fetchedData[0]).filter(
+  //           key => key.toLowerCase() !== "caseid" && !key.startsWith("_")
+  //         ),
+  //       ];
+
+  //       const formattedData = fetchedData.map(row => ({
+  //         attachments: row.attachments || [],
+  //         ...Object.fromEntries(
+  //           extractedHeaders
+  //             .filter(header => header !== "☑")
+  //             .map(header => [
+  //               header,
+  //               ["createdAt", "updatedAt"].includes(header)
+  //                 ? row[header]
+  //                   ? moment(row[header]).format("DD-MM-YYYY HH:mm:ss")
+  //                   : ""
+  //                 : row[header] ?? ""
+  //             ])
+  //         )
+  //       }));
+
+  //       setHeaders(extractedHeaders);
+  //       setData(formattedData);
+  //     } else {
+  //       setHeaders([]);
+  //       setData([]);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  const fetchTrackerData = async (applyFilters = true) => {
+  setIsLoading(true);
+  try {
+    const endpoint = filterType === "deleted" 
       ? "/kyc/deleted-items" 
       : "/kyc/tracker-data";
     
+    // Get the base data from server
     const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}${endpoint}`, {
-      params: { role, userId, name }
+      params: { 
+        role, 
+        userId, 
+        name,
+        // Optionally send filters to server for more efficient filtering
+        ...(applyFilters && !deduceMode && {
+          product: filters.product,
+          productType: filters.productType,
+          status: filters.status,
+          caseStatus: filters.caseStatus,
+          dateIn: filters.dateIn,
+          endDate: filters.endDate,
+          dateOut: filters.dateOut
+        })
+      }
     });
 
     let fetchedData = response.data?.data || response.data || [];
-    setOriginalData(fetchedData); // Store original data
+    setOriginalData(fetchedData); // Always store original unfiltered data
 
-
-      let columns = response.data?.editableColumns || [];
-
-      if (columns.length > 0) setEditableColumns(columns);
-
-      if (fetchedData.length > 0) {
-        const extractedHeaders = [
-          //"☑",
-          "&nbsp;",
-          "caseId",
-          ...Object.keys(fetchedData[0]).filter(
-            key => key.toLowerCase() !== "caseid" && !key.startsWith("_")
-          ),
-        ];
-
-        const formattedData = fetchedData.map(row => ({
-          attachments: row.attachments || [],
-          ...Object.fromEntries(
-            extractedHeaders
-              .filter(header => header !== "☑")
-              .map(header => [
-                header,
-                ["createdAt", "updatedAt"].includes(header)
-                  ? row[header]
-                    ? moment(row[header]).format("DD-MM-YYYY HH:mm:ss")
-                    : ""
-                  : row[header] ?? ""
-              ])
-          )
-        }));
-
-        setHeaders(extractedHeaders);
-        setData(formattedData);
-      } else {
-        setHeaders([]);
-        setData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
+    // Apply client-side filters if needed (when server doesn't handle filtering)
+    if (applyFilters && !deduceMode && Object.values(filters).some(Boolean)) {
+      fetchedData = fetchedData.filter(record => {
+        return (
+          (!filters.product || record.product?.toLowerCase().includes(filters.product.toLowerCase())) &&
+          (!filters.productType || record.productType?.toLowerCase().includes(filters.productType.toLowerCase())) &&
+          (!filters.status || record.status?.toLowerCase().includes(filters.status.toLowerCase())) &&
+          (!filters.caseStatus || record.caseStatus?.toLowerCase().includes(filters.caseStatus.toLowerCase())) &&
+          (!filters.dateIn || moment(record.dateIn).format('YYYY-MM-DD') === filters.dateIn) &&
+          (!filters.endDate || moment(record.endDate).format('YYYY-MM-DD') === filters.endDate) &&
+          (!filters.dateOut || moment(record.dateOut).format('YYYY-MM-DD') === filters.dateOut)
+        );
+      });
     }
-  };
 
+    // Process columns and headers
+    let columns = response.data?.editableColumns || [];
+    if (columns.length > 0) setEditableColumns(columns);
+
+    if (fetchedData.length > 0) {
+      const extractedHeaders = [
+        "&nbsp;",
+        "caseId",
+        ...Object.keys(fetchedData[0]).filter(
+          key => key.toLowerCase() !== "caseid" && !key.startsWith("_")
+        ),
+      ];
+
+      // Format the data for display
+      const formattedData = fetchedData.map(row => ({
+        attachments: row.attachments || [],
+        ...Object.fromEntries(
+          extractedHeaders
+            .filter(header => header !== "☑")
+            .map(header => [
+              header,
+              ["createdAt", "updatedAt", "sentDate", "dateOut"].includes(header)
+                ? row[header]
+                  ? moment(row[header]).format("DD-MM-YYYY HH:mm:ss")
+                  : ""
+                : row[header] ?? ""
+            ])
+        )
+      }));
+
+      setHeaders(extractedHeaders);
+      setData(formattedData);
+    } else {
+      setHeaders([]);
+      setData([]);
+    }
+
+    // If in deduce mode but no filters applied, exit deduce mode
+    if (deduceMode && !Object.values(filters).some(Boolean)) {
+      setDeduceMode(false);
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    toast.error("Failed to fetch data. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
   useEffect(() => {
     if (role) fetchTrackerData();
   }, [role, userId, name, filterType]);

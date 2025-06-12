@@ -406,7 +406,7 @@ const Layout = ({ children }) => {
           { title: "KYC Management", path: "/kyc", icon: FileCheck },
           { title: "Employee Management", path: "/empmanager", icon: UserCheck },
           { title: "Product-Management", path: "/product-management", icon: ShoppingCart },
-          { title: "Vandor-Management", path: "/vandor-management", icon: Store },
+          { title: "Vendor-Management", path: "/vandor-management", icon: Store },
           { title: "Access-Management", path: "/column-management", icon: Lock },
           { title: "User-Management", path: "/user-management", icon: UserCheck },
           // { title: "New-Dashboard", path: "/live-dashboard", icon: LayoutDashboard }

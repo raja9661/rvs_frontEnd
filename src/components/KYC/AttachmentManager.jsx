@@ -410,7 +410,7 @@ const AttachmentManager = ({ caseId, isDarkMode, onClose,fetchTrackerData,handle
       setSelectedFile(null);
       handleMasterReset();
       fetchAttachments();
-      fetchTrackerData();
+      fetchTrackerData(true);
     } catch (error) {
       toast.error("Failed to upload file");
     } finally {
