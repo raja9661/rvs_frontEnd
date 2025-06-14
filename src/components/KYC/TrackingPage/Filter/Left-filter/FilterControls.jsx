@@ -40,6 +40,7 @@ const FilterControls = ({
   const [role, setRole] = useState("");
   const productRef = useRef(null);
   const [attachmentFileName, setAttachmentFileName] = useState('');
+  const [clientTypeOptions] = useState(["Agency","Corporate", "Other", "Unknown"]);
 
   useEffect(() => {
       const getUser = localStorage.getItem("loginUser");
@@ -94,6 +95,12 @@ const FilterControls = ({
       return;
     }
 
+      // Check if the selected vendor name is valid
+  if (updateFields.vendorName && !vendorNames.includes(updateFields.vendorName)) {
+    toast.error("Selected vendor name is not valid. Please select a vendor from the dropdown.");
+    return;
+  }
+
     // Validate cases being closed have sentDate
     if ((updateFields.status === "Closed" || updateFields.vendorStatus === "Closed")) {
       const casesWithoutSentDate = selectedRows.filter(rowIndex => {
@@ -127,7 +134,6 @@ const FilterControls = ({
       // Handle Closed status
       if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
         updates.dateOut = getFormattedDateTime();
-        console.log("dateOut",getFormattedDateTime())
         updates.dateOutInDay = getFormattedDateDay()
         updates.caseDoneBy = user.name;
       }
@@ -136,7 +142,6 @@ const FilterControls = ({
       if (updates.caseStatus === "Sent" && user) {
         updates.sentBy = user.name;
         updates.sentDate = getFormattedDateTime();
-        console.log("sentDate",getFormattedDateTime())
         updates.sentDateInDay = getFormattedDateDay()
       }
 
@@ -246,6 +251,7 @@ const resetFields = () => {
       dateOut: "",
       status: "",
       caseStatus: "",
+      vendorStatus: "",
     });
   } else {
     setUpdateFields({
@@ -494,6 +500,87 @@ const resetFields = () => {
                         />
                       </div>
                     </div>
+
+
+                    
+{/* Send Date */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Sent Date
+  </label>
+  <div className={`w-full px-3 py-2 text-sm rounded border ${
+    isDarkMode
+      ? "bg-gray-700 border-gray-600 text-gray-200"
+      : "bg-white border-gray-300 text-gray-700"
+    } sticky top-0 z-10`}>
+    <DatePicker
+      selected={filters.sentDate ? parse(filters.sentDate, 'dd-MM-yyyy', new Date()) : null}
+      onChange={(date) => handleDateChange('sentDate', date)}
+      dateFormat="dd-MM-yyyy"
+      placeholderText="DD-MM-YYYY"
+      popperModifiers={{
+        preventOverflow: {
+          enabled: true,
+          options: {
+            padding: 10,
+          },
+        },
+        zIndex: {
+          enabled: true,
+          order: 9999,
+        },
+      }}
+    />
+  </div>
+</div>
+
+
+{/* Vendor Status */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Vendor Status
+  </label>
+  <select
+    name="vendorStatus"
+    value={filters.vendorStatus}
+    onChange={handleInputChange}
+    className={`w-full px-3 py-2 text-sm rounded border ${
+      isDarkMode
+        ? "bg-gray-700 border-gray-600 text-gray-200"
+        : "bg-white border-gray-300 text-gray-700"
+    }`}
+  >
+    <option value="">All Vendor Status</option>
+    {["Closed", "Invalid", "CNV", "Account Closed", "Restricted Account", "Staff Account", "Records Not Updated", "Not Found", "Records Not Found"].map((status, index) => (
+      <option key={index} value={status}>{status}</option>
+    ))}
+  </select>
+</div>
+
+{/* // Client Type Dropdown */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Client Type
+  </label>
+  <Select
+    id="client-type-select"
+    name="clientType"
+    value={filters.clientType ? { value: filters.clientType, label: filters.clientType } : null}
+    onChange={(selectedOption) => {
+      setFilters({ ...filters, clientType: selectedOption ? selectedOption.value : "" });
+    }}
+    options={[
+      { value: "", label: "All Client Types" },
+      ...clientTypeOptions.map(type => ({ value: type, label: type })) // Use fetched client types
+    ]}
+    styles={customStyles}
+    placeholder="All Client Types"
+    isClearable
+    className="text-sm z-20"
+  />
+</div>
+
+
           {/* Case Status */}
           <div className="mb-2">
             <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
@@ -550,6 +637,9 @@ const resetFields = () => {
                 className="text-sm"
               />
             </div>
+
+
+
             
             {/* Case Status */}
             <div className="mb-2">
@@ -711,17 +801,19 @@ const resetFields = () => {
 export default FilterControls;
 
 
-///////////////////////////////////////////////////////////////////////////working date formate///////////////////////////////////////
 
-
-// import React, { useState, useEffect } from "react";
+// import React, { useState, useEffect, useRef } from "react";
 // import axios from "axios";
 // import { toast } from 'react-toastify';
 // import 'react-toastify/dist/ReactToastify.css';
-// import Select from "react-select";
+// import { Paperclip, Loader2 } from 'lucide-react';
 // import DatePicker from "react-datepicker";
 // import "react-datepicker/dist/react-datepicker.css";
-// import { format, parse } from 'date-fns';
+// import { format, parse } from "date-fns";
+// import AttachmentManager from "../../../AttachmentManager";
+// import Select from "react-select";
+// import moment from "moment-timezone"
+
 
 // const FilterControls = ({ 
 //   filters, 
@@ -730,7 +822,7 @@ export default FilterControls;
 //   selectedRows,
 //   data,
 //   fetchTrackerData,
-//   role
+//   setSelectedRows 
 // }) => {
 //   const [viewMode, setViewMode] = useState('filter');
 //   const [updateFields, setUpdateFields] = useState({
@@ -743,12 +835,24 @@ export default FilterControls;
 //   });
 //   const [isUpdating, setIsUpdating] = useState(false);
 //   const [productOptions, setProductOptions] = useState([]);
+//   const [vendorOptions, setVendorOptions] = useState([]);
+//   const [productTypeOptions] = useState(["BANKING", "MOBILE", "ITO", "NYC", "STATEMENT"]);
+//   const [statusOptions] = useState(["Pending", "Closed", "Negative", "CNV"]);
+//   const [caseStatusOptions] = useState(["New Pending", "Sent"]);
+//   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
 //   const [vendorNames, setVendorNames] = useState([]);
-  
-//   const productTypeOptions = ["BANKING", "MOBILE", "ITO", "NYC", "STATEMENT"];
-//   const statusOptions = ["New Data", "Closed", "Negative", "CNV"];
-//   const caseStatusOptions = ["New Pending", "Sent", "Completed"];
+//   const [role, setRole] = useState("");
+//   const productRef = useRef(null);
+//   const [attachmentFileName, setAttachmentFileName] = useState('');
 
+//   useEffect(() => {
+//       const getUser = localStorage.getItem("loginUser");
+//       if (getUser) {
+//         const data = JSON.parse(getUser);
+//         setRole(data.role || "");
+//       }
+//     }, []);
+  
 //   const fetchProductName = async () => {
 //     try {
 //       const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/kyc/getProductname`);
@@ -773,15 +877,16 @@ export default FilterControls;
 //     fetchVendorNames();
 //   }, []);
 
-//     const getFormattedDateTime = () => {
-//     const date = new Date();
-//     const [year, month, day] = date.toISOString().split("T")[0].split("-");
-//     const formattedDate = `${day}-${month}-${year}`;
-//     const time = date.toLocaleTimeString();
-//     return ` ${formattedDate}, ${time}`;
-//   };
+//   const getFormattedDateTime = () => {
+//   return moment().tz("Asia/Kolkata").format("DD-MM-YYYY, hh:mm:ss A");
+// };
+//  const getFormattedDateDay = () => {
+//    return moment().format("DD-MM-YYYY, dddd");
+//  };
 
-//     const handleUpdate = async () => {
+  
+  
+//   const handleUpdate = async () => {
 //     if (selectedRows.length === 0) {
 //       toast.warning("Please select at least one row to update");
 //       return;
@@ -826,6 +931,8 @@ export default FilterControls;
 //       // Handle Closed status
 //       if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
 //         updates.dateOut = getFormattedDateTime();
+//         console.log("dateOut",getFormattedDateTime())
+//         updates.dateOutInDay = getFormattedDateDay()
 //         updates.caseDoneBy = user.name;
 //       }
 
@@ -833,6 +940,8 @@ export default FilterControls;
 //       if (updates.caseStatus === "Sent" && user) {
 //         updates.sentBy = user.name;
 //         updates.sentDate = getFormattedDateTime();
+//         console.log("sentDate",getFormattedDateTime())
+//         updates.sentDateInDay = getFormattedDateDay()
 //       }
 
 //       // Remove empty fields
@@ -859,17 +968,7 @@ export default FilterControls;
 //     { headers: { 'Content-Type': 'multipart/form-data' } }
 //   );
 // }
-//       // if (updateFields.attachment) {
-//       //   const formData = new FormData();
-//       //   formData.append('file', updateFields.attachment);
-//       //   formData.append('caseIds', JSON.stringify(caseIds)); // Send all case IDs
-        
-//       //   await axios.post(
-//       //     `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
-//       //     formData,
-//       //     { headers: { 'Content-Type': 'multipart/form-data' } }
-//       //   );
-//       // }
+
 
 //       // Process other updates if any
 //       if (Object.keys(nonEmptyUpdates).length > 0) {
@@ -896,11 +995,11 @@ export default FilterControls;
 //         vendorStatus: '',
 //         remarks: '',
 //         status: '',
-//         attachment: null
+//         attachment: null,
 //       });
-      
-//       // Refresh data
-//       fetchTrackerData();
+//       setAttachmentFileName('')
+//       setSelectedRows([]);
+//       fetchTrackerData(true);
 //     } catch (error) {
 //       console.error("Update error:", error);
 //       toast.error(error.response?.data?.message || error.message || "Update failed");
@@ -908,38 +1007,62 @@ export default FilterControls;
 //       setIsUpdating(false);
 //     }
 //   };
-
 //   const handleDateChange = (name, date) => {
-//     const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
-//     setFilters({ ...filters, [name]: formattedDate });
-//   };
+//       const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
+//       setFilters({ ...filters, [name]: formattedDate });
+//     };
 
 //   const handleInputChange = (e) => {
 //     const { name, value } = e.target;
 //     setFilters({ ...filters, [name]: value });
 //   };
 
-//   const resetFields = () => {
-//     if (viewMode === 'filter') {
-//       setFilters({
-//         product: "",
-//         productType: "",
-//         dateIn: "",
-//         dateOut: "", // Updated to reflect the new name
-//         status: "",
-//         caseStatus: "",
-//       });
-//     } else {
-//       setUpdateFields({
-//         vendorName: '',
-//         caseStatus: '',
-//         vendorStatus: '',
-//         remarks: '',
-//         status: '',
-//         attachment: null
-//       });
-//     }
-//   };
+//   // const resetFields = () => {
+//   //   if (viewMode === 'filter') {
+//   //     setFilters({
+//   //       product: "",
+//   //       productType: "",
+//   //       dateIn: "",//update line
+//   //       dateOut: "",//update line
+//   //       status: "",
+//   //       caseStatus: "",
+//   //     });
+//   //   } else {
+//   //     setUpdateFields({
+//   //       vendorName: '',
+//   //       caseStatus: '',
+//   //       vendorStatus: '',
+//   //       remarks: '',
+//   //       status: '',
+//   //       attachment: null
+//   //     });
+//   //   }
+//   // };
+
+
+//   // Update the resetFields function to reset the attachment field
+// const resetFields = () => {
+//   if (viewMode === 'filter') {
+//     setFilters({
+//       product: "",
+//       productType: "",
+//       dateIn: "",
+//       dateOut: "",
+//       status: "",
+//       caseStatus: "",
+//     });
+//   } else {
+//     setUpdateFields({
+//       vendorName: '',
+//       caseStatus: '',
+//       vendorStatus: '',
+//       remarks: '',
+//       status: '',
+//       attachment: null // Reset attachment here
+//     });
+//     setAttachmentFileName(''); // Reset file name here
+//   }
+// };
 
 //   const toggleButtonClass = (active) => 
 //     `px-4 py-2 rounded-t-lg transition-colors ${
@@ -987,21 +1110,24 @@ export default FilterControls;
 //   };
 
 //   return (
-//     <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"} p-4 rounded shadow-md`}>
+//     <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
 //       <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700">
 //         <div className="flex">
 //           <button
 //             onClick={() => setViewMode('filter')}
 //             className={toggleButtonClass(viewMode === 'filter')}
 //           >
-//             Filter Options
+//             Filter
 //           </button>
-//           <button
+//           {(role === "admin" || role === "employee") && (
+//                   <button
 //             onClick={() => setViewMode('update')}
 //             className={toggleButtonClass(viewMode === 'update')}
 //           >
-//             Update Fields
+//             Update
 //           </button>
+//                 )}
+          
 //         </div>
         
 //         <div className="flex gap-2">
@@ -1015,7 +1141,8 @@ export default FilterControls;
 //           >
 //             Reset
 //           </button>
-//                      {viewMode === 'update' && (
+          
+//           {viewMode === 'update' && (
 //             <button
 //               onClick={handleUpdate}
 //               disabled={selectedRows?.length === 0 || isUpdating}
@@ -1035,7 +1162,6 @@ export default FilterControls;
 //           )}
 //         </div>
 //       </div>
-
 
 //       {viewMode === 'filter' ? (
 //         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1058,7 +1184,7 @@ export default FilterControls;
 //               styles={customStyles}
 //               placeholder="All Products"
 //               isClearable
-//               className="text-sm"
+//               className="text-sm  z-20"
 //             />
 //           </div>
 
@@ -1081,7 +1207,7 @@ export default FilterControls;
 //               styles={customStyles}
 //               placeholder="All Product Types"
 //               isClearable
-//               className="text-sm"
+//               className="text-sm  z-20"
 //             />
 //           </div>
 
@@ -1109,76 +1235,69 @@ export default FilterControls;
 
 //           {/* Date In */}
 //           <div className="mb-2">
-//             <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-//               Date In (From)
-//             </label>
-//                           <div
-//     className={`w-full px-3 py-2 text-sm rounded border ${
-//       isDarkMode
-//         ? "bg-gray-700 border-gray-600 text-gray-200"
-//         : "bg-white border-gray-300 text-gray-700"
-//     } sticky top-0 z-10`}
-//   >
-//             <DatePicker
-//               selected={filters.dateIn ? parse(filters.dateIn, 'dd-MM-yyyy', new Date()) : null}
-//               onChange={(date) => handleDateChange('dateIn', date)}
-//               dateFormat="dd-MM-yyyy"
-//               placeholderText="DD-MM-YYYY"
-//               popperModifiers={{
-//                 preventOverflow: {
-//                   enabled: true,
-//                   options: {
-//                     padding: 10,
-//                   },
-//                 },
-//                 zIndex: {
-//                   enabled: true,
-//                   order: 9999,
-//                 },
-//               }}
-//             />
-//           </div>
-//           </div>
-
-
-//           {/* Date Out */}
-//           <div className="mb-2">
-//             <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-//               Date Out
-//             </label>
-//               <div
-//     className={`w-full px-3 py-2 text-sm rounded border ${
-//       isDarkMode
-//         ? "bg-gray-700 border-gray-600 text-gray-200"
-//         : "bg-white border-gray-300 text-gray-700"
-//     } sticky top-0 z-10`}
-//   >
-//             <DatePicker
-//               selected={filters.dateOut ? parse(filters.dateOut, 'dd-MM-yyyy', new Date()) : null}
-//               onChange={(date) => handleDateChange('dateOut', date)}
-//               dateFormat="dd-MM-yyyy"
-//               // className={`w-full px-3 py-2 text-sm rounded border ${
-//               //   isDarkMode
-//               //     ? "bg-gray-700 border-gray-600 text-gray-200"
-//               //     : "bg-white border-gray-300 text-gray-700"
-//               // }`}
-//               placeholderText="DD-MM-YYYY"
-//               popperModifiers={{
-//                 preventOverflow: {
-//                   enabled: true,
-//                   options: {
-//                     padding: 10,
-//                   },
-//                 },
-//                 zIndex: {
-//                   enabled: true,
-//                   order: 9999,
-//                 },
-//               }}
-//             />
-//           </div>
-//           </div>
-
+//                       <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+//                         Date In
+//                       </label>
+//                       <div className={`w-full px-3 py-2 text-sm rounded border ${
+//                         isDarkMode
+//                           ? "bg-gray-700 border-gray-600 text-gray-200"
+//                           : "bg-white border-gray-300 text-gray-700"
+//                         } sticky top-0 z-10`}>
+//                         <DatePicker
+//                           selected={filters.dateIn ? parse(filters.dateIn, 'dd-MM-yyyy', new Date()) : null}
+//                           onChange={(date) => handleDateChange('dateIn', date)}
+//                           dateFormat="dd-MM-yyyy"
+//                           placeholderText="DD-MM-YYYY"
+//                           // className={datePickerCustomClass}
+//                           popperModifiers={{
+//                             preventOverflow: {
+//                               enabled: true,
+//                               options: {
+//                                 padding: 10,
+//                               },
+//                             },
+//                             zIndex: {
+//                               enabled: true,
+//                               order: 9999,
+//                             },
+//                           }}
+//                         />
+//                       </div>
+//                     </div>
+          
+          
+          
+//                     {/* Date Out */}
+//                     <div className="mb-2">
+//                       <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+//                         Date Out
+//                       </label>
+//                       <div className={`w-full px-3 py-2 text-sm rounded border ${
+//                         isDarkMode
+//                           ? "bg-gray-700 border-gray-600 text-gray-200"
+//                           : "bg-white border-gray-300 text-gray-700"
+//                         } sticky top-0 z-10`}>
+//                         <DatePicker
+//                           selected={filters.dateOut ? parse(filters.dateOut, 'dd-MM-yyyy', new Date()) : null}
+//                           onChange={(date) => handleDateChange('dateOut', date)}
+//                           dateFormat="dd-MM-yyyy"
+//                           placeholderText="DD-MM-YYYY"
+//                           // className={datePickerCustomClass}
+//                           popperModifiers={{
+//                             preventOverflow: {
+//                               enabled: true,
+//                               options: {
+//                                 padding: 10,
+//                               },
+//                             },
+//                             zIndex: {
+//                               enabled: true,
+//                               order: 9999,
+//                             },
+//                           }}
+//                         />
+//                       </div>
+//                     </div>
 //           {/* Case Status */}
 //           <div className="mb-2">
 //             <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
@@ -1323,12 +1442,12 @@ export default FilterControls;
 //             </div>
 
 //             {/* Attachment */}
-//             <div className="mb-2">
+//             {/*<div className="mb-2">
 //               <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
 //                 Attachment
 //               </label>
-//               <div className="flex items-center">
-//                 <input
+//               <div className="flex items-center">*/}
+//                 {/* <input
 //                   type="file"
 //                   onChange={(e) => setUpdateFields({...updateFields, attachment: e.target.files[0]})}
 //                   className={`w-full px-3 py-2 text-sm rounded border ${
@@ -1336,9 +1455,50 @@ export default FilterControls;
 //                       ? "bg-gray-700 border-gray-600 text-gray-200"
 //                       : "bg-white border-gray-300 text-gray-700"
 //                   }`}
-//                 />
+//                 /> */}
+//               {/*    <input
+//      type="file"
+//      onChange={(e) => {
+//        const file = e.target.files[0];
+//        setUpdateFields({...updateFields, attachment: file});
+//        setAttachmentFileName(file ? file.name : '');
+//      }}
+//      className={`w-full px-3 py-2 text-sm rounded border ${
+//        isDarkMode
+//          ? "bg-gray-700 border-gray-600 text-gray-200"
+//          : "bg-white border-gray-300 text-gray-700"
+//      }`}
+//    />
+//     <div className="mt-1 text-sm text-gray-500">
+//      {attachmentFileName || "No file chosen"}
+//    </div>
 //               </div>
-//             </div>
+//             </div> */}
+
+// <div className="mb-2">
+//   <label className={`block text-sm font-medium mb-1 transition-colors duration-150 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+//     Attachment
+//   </label>
+//   <div className="flex items-center gap-2">
+//     <input
+//       type="file"
+//       onChange={(e) => {
+//         const file = e.target.files[0];
+//         setUpdateFields({ ...updateFields, attachment: file });
+//         setAttachmentFileName(file ? file.name : '');
+//       }}
+//       className={`w-full px-3 py-1 text-sm rounded border shadow-sm transition-all duration-150 cursor-pointer file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:font-medium ${
+//         isDarkMode
+//           ? "bg-gray-700 border-gray-600 text-gray-200 file:bg-gray-600 file:text-gray-200"
+//           : "bg-white border-gray-300 text-gray-700 file:bg-gray-100 file:text-gray-700"
+//       }`}
+//     />
+//     <div className="mt-1 text-m text-gray-500 truncate">
+//       {attachmentFileName || "No file chosen"}
+//     </div>
+//   </div>
+// </div>
+
 //           </div>
 
 //           <div className={`text-sm pt-2 border-t border-gray-200 dark:border-gray-700 ${
@@ -1355,11 +1515,5 @@ export default FilterControls;
 // export default FilterControls;
 
 
-
-
-
-
-
-
-
+///////////////////////////////////////////////////////////////////////////working date formate///////////////////////////////////////
 
