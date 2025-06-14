@@ -735,20 +735,6 @@ const createCustomCheckboxRenderer = useCallback(() => {
             readOnly: !isEditable,
           };
         }
-        if (header === "dateOut" || header === "sentDate") {
-          return {
-            type: 'date',
-            allowInvalid: false,
-            dateFormat: 'YYYY-MM-DD',
-            headerClassName: 'htLeft',
-            renderer: (instance, td, row, col, prop, value, cellProperties) => {
-      td.style.textAlign = 'left';
-      
-      return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
-    },
-            readOnly: !isEditable,
-          };
-        }
         if (readOnlyColumns.includes(header)) {
           return { type: "text", readOnly: true, 
             renderer: (instance, td, row, col, prop, value, cellProperties) => {
@@ -1050,7 +1036,20 @@ const sendUpdateToBackend = debounce(async (update) => {
     setTimeout(() => setUpdateStatus(null), 3000);
 
   } catch (error) {
-    console.error("Update error:", error);
+    // console.error("Update error:", error);
+    if (error.response) {
+    const { message, field } = error.response.data;
+    
+    // Show error message to user
+    toast.error(message);
+    
+    // Highlight problematic field if available
+    if (field) {
+      // Your logic to highlight the field in UI
+    }
+  } else {
+    toast.error("Network error occurred");
+  }
     setUpdateStatus(`Error: ${error.message}`);
     setTimeout(() => setUpdateStatus(null), 5000);
   }

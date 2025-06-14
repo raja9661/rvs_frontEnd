@@ -127,6 +127,7 @@ const FilterControls = ({
       // Handle Closed status
       if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
         updates.dateOut = getFormattedDateTime();
+        console.log("dateOut",getFormattedDateTime())
         updates.dateOutInDay = getFormattedDateDay()
         updates.caseDoneBy = user.name;
       }
@@ -135,6 +136,7 @@ const FilterControls = ({
       if (updates.caseStatus === "Sent" && user) {
         updates.sentBy = user.name;
         updates.sentDate = getFormattedDateTime();
+        console.log("sentDate",getFormattedDateTime())
         updates.sentDateInDay = getFormattedDateDay()
       }
 

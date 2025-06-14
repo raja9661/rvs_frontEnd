@@ -310,11 +310,13 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import moment from "moment";
+import moment from "moment-timezone"
 import Layout from "../../../Layout/Layout";
 import FilterControls from "../Filter/Left-filter/FilterControls";
 import FilterAndSearch from "../Filter/Right-filter/FilterAndSearch";
 import Table from "./Table";
+import { format, parse } from "date-fns";
+import { toast } from 'react-toastify';
 
 const TrackerTable = () => {
   const [data, setData] = useState([]);
@@ -447,7 +449,7 @@ const [originalData, setOriginalData] = useState([]);
         })
       }
     });
-
+    
     let fetchedData = response.data?.data || response.data || [];
     setOriginalData(fetchedData); // Always store original unfiltered data
 
@@ -459,9 +461,23 @@ const [originalData, setOriginalData] = useState([]);
           (!filters.productType || record.productType?.toLowerCase().includes(filters.productType.toLowerCase())) &&
           (!filters.status || record.status?.toLowerCase().includes(filters.status.toLowerCase())) &&
           (!filters.caseStatus || record.caseStatus?.toLowerCase().includes(filters.caseStatus.toLowerCase())) &&
-          (!filters.dateIn || moment(record.dateIn).format('YYYY-MM-DD') === filters.dateIn) &&
-          (!filters.endDate || moment(record.endDate).format('YYYY-MM-DD') === filters.endDate) &&
-          (!filters.dateOut || moment(record.dateOut).format('YYYY-MM-DD') === filters.dateOut)
+          (!filters.dateIn || (
+  record.dateIn &&
+  moment(record.dateIn, "DD-MM-YYYY, h:mm:ss A").format("DD-MM-YYYY") === filters.dateIn
+))  &&
+// (!filters.dateOut || (
+//   record.dateOut && 
+//   moment(record.dateOut).isSame(moment(filters.dateOut, "DD-MM-YYYY"), 'day')
+// ))
+(!filters.dateOut || (
+  record.dateOut && 
+  record.dateOut.trim() !== '' &&
+  moment(record.dateOut, "DD-MM-YYYY, h:mm:ss a").isSame(
+    moment(filters.dateOut, "DD-MM-YYYY"),
+    'day'
+  )
+))
+
         );
       });
     }
@@ -480,22 +496,46 @@ const [originalData, setOriginalData] = useState([]);
       ];
 
       // Format the data for display
+      // const formattedData = fetchedData.map(row => ({
+      //   attachments: row.attachments || [],
+      //   ...Object.fromEntries(
+      //     extractedHeaders
+      //       .filter(header => header !== "☑")
+      //       .map(header => [
+      //         header,
+      //         ["createdAt", "updatedAt", "sentDate", "dateOut"].includes(header)
+      //           ? row[header]
+      //             ? moment(row[header]).format("DD-MM-YYYY, h:mm:ss A")
+      //             : ""
+      //           : row[header] ?? ""
+      //       ])
+      //   )
+      // }));
       const formattedData = fetchedData.map(row => ({
-        attachments: row.attachments || [],
-        ...Object.fromEntries(
-          extractedHeaders
-            .filter(header => header !== "☑")
-            .map(header => [
+  attachments: row.attachments || [],
+  ...Object.fromEntries(
+    extractedHeaders
+      .filter(header => header !== "☑")
+      .map(header => {
+        // Handle date fields
+        if (["dateIn", "dateOut", "sentDate", "createdAt", "updatedAt"].includes(header)) {
+          try {
+            return [
               header,
-              ["createdAt", "updatedAt", "sentDate", "dateOut"].includes(header)
-                ? row[header]
-                  ? moment(row[header]).format("DD-MM-YYYY HH:mm:ss")
-                  : ""
-                : row[header] ?? ""
-            ])
-        )
-      }));
-
+              row[header] 
+                ? moment(row[header], "DD-MM-YYYY, h:mm:ss A").isValid()
+                  ? moment(row[header], "DD-MM-YYYY, h:mm:ss A").format("DD-MM-YYYY, h:mm:ss A")
+                  : "Invalid Date"
+                : ""
+            ];
+          } catch (e) {
+            return [header, "Format Error"];
+          }
+        }
+        return [header, row[header] ?? ""];
+      })
+  )
+}));
       setHeaders(extractedHeaders);
       setData(formattedData);
     } else {
@@ -516,7 +556,7 @@ const [originalData, setOriginalData] = useState([]);
 };
   useEffect(() => {
     if (role) fetchTrackerData();
-  }, [role, userId, name, filterType]);
+  }, [role, userId, name, filterType,filters]);
 
   const handleRowSelection = (r, isChecked) => {
     const updatedData = [...data];
@@ -662,6 +702,7 @@ const [originalData, setOriginalData] = useState([]);
           <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"} p-4 rounded shadow-md`}>
             <FilterAndSearch 
               setSearchQuery={setSearchQuery}
+              searchQuery = {searchQuery}
               rowData={rowData}
               onRecordAdded={handleRecordAdded}
               onRecheck={handleRecheck}

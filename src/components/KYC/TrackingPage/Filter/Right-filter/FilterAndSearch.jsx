@@ -1186,7 +1186,8 @@ const FilterAndSearch = ({
   onFilterTypeChange,
   filters,
   setFilters,
-  filterType
+  filterType,
+  searchQuery
 }) => {
   const [newRecord, setNewRecord] = useState(false);
   const [isRecheckModalOpen, setIsRecheckModalOpen] = useState(false);
@@ -1462,6 +1463,7 @@ const handleClientIdChange = (e) => {
         <input
           type="text"
           placeholder="Search by Account Number"
+          value={searchQuery} 
           onChange={(e) => setSearchQuery(e.target.value)}
           className={`border p-2 text-sm rounded w-full ${
             isDarkMode
