@@ -40,6 +40,7 @@ const FilterControls = ({
   const [role, setRole] = useState("");
   const productRef = useRef(null);
   const [attachmentFileName, setAttachmentFileName] = useState('');
+  const [clientTypeOptions] = useState(["Agency","Corporate", "Other", "Unknown"]);
 
   useEffect(() => {
       const getUser = localStorage.getItem("loginUser");
@@ -93,6 +94,12 @@ const FilterControls = ({
       toast.error("No valid records selected for update");
       return;
     }
+
+      // Check if the selected vendor name is valid
+  if (updateFields.vendorName && !vendorNames.includes(updateFields.vendorName)) {
+    toast.error("Selected vendor name is not valid. Please select a vendor from the dropdown.");
+    return;
+  }
 
     // Validate cases being closed have sentDate
     if ((updateFields.status === "Closed" || updateFields.vendorStatus === "Closed")) {
@@ -244,6 +251,7 @@ const resetFields = () => {
       dateOut: "",
       status: "",
       caseStatus: "",
+      vendorStatus: "",
     });
   } else {
     setUpdateFields({
@@ -492,6 +500,87 @@ const resetFields = () => {
                         />
                       </div>
                     </div>
+
+
+                    
+{/* Send Date */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Send Date
+  </label>
+  <div className={`w-full px-3 py-2 text-sm rounded border ${
+    isDarkMode
+      ? "bg-gray-700 border-gray-600 text-gray-200"
+      : "bg-white border-gray-300 text-gray-700"
+    } sticky top-0 z-10`}>
+    <DatePicker
+      selected={filters.sendDate ? parse(filters.sendDate, 'dd-MM-yyyy', new Date()) : null}
+      onChange={(date) => handleDateChange('sendDate', date)}
+      dateFormat="dd-MM-yyyy"
+      placeholderText="DD-MM-YYYY"
+      popperModifiers={{
+        preventOverflow: {
+          enabled: true,
+          options: {
+            padding: 10,
+          },
+        },
+        zIndex: {
+          enabled: true,
+          order: 9999,
+        },
+      }}
+    />
+  </div>
+</div>
+
+
+{/* Vendor Status */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Vendor Status
+  </label>
+  <select
+    name="vendorStatus"
+    value={filters.vendorStatus}
+    onChange={handleInputChange}
+    className={`w-full px-3 py-2 text-sm rounded border ${
+      isDarkMode
+        ? "bg-gray-700 border-gray-600 text-gray-200"
+        : "bg-white border-gray-300 text-gray-700"
+    }`}
+  >
+    <option value="">All Vendor Status</option>
+    {["Closed", "Invalid", "CNV", "Account Closed", "Restricted Account", "Staff Account", "Records Not Updated", "Not Found", "Records Not Found"].map((status, index) => (
+      <option key={index} value={status}>{status}</option>
+    ))}
+  </select>
+</div>
+
+{/* // Client Type Dropdown */}
+<div className="mb-2">
+  <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+    Client Type
+  </label>
+  <Select
+    id="client-type-select"
+    name="clientType"
+    value={filters.clientType ? { value: filters.clientType, label: filters.clientType } : null}
+    onChange={(selectedOption) => {
+      setFilters({ ...filters, clientType: selectedOption ? selectedOption.value : "" });
+    }}
+    options={[
+      { value: "", label: "All Client Types" },
+      ...clientTypeOptions.map(type => ({ value: type, label: type })) // Use fetched client types
+    ]}
+    styles={customStyles}
+    placeholder="All Client Types"
+    isClearable
+    className="text-sm z-20"
+  />
+</div>
+
+
           {/* Case Status */}
           <div className="mb-2">
             <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
@@ -548,6 +637,9 @@ const resetFields = () => {
                 className="text-sm"
               />
             </div>
+
+
+
             
             {/* Case Status */}
             <div className="mb-2">
