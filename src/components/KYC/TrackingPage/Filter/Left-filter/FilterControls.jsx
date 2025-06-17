@@ -502,7 +502,8 @@ const resetFields = () => {
                     </div>
 
 
-                    
+{(role === "admin" || role === "employee") && (
+  <>                    
 {/* Send Date */}
 <div className="mb-2">
   <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
@@ -579,7 +580,8 @@ const resetFields = () => {
     className="text-sm z-20"
   />
 </div>
-
+  </>
+)}
 
           {/* Case Status */}
           <div className="mb-2">
