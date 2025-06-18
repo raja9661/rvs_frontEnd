@@ -785,7 +785,7 @@ const UserManagement = () => {
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label htmlFor="password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                     New Password
                     {currentUser && (
@@ -815,7 +815,7 @@ const UserManagement = () => {
                       )}
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Row 6 - Address */}
