@@ -4,7 +4,6 @@ import axios from "axios";
 import Layout from "../Layout/Layout";
 import { toast } from "react-toastify";
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import EditUserModal from "./EditUserModal";
 
 const UserManagement = () => {
   // State management
@@ -19,9 +18,6 @@ const UserManagement = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-
 
   // Initialize form data with all required fields
   const [formData, setFormData] = useState({
@@ -152,17 +148,6 @@ const UserManagement = () => {
     } catch (error) {
       console.error("Error saving user:", error);
       toast.error("Error saving user");
-    }
-  };
-
-  const handleEditUser = async (userId, formData) => {
-    try {
-      await axios.put(`${baseUrl}/auth/users/${userId}`, formData, {
-        headers: { "Content-Type": "application/json" },
-      });
-      fetchUsers();
-    } catch (error) {
-      throw error; // This will be caught in the EditUserModal
     }
   };
 
@@ -341,15 +326,11 @@ const UserManagement = () => {
                               {user.isEnable === "enable" ? "Disable" : "Enable"}
                             </button>
                             <button
-  onClick={() => {
-    setCurrentUser(user); // Make sure this is setting the user
-    setIsEditModalOpen(true); // Make sure this is setting to true
-    
-  }}
-  className={isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"}
->
-  Edit
-</button>
+                              onClick={() => openUserModal(user)}
+                              className={isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"}
+                            >
+                              Edit
+                            </button>
                             <button
                               onClick={() => openDeleteModal(user)}
                               className={isDarkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}
@@ -507,19 +488,349 @@ const UserManagement = () => {
           )}
         </div>
 
-        <EditUserModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          user={currentUser}
-          onSave={handleEditUser}
-          isDarkMode={isDarkMode}
-        />
+        {/* Edit User Modal */}
+        {isModalOpen && (
+          <div className="fixed z-50 inset-0 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed  transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-black opacity-75"></div>
+              </div>
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+                &#8203;
+              </span>
+              <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                <div className={`px-6 pt-6 pb-4 sm:p-8 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
+                  <div className="flex justify-between items-start">
+                    <h3 className={`text-xl leading-6 font-semibold mb-6 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                      {currentUser ? "Edit User" : "Add User"}
+                    </h3>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className={`p-1 rounded-full ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+                    >
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      {/* Row 1 */}
+                      <div>
+                        <label htmlFor="name" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          id="name"
+                          value={formData.name || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="email" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          id="email"
+                          value={formData.email || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="phoneNumber" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          id="phoneNumber"
+                          value={formData.phoneNumber || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      {/* Row 2 */}
+                      <div>
+                        <label htmlFor="role" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Role <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="role"
+                          id="role"
+                          value={formData.role || "client"}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="client">Client</option>
+                          <option value="employee">Employee</option>
+                          <option value="vendor">Vendor</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label htmlFor="isEnable" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Login Access <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="isEnable"
+                          id="isEnable"
+                          value={formData.isEnable || "enable"}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        >
+                          <option value="enable">Enable</option>
+                          <option value="disable">Disable</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label htmlFor="userId" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          User ID <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="userId"
+                          id="userId"
+                          value={formData.userId || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      {/* Row 3 - Conditional Client Code */}
+                      {formData.role === "client" && (
+                        <div className="md:col-span-3">
+                          <label htmlFor="clientCode" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            Client Code <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="clientCode"
+                            id="clientCode"
+                            value={formData.clientCode || ""}
+                            onChange={handleInputChange}
+                            disabled={false}
+                            readOnly={false}
+                            className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                              isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                            }`}
+                            required={formData.role === "client"}
+                          />
+                        </div>
+                      )}
+
+                      {/* Row 4 */}
+                      <div className="md:col-span-3">
+                        <label htmlFor="companyName" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Company Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="companyName"
+                          id="companyName"
+                          value={formData.companyName || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      {/* Row 5 - Password Fields */}
+                      <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label htmlFor="curr-password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            Current Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              name="curr-password"
+                              id="curr-password"
+                              value={formData.showPassword || ""}
+                              readOnly={true}
+                              onChange={handleInputChange}
+                              className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10 ${
+                                isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                              onClick={() => setShowPassword(!showPassword)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? (
+                                <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <EyeIcon className="h-5 w-5 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label htmlFor="password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            New Password
+                            {currentUser && (
+                              <span className="text-gray-400 ml-1 text-xs">(leave blank to keep current)</span>
+                            )}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              name="password"
+                              id="password"
+                              value={formData.password || ""}
+                              onChange={handleInputChange}
+                              className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10 ${
+                                isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                              onClick={() => setShowPassword(!showPassword)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? (
+                                <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <EyeIcon className="h-5 w-5 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Row 6 - Address */}
+                      <div className="md:col-span-3">
+                        <label htmlFor="address" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Address <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          name="address"
+                          id="address"
+                          rows={3}
+                          value={formData.address || ""}
+                          onChange={handleInputChange}
+                          disabled={false}
+                          readOnly={false}
+                          className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                          }`}
+                          required
+                        />
+                      </div>
+
+                      {/* Row 7 - Readonly Fields */}
+                      <div>
+                        <label htmlFor="createdBy" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Created By
+                        </label>
+                        <input
+                          type="text"
+                          name="createdBy"
+                          id="createdBy"
+                          value={formData.createdBy || ""}
+                          readOnly={true}
+                          className={`w-full rounded-md border py-2 px-3 ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-300 text-gray-500"
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="createdAt" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Created At
+                        </label>
+                        <input
+                          type="text"
+                          name="createdAt"
+                          id="createdAt"
+                          value={formData.createdAt || ""}
+                          readOnly={true}
+                          className={`w-full rounded-md border py-2 px-3 ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-300 text-gray-500"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-8 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className={`px-4 py-2 rounded-md border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ${
+                          isDarkMode
+                            ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-md border border-transparent bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition"
+                      >
+                        {currentUser ? "Update User" : "Create User"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {isDeleteModalOpen && (
           <div className="fixed z-10 inset-0 overflow-y-auto">
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="fixed transition-opacity" aria-hidden="true">
                 <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
               </div>
               <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
