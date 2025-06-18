@@ -790,6 +790,70 @@ const UserManagement = () => {
                 />
               </div>
 
+              {/* Row 5 - Password Fields */}
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="curr-password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                    Current Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="curr-password"
+                      id="curr-password"
+                      value={formData.showPassword}
+                      onChange={handleInputChange}
+                      className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10 ${
+                        isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                    New Password
+                    {currentUser && (
+                      <span className="text-gray-400 ml-1 text-xs">(leave blank to keep current)</span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      id="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10 ${
+                        isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Row 6 - Address */}
               <div className="md:col-span-3">
                 <label htmlFor="address" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
@@ -818,7 +882,6 @@ const UserManagement = () => {
                   name="createdBy"
                   id="createdBy"
                   value={formData.createdBy}
-                  readOnly
                   className={`w-full rounded-md border py-2 px-3 bg-gray-100 ${
                     isDarkMode ? "border-gray-600 text-gray-300" : "border-gray-300 text-gray-500"
                   }`}
@@ -834,7 +897,6 @@ const UserManagement = () => {
                   name="createdAt"
                   id="createdAt"
                   value={formData.createdAt}
-                  readOnly
                   className={`w-full rounded-md border py-2 px-3 bg-gray-100 ${
                     isDarkMode ? "border-gray-600 text-gray-300" : "border-gray-300 text-gray-500"
                   }`}
