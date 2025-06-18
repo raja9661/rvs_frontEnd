@@ -74,33 +74,69 @@ const UserManagement = () => {
   };
 
   // Open modal for editing user
+  // const openUserModal = (user = null) => {
+  //   setCurrentUser(user);
+  //   setFormData(
+  //     user
+  //       ? {
+  //           ...user,
+  //           showPassword:user.showPassword || "",
+  //           password: "",
+  //           clientCode: user.clientCode || "",
+  //         }
+  //       : {
+  //           name: "",
+  //           email: "",
+  //           phoneNumber: "",
+  //           role: "client",
+  //           userId: "",
+  //           password: "",
+  //           companyName: "",
+  //           address: "",
+  //           clientCode: "",
+  //           createdBy: "admin",
+  //           isEnable: "enable",
+  //         }
+  //   );
+  //   setIsModalOpen(true);
+  // };
   const openUserModal = (user = null) => {
-    setCurrentUser(user);
-    setFormData(
-      user
-        ? {
-            ...user,
-            showPassword:user.showPassword || "",
-            password: "",
-            clientCode: user.clientCode || "",
-          }
-        : {
-            name: "",
-            email: "",
-            phoneNumber: "",
-            role: "client",
-            userId: "",
-            password: "",
-            companyName: "",
-            address: "",
-            clientCode: "",
-            createdBy: "admin",
-            isEnable: "enable",
-          }
-    );
-    setIsModalOpen(true);
-  };
-
+  setCurrentUser(user);
+  setFormData(
+    user
+      ? {
+          name: user.name || "",
+          email: user.email || "",
+          phoneNumber: user.phoneNumber || "",
+          role: user.role || "client",
+          userId: user.userId || "",
+          password: "", // Always empty for security
+          companyName: user.companyName || "",
+          address: user.address || "",
+          clientCode: user.clientCode || "",
+          createdBy: user.createdBy || "admin",
+          isEnable: user.isEnable || "enable",
+          showPassword: user.showPassword || "",
+          createdAt: user.createdAt || ""
+        }
+      : {
+          name: "",
+          email: "",
+          phoneNumber: "",
+          role: "client",
+          userId: "",
+          password: "",
+          companyName: "",
+          address: "",
+          clientCode: "",
+          createdBy: "admin",
+          isEnable: "enable",
+          showPassword: "",
+          createdAt: ""
+        }
+  );
+  setIsModalOpen(true);
+};
   // Form state
   const [formData, setFormData] = useState({
     name: "",
@@ -114,7 +150,8 @@ const UserManagement = () => {
     clientCode: "",
     createdBy: "admin",
     isEnable: "enable",
-    showPassword:""
+    showPassword:"",
+    createdAt: ""
   });
 
   // Handle form input changes
@@ -785,7 +822,7 @@ const UserManagement = () => {
                   </div>
                 </div>
 
-                {/* <div>
+                <div>
                   <label htmlFor="password" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                     New Password
                     {currentUser && (
@@ -815,7 +852,7 @@ const UserManagement = () => {
                       )}
                     </button>
                   </div>
-                </div> */}
+                </div>
               </div>
 
               {/* Row 6 - Address */}
