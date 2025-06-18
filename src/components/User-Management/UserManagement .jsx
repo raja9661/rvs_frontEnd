@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Layout from "../Layout/Layout";
 import { toast } from "react-toastify";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import EditUserModal from "./EditUserModal";
 
 const UserManagement = () => {
   // State management
@@ -19,6 +19,26 @@ const UserManagement = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+
+
+  // Initialize form data with all required fields
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    role: "client",
+    userId: "",
+    password: "",
+    companyName: "",
+    address: "",
+    clientCode: "",
+    createdBy: "admin",
+    isEnable: "enable",
+    showPassword: "",
+    createdAt: ""
+  });
 
   const navigate = useNavigate();
   const baseUrl = import.meta.env.VITE_Backend_Base_URL;
@@ -43,6 +63,7 @@ const UserManagement = () => {
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
@@ -73,16 +94,25 @@ const UserManagement = () => {
     }
   };
 
-  // Open modal for editing user
+  // Open modal for editing user with proper initial values
   const openUserModal = (user = null) => {
     setCurrentUser(user);
     setFormData(
       user
         ? {
-            ...user,
-            showPassword:user.showPassword || "",
-            password: "",
+            name: user.name || "",
+            email: user.email || "",
+            phoneNumber: user.phoneNumber || "",
+            role: user.role || "client",
+            userId: user.userId || "",
+            password: "", // Always empty for security
+            companyName: user.companyName || "",
+            address: user.address || "",
             clientCode: user.clientCode || "",
+            createdBy: user.createdBy || "admin",
+            isEnable: user.isEnable || "enable",
+            showPassword: user.showPassword || "",
+            createdAt: user.createdAt || ""
           }
         : {
             name: "",
@@ -96,26 +126,12 @@ const UserManagement = () => {
             clientCode: "",
             createdBy: "admin",
             isEnable: "enable",
+            showPassword: "",
+            createdAt: ""
           }
     );
     setIsModalOpen(true);
   };
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-    role: "client",
-    userId: "",
-    password: "",
-    companyName: "",
-    address: "",
-    clientCode: "",
-    createdBy: "admin",
-    isEnable: "enable",
-    showPassword:""
-  });
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -136,6 +152,17 @@ const UserManagement = () => {
     } catch (error) {
       console.error("Error saving user:", error);
       toast.error("Error saving user");
+    }
+  };
+
+  const handleEditUser = async (userId, formData) => {
+    try {
+      await axios.put(`${baseUrl}/auth/users/${userId}`, formData, {
+        headers: { "Content-Type": "application/json" },
+      });
+      fetchUsers();
+    } catch (error) {
+      throw error; // This will be caught in the EditUserModal
     }
   };
 
@@ -200,7 +227,7 @@ const UserManagement = () => {
 
   return (
     <Layout>
-      <div className={` mx-auto py-2 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
+      <div className={`mx-auto py-2 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h1 className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"} mb-4 md:mb-0`}>
@@ -314,11 +341,15 @@ const UserManagement = () => {
                               {user.isEnable === "enable" ? "Disable" : "Enable"}
                             </button>
                             <button
-                              onClick={() => openUserModal(user)}
-                              className={isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"}
-                            >
-                              Edit
-                            </button>
+  onClick={() => {
+    setCurrentUser(user); // Make sure this is setting the user
+    setIsEditModalOpen(true); // Make sure this is setting to true
+    
+  }}
+  className={isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"}
+>
+  Edit
+</button>
                             <button
                               onClick={() => openDeleteModal(user)}
                               className={isDarkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}
@@ -339,871 +370,219 @@ const UserManagement = () => {
                 </table>
               </div>
 
-              {/* Pagination - unchanged from your original code */}
+              {/* Pagination */}
               {totalPages > 1 && (
                 <div className={`px-4 py-3 flex items-center justify-between border-t ${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} sm:px-6`}>
                   <div className="flex-1 flex justify-between sm:hidden">
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.max(prev - 1, 1))
-              }
-              disabled={currentPage === 1}
-              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
-                currentPage === 1
-                  ? isDarkMode
-                    ? "bg-gray-700 text-gray-400 border-gray-600"
-                    : "bg-gray-100 text-gray-400 border-gray-300"
-                  : isDarkMode
-                  ? "bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
-                currentPage === totalPages
-                  ? isDarkMode
-                    ? "bg-gray-700 text-gray-400 border-gray-600"
-                    : "bg-gray-100 text-gray-400 border-gray-300"
-                  : isDarkMode
-                  ? "bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p
-                className={`text-sm ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Showing{" "}
-                <span className="font-medium">
-                  {(currentPage - 1) * 50 + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium">
-                  {Math.min(
-                    currentPage * 50,
-                    users.length + (currentPage - 1) * 50
-                  )}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium">
-                  {users.length + (currentPage - 1) * 50}
-                </span>{" "}
-                results
-              </p>
-            </div>
-            <div>
-              <nav
-                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                aria-label="Pagination"
-              >
-                <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-800"
-                      : "border-gray-300 bg-white"
-                  } text-sm font-medium ${
-                    currentPage === 1
-                      ? isDarkMode
-                        ? "text-gray-500"
-                        : "text-gray-300"
-                      : isDarkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="sr-only">First</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      d="M8.707 5.293a1 1 0 010 1.414L5.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className={`relative inline-flex items-center px-2 py-2 border ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-800"
-                      : "border-gray-300 bg-white"
-                  } text-sm font-medium ${
-                    currentPage === 1
-                      ? isDarkMode
-                        ? "text-gray-500"
-                        : "text-gray-300"
-                      : isDarkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="sr-only">Previous</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                {getPageNumbers().map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      currentPage === pageNum
-                        ? isDarkMode
-                          ? "z-10 bg-blue-900/30 border-blue-500 text-blue-300"
-                          : "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                        : isDarkMode
-                        ? "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(prev + 1, totalPages)
-                    )
-                  }
-                  disabled={currentPage === totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 border ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-800"
-                      : "border-gray-300 bg-white"
-                  } text-sm font-medium ${
-                    currentPage === totalPages
-                      ? isDarkMode
-                        ? "text-gray-500"
-                        : "text-gray-300"
-                      : isDarkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="sr-only">Next</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
-                    isDarkMode
-                      ? "border-gray-600 bg-gray-800"
-                      : "border-gray-300 bg-white"
-                  } text-sm font-medium ${
-                    currentPage === totalPages
-                      ? isDarkMode
-                        ? "text-gray-500"
-                        : "text-gray-300"
-                      : isDarkMode
-                      ? "text-gray-300 hover:bg-gray-700"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="sr-only">Last</span>
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      d="M11.293 14.707a1 1 0 010-1.414L14.586 10l-3.293-3.293a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </nav>
-            </div>
-          </div>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                        currentPage === 1
+                          ? isDarkMode
+                            ? "bg-gray-700 text-gray-400 border-gray-600"
+                            : "bg-gray-100 text-gray-400 border-gray-300"
+                          : isDarkMode
+                          ? "bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`ml-3 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                        currentPage === totalPages
+                          ? isDarkMode
+                            ? "bg-gray-700 text-gray-400 border-gray-600"
+                            : "bg-gray-100 text-gray-400 border-gray-300"
+                          : isDarkMode
+                          ? "bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Showing <span className="font-medium">{(currentPage - 1) * 50 + 1}</span> to{" "}
+                        <span className="font-medium">{Math.min(currentPage * 50, users.length + (currentPage - 1) * 50)}</span> of{" "}
+                        <span className="font-medium">{users.length + (currentPage - 1) * 50}</span> results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
+                            isDarkMode ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"
+                          } text-sm font-medium ${
+                            currentPage === 1
+                              ? isDarkMode ? "text-gray-500" : "text-gray-300"
+                              : isDarkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">First</span>
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M8.707 5.293a1 1 0 010 1.414L5.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 border ${
+                            isDarkMode ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"
+                          } text-sm font-medium ${
+                            currentPage === 1
+                              ? isDarkMode ? "text-gray-500" : "text-gray-300"
+                              : isDarkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">Previous</span>
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        {getPageNumbers().map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === pageNum
+                                ? isDarkMode
+                                  ? "z-10 bg-blue-900/30 border-blue-500 text-blue-300"
+                                  : "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                                : isDarkMode
+                                ? "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className={`relative inline-flex items-center px-2 py-2 border ${
+                            isDarkMode ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"
+                          } text-sm font-medium ${
+                            currentPage === totalPages
+                              ? isDarkMode ? "text-gray-500" : "text-gray-300"
+                              : isDarkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">Next</span>
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          disabled={currentPage === totalPages}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
+                            isDarkMode ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"
+                          } text-sm font-medium ${
+                            currentPage === totalPages
+                              ? isDarkMode ? "text-gray-500" : "text-gray-300"
+                              : isDarkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">Last</span>
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M11.293 14.707a1 1 0 010-1.414L14.586 10l-3.293-3.293a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
                 </div>
               )}
             </>
           )}
         </div>
 
-        {/* User Modal (Edit) */}
-        {isModalOpen && (
-          <div className="fixed z-20 inset-0 overflow-y-auto">  
+        <EditUserModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          user={currentUser}
+          onSave={handleEditUser}
+          isDarkMode={isDarkMode}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {isDeleteModalOpen && (
+          <div className="fixed z-10 inset-0 overflow-y-auto">
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div className="absolute inset-0 bg-black opacity-75"></div>
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
               </div>
               <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
                 &#8203;
               </span>
-              {/* Adjusted modal width and height */}
-              <div className="inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full z-50">
-                <div className={`px-4 pt-5 pb-4 sm:p-6 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
-                  <h3 className={`text-lg leading-6 font-medium mb-4 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
-                    Edit User
-                  </h3>
-                  <form onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 gap-y-4 gap-x-6 sm:grid-cols-2">
-                      {/* Name*/}
-                      <div>
-                        <label htmlFor="name" className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          id="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
-                          }`}
-                          required
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <svg
+                        className="h-6 w-6 text-red-600"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                         />
+                      </svg>
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Delete user
+                      </h3>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          Are you sure you want to delete {userToDelete?.name}?
+                          This action cannot be undone.
+                        </p>
                       </div>
-
-                                                   {/* Client Code */}
-                            <div
-                className={`transition-all duration-200 ${
-                  formData.role === "client"
-                    ? "opacity-100 h-auto"
-                    : "opacity-0 h-0 overflow-hidden"
-                }`}
-              >
-                <label
-                  htmlFor="clientCode"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Client Code
-                </label>
-                <input
-                  type="text"
-                  name="clientCode"
-                  id="clientCode"
-                  value={formData.clientCode}
-                  onChange={handleInputChange}
-                  // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required={formData.role === "client"}
-                />
-              </div>
-
-                            {/* Email */}
-                      <div>
-                <label
-                  htmlFor="email"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-                   {/* Phone Number */}
-              <div>
-                <label
-                  htmlFor="phoneNumber"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  id="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-
-                    {/* Role */}
-              <div>
-                <label
-                  htmlFor="role"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Role
-                </label>
-                <select
-                  name="role"
-                  id="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                >
-                  <option value="admin">Admin</option>
-                  <option value="client">Client</option>
-                  <option value="employee">Employee</option>
-                  <option value="vendor">Vendor</option>
-                </select>
-              </div>
-                      {/* Login-Access */}
-                      <div>
-                        <label htmlFor="isEnable" className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                          Login-Access
-                        </label>
-                        <select
-                          name="isEnable"
-                          id="isEnable"
-                          value={formData.isEnable}
-                          onChange={handleInputChange}
-                          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                            isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
-                          }`}
-                          required
-                        >
-                          <option value="enable">Enable</option>
-                          <option value="disable">Disable</option>
-                        </select>
-                      </div>
-
-                      {/* User ID */}
-                      <div>
-                <label
-                  htmlFor="userId"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  User ID
-                </label>
-                <input
-                  type="text"
-                  name="userId"
-                  id="userId"
-                  value={formData.userId}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-
-              {/* /////////////////////////Company name/////////////// */}
-              <div >
-                <label
-                  htmlFor="companyName"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  name="companyName"
-                  id="companyName"
-                  value={formData.companyName}
-                  onChange={handleInputChange}
-                  // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-
-
-              {/* Current-Password */}
-              {/* <div >
-                <label
-                  htmlFor="curr-password"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Current-Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    id="new-password"
-                    value={formData.showPassword}
-                    readOnly={true}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10"
-                    required={!currentUser}
-                  />
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center mt-1"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    onClick={confirmDelete}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    {showPassword ? (
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    )}
+                    Delete
                   </button>
-                </div>
-              </div> */}
-              
-                  {/* New-Password */}
-              {/* <div >
-                <label
-                  htmlFor="password"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  New-Password
-                  {currentUser && (
-                    <span className="text-gray-400 ml-1">
-                      (leave blank to keep current)
-                    </span>
-                  )}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    id="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10"
-                    required={!currentUser}
-                  />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center mt-1"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    {showPassword ? (
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    )}
+                    Cancel
                   </button>
-                </div>
-              </div> */}
-
-{/* Current-Password */}
-<div>
-  <label
-    htmlFor="curr-password"
-    className={`block text-sm font-medium ${
-      isDarkMode ? "text-gray-300" : "text-gray-700"
-    }`}
-  >
-    Current-Password
-  </label>
-  
-  <div className="relative">
-    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-      <i className="fas fa-lock"></i> {/* Replace with your desired icon */}
-    </span>
-    
-    <input
-      type={showPassword ? "text" : "password"}
-      name="curr-password"
-      id="curr-password"
-      value={formData.showPassword}
-      readOnly={true}
-      onChange={handleInputChange}
-      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-12 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10"
-      required={!currentUser }
-    />
-    
-    <span
-      className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400"
-      onClick={() => setShowPassword(!showPassword)}
-      aria-label={showPassword ? "Hide password" : "Show password"}
-    >
-      {showPassword ? (
-        <FaEye className="h-5 w-5" />
-      ) : (
-        <FaEyeSlash className="h-5 w-5" />
-      )}
-    </span>
-  </div>
-</div>
-
-
-{/* New-Password */}
-<div>
-  <label
-    htmlFor="password"
-    className={`block text-sm font-medium ${
-      isDarkMode ? "text-gray-300" : "text-gray-700"
-    }`}
-  >
-    New-Password
-    {currentUser  && (
-      <span className="text-gray-400 ml-1">
-        (leave blank to keep current)
-      </span>
-    )}
-  </label>
-  
-  <div className="relative">
-    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-      <i className="fas fa-lock"></i> {/* Replace with your desired icon */}
-    </span>
-    
-    <input
-      type={showPassword ? "text" : "password"}
-      name="password"
-      id="password"
-      value={formData.password}
-      onChange={handleInputChange}
-      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-12 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm pr-10"
-      required={!currentUser }
-    />
-    
-    <span
-      className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400"
-      onClick={() => setShowPassword(!showPassword)}
-      aria-label={showPassword ? "Hide password" : "Show password"}
-    >
-      {showPassword ? (
-        <FaEye className="h-5 w-5" />
-      ) : (
-        <FaEyeSlash className="h-5 w-5" />
-      )}
-    </span>
-  </div>
-</div>
-
-
-
-
-              
-              {/* Address */}
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="address"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  id="address"
-                  rows={3}
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-
-
-                 {/* Created By */}
-              <div>
-                <label
-                  htmlFor="createdBy"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Created By
-                </label>
-                <input
-                  type="text"
-                  name="createdBy"
-                  id="createdBy"
-                  value={formData.createdBy}
-                  readOnly={true}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-
-              {/* Created At */}
-              <div>
-                <label
-                  htmlFor="createdBy"
-                  className={`block text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Created At
-                </label>
-                <input
-                  type="text"
-                  name="createdBy"
-                  id="createdat"
-                  value={formData.createdAt}
-                  readOnly={true}
-                  onChange={handleInputChange}
-                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    isDarkMode
-                      ? "bg-gray-700 border-gray-600 text-white"
-                      : "border-gray-300 text-gray-900"
-                  }`}
-                  required
-                />
-              </div>
-                      
-                    </div>
-
-                    <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                      <button
-                        type="submit"
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm"
-                      >
-                        Update User
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsModalOpen(false)}
-                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
                 </div>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Delete Confirmation Modal - unchanged */}
-        {isDeleteModalOpen && (
-           <div className="fixed z-20 inset-0 overflow-y-auto">
-    <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div
-        className="fixed inset-0 transition-opacity"
-        aria-hidden="true"
-      >
-        <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-      </div>
-      <span
-        className="hidden sm:inline-block sm:align-middle sm:h-screen"
-        aria-hidden="true"
-      >
-        &#8203;
-      </span>
-      <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-50">
-        <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div className="sm:flex sm:items-start">
-            <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg
-                className="h-6 w-6 text-red-600"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Delete user
-              </h3>
-              <div className="mt-2">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to delete {userToDelete?.name}?
-                  This action cannot be undone.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button
-            type="button"
-            onClick={confirmDelete}
-            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            Delete
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
         )}
       </div>
     </Layout>
   );
 };
 
-export default UserManagement;  
+export default UserManagement;
 
 
 
