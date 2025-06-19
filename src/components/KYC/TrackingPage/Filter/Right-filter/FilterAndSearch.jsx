@@ -1490,50 +1490,8 @@ const handleClientIdChange = (e) => {
             <option value="deleted">Deleted Records</option>
           </select>
         )}
+  
         <select
-  value={
-    filters.isRechecked 
-      ? "recheck" 
-      : filters.caseStatus || filters.status || ""
-  }
-  onChange={(e) => {
-    const value = e.target.value;
-    if (value === "true") {
-      setFilters({
-        ...filters, 
-        recheck: true,
-        status: "",
-        caseStatus: ""
-      });
-    } else if (["New Pending", "Sent"].includes(value)) {
-      setFilters({
-        ...filters,
-        caseStatus: value,
-        status: "",
-        recheck: false
-      });
-    } else {
-      setFilters({
-        ...filters,
-        status: value,
-        caseStatus: "",
-        recheck: false
-      });
-    }
-  }}
-  className={`border rounded-lg p-2 w-full ${
-    isDarkMode
-      ? "bg-gray-700 border-gray-600 text-gray-200"
-      : "bg-white border-gray-300 text-gray-700"
-  }`}
->
-  <option value="">All Status</option>
-  <option value="New Pending">New Pending</option>
-  <option value="Sent">Sent</option>
-  {/* <option value="true">Recheck Records</option> */}
-</select>
-
-        {/* <select
           value={filters.status || filters.caseStatus || ""}
           onChange={(e) => {
             const value = e.target.value;
@@ -1550,11 +1508,13 @@ const handleClientIdChange = (e) => {
           }`}
         >
           <option value="">All Statuses</option>
-          <option value="New Data">New Data</option>
+          <option value="Pending">Pending</option>
           <option value="New Pending">New Pending</option>
           <option value="Sent">Sent</option>
           <option value="Closed">Closed</option>
-        </select> */}
+          <option value="Negative">Negative</option>
+          <option value="CNV">CNV</option>
+        </select>
       </div>
 
       {/* Action buttons with better alignment */}
