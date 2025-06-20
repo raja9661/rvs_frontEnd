@@ -44,4 +44,4 @@ jobs:
         continue-on-error: true
 
       - name: Run Docker Container
-        run: docker run -d --name reactjs-container -p 80:80 raja9661/rvs_frontend:latest
+        run: docker run -d --name reactjs-container -p 5173:80 raja9661/rvs_frontend:latest
