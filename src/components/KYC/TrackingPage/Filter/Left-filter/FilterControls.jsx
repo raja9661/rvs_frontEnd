@@ -82,132 +82,309 @@ const FilterControls = ({
  };
 
   
-  
-  const handleUpdate = async () => {
-    if (selectedRows.length === 0) {
-      toast.warning("Please select at least one row to update");
-      return;
-    }
+   const handleUpdate = async () => {
+  if (selectedRows.length === 0) {
+    toast.warning("Please select at least one row to update");
+    return;
+  }
 
-    const caseIds = selectedRows.map(rowIndex => data[rowIndex]?.caseId).filter(Boolean);
-    if (caseIds.length === 0) {
-      toast.error("No valid records selected for update");
-      return;
-    }
+  const caseIds = selectedRows.map(rowIndex => data[rowIndex]?.caseId).filter(Boolean);
+  if (caseIds.length === 0) {
+    toast.error("No valid records selected for update");
+    return;
+  }
 
-      // Check if the selected vendor name is valid
+  // Check if the selected vendor name is valid
   if (updateFields.vendorName && !vendorNames.includes(updateFields.vendorName)) {
     toast.error("Selected vendor name is not valid. Please select a vendor from the dropdown.");
     return;
   }
 
-    // Validate cases being closed have sentDate
-    if ((updateFields.status === "Closed" || updateFields.vendorStatus === "Closed")) {
-      const casesWithoutSentDate = selectedRows.filter(rowIndex => {
-        const rowData = data[rowIndex];
-        return !rowData.sentDate;
-      });
+  // Validate cases being sent
+  if (updateFields.caseStatus === "Sent") {
+    const alreadySentCases = selectedRows.filter(rowIndex => {
+      const rowData = data[rowIndex];
+      return rowData.caseStatus === "Sent";
+    });
 
-      if (casesWithoutSentDate.length > 0) {
-        toast.warning(
-          `${casesWithoutSentDate.length} selected case(s) don't have a sent date. ` +
-          `Please set case status to "Sent" first or skip these cases.`
-        );
-        return;
-      }
-    }
-
-    setIsUpdating(true);
-
-    try {
-      const getUser = localStorage.getItem("loginUser");
-      const user = getUser ? JSON.parse(getUser) : null;
-      
-      const updates = {
-        vendorName: updateFields.vendorName,
-        caseStatus: updateFields.caseStatus,
-        vendorStatus: updateFields.vendorStatus,
-        remarks: updateFields.remarks,
-        status: updateFields.status
-      };
-
-      // Handle Closed status
-      if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
-        updates.dateOut = getFormattedDateTime();
-        updates.dateOutInDay = getFormattedDateDay()
-        updates.caseDoneBy = user.name;
-      }
-
-      // Handle Sent status
-      if (updates.caseStatus === "Sent" && user) {
-        updates.sentBy = user.name;
-        updates.sentDate = getFormattedDateTime();
-        updates.sentDateInDay = getFormattedDateDay()
-      }
-
-      // Remove empty fields
-      const nonEmptyUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+    if (alreadySentCases.length > 0) {
+      const shouldProceed = window.confirm(
+        `${alreadySentCases.length} selected case(s) are already marked as Sent. Do you want to update them anyway?`
       );
-
-      // Prepare the update payload
-      const payload = { caseIds, updates: nonEmptyUpdates };
-
-      // Process attachment first if exists
-      if (updateFields.attachment) {
-  const formData = new FormData();
-  formData.append('file', updateFields.attachment);
-  
-  // Append each caseId individually
-  caseIds.forEach(caseId => {
-    formData.append('caseIds', caseId);
-  });
-
-  await axios.post(
-    `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
-    formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
-  );
-}
-
-
-      // Process other updates if any
-      if (Object.keys(nonEmptyUpdates).length > 0) {
-        const response = await axios.post(
-          `${import.meta.env.VITE_Backend_Base_URL}/kyc/batch-update`,
-          payload
-        );
-        
-        if (response.data?.success) {
-          toast.success(`Updated ${response.data.updatedCount} records successfully`);
-        } else {
-          toast.error(response.data?.message || "Update failed");
-        }
-      } else if (updateFields.attachment) {
-        toast.success("Attachment uploaded successfully");
-      } else {
-        toast.warning("No update fields filled");
-      }
-
-      // Reset form
-      setUpdateFields({
-        vendorName: '',
-        caseStatus: '',
-        vendorStatus: '',
-        remarks: '',
-        status: '',
-        attachment: null,
-      });
-      setAttachmentFileName('')
-      setSelectedRows([]);
-      fetchTrackerData(true);
-    } catch (error) {
-      console.error("Update error:", error);
-      toast.error(error.response?.data?.message || error.message || "Update failed");
-    } finally {
-      setIsUpdating(false);
+      if (!shouldProceed) return;
     }
-  };
+  }
+
+  // Validate cases being closed
+  if (updateFields.status === "Closed" || updateFields.vendorStatus === "Closed") {
+    const alreadyClosedCases = selectedRows.filter(rowIndex => {
+      const rowData = data[rowIndex];
+      return rowData.status === "Closed" || rowData.vendorStatus === "Closed";
+    });
+
+    if (alreadyClosedCases.length > 0) {
+      const shouldProceed = window.confirm(
+        `${alreadyClosedCases.length} selected case(s) are already Closed. Do you want to update them anyway?`
+      );
+      if (!shouldProceed) return;
+    }
+
+    // Check for cases without sent date
+    const casesWithoutSentDate = selectedRows.filter(rowIndex => {
+      const rowData = data[rowIndex];
+      return !rowData.sentDate;
+    });
+
+    if (casesWithoutSentDate.length > 0) {
+      toast.warning(
+        `${casesWithoutSentDate.length} selected case(s) don't have a sent date. ` +
+        `Please set case status to "Sent" first or skip these cases.`
+      );
+      return;
+    }
+  }
+
+  setIsUpdating(true);
+
+  try {
+    const getUser = localStorage.getItem("loginUser");
+    const user = getUser ? JSON.parse(getUser) : null;
+    
+    const updates = {
+      vendorName: updateFields.vendorName,
+      caseStatus: updateFields.caseStatus,
+      vendorStatus: updateFields.vendorStatus,
+      remarks: updateFields.remarks,
+      status: updateFields.status
+    };
+
+    // Handle Closed status
+    if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
+      updates.dateOut = getFormattedDateTime();
+      updates.dateOutInDay = getFormattedDateDay();
+      updates.caseDoneBy = user.name;
+    }
+
+    // Handle Sent status
+    if (updates.caseStatus === "Sent" && user) {
+      updates.sentBy = user.name;
+      updates.sentDate = getFormattedDateTime();
+      updates.sentDateInDay = getFormattedDateDay();
+    }
+
+    // Remove empty fields
+    const nonEmptyUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+    );
+
+    // Prepare the update payload
+    const payload = { caseIds, updates: nonEmptyUpdates };
+
+    // Process attachment first if exists
+    if (updateFields.attachment) {
+      const formData = new FormData();
+      formData.append('file', updateFields.attachment);
+      
+      // Append each caseId individually
+      caseIds.forEach(caseId => {
+        formData.append('caseIds', caseId);
+      });
+
+      await axios.post(
+        `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+    }
+
+    // Process other updates if any
+    if (Object.keys(nonEmptyUpdates).length > 0) {
+      const response = await axios.post(
+        `${import.meta.env.VITE_Backend_Base_URL}/kyc/batch-update`,
+        payload
+      );
+      
+      if (response.data?.success) {
+        let successMessage = `Updated ${response.data.updatedCount} record(s) successfully`;
+        if (response.data.clientTATUpdates > 0) {
+          successMessage += ` (${response.data.clientTATUpdates} TATs calculated)`;
+        }
+        toast.success(successMessage);
+        
+        if (response.data.errors?.length > 0) {
+          response.data.errors.forEach(error => toast.warning(error));
+        }
+      } else {
+        toast.error(response.data?.message || "Update failed");
+      }
+    } else if (updateFields.attachment) {
+      toast.success("Attachment uploaded successfully");
+    } else {
+      toast.warning("No update fields filled");
+    }
+
+    // Reset form
+    setUpdateFields({
+      vendorName: '',
+      caseStatus: '',
+      vendorStatus: '',
+      remarks: '',
+      status: '',
+      attachment: null,
+    });
+    setAttachmentFileName('');
+    setSelectedRows([]);
+    fetchTrackerData(true);
+  } catch (error) {
+    console.error("Update error:", error);
+    let errorMessage = "Update failed";
+    
+    if (error.response) {
+      if (error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response.data?.errors) {
+        errorMessage = error.response.data.errors.join(", ");
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    toast.error(errorMessage);
+  } finally {
+    setIsUpdating(false);
+  }
+};
+//   const handleUpdate = async () => {
+//     if (selectedRows.length === 0) {
+//       toast.warning("Please select at least one row to update");
+//       return;
+//     }
+
+//     const caseIds = selectedRows.map(rowIndex => data[rowIndex]?.caseId).filter(Boolean);
+//     if (caseIds.length === 0) {
+//       toast.error("No valid records selected for update");
+//       return;
+//     }
+
+//       // Check if the selected vendor name is valid
+//   if (updateFields.vendorName && !vendorNames.includes(updateFields.vendorName)) {
+//     toast.error("Selected vendor name is not valid. Please select a vendor from the dropdown.");
+//     return;
+//   }
+
+//     // Validate cases being closed have sentDate
+//     if ((updateFields.status === "Closed" || updateFields.vendorStatus === "Closed")) {
+//       const casesWithoutSentDate = selectedRows.filter(rowIndex => {
+//         const rowData = data[rowIndex];
+//         return !rowData.sentDate;
+//       });
+
+//       if (casesWithoutSentDate.length > 0) {
+//         toast.warning(
+//           `${casesWithoutSentDate.length} selected case(s) don't have a sent date. ` +
+//           `Please set case status to "Sent" first or skip these cases.`
+//         );
+//         return;
+//       }
+//     }
+
+//     setIsUpdating(true);
+
+//     try {
+//       const getUser = localStorage.getItem("loginUser");
+//       const user = getUser ? JSON.parse(getUser) : null;
+      
+//       const updates = {
+//         vendorName: updateFields.vendorName,
+//         caseStatus: updateFields.caseStatus,
+//         vendorStatus: updateFields.vendorStatus,
+//         remarks: updateFields.remarks,
+//         status: updateFields.status
+//       };
+
+//       // Handle Closed status
+//       if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
+//         updates.dateOut = getFormattedDateTime();
+//         updates.dateOutInDay = getFormattedDateDay()
+//         updates.caseDoneBy = user.name;
+//       }
+
+//       // Handle Sent status
+//       if (updates.caseStatus === "Sent" && user) {
+//         updates.sentBy = user.name;
+//         updates.sentDate = getFormattedDateTime();
+//         updates.sentDateInDay = getFormattedDateDay()
+//       }
+
+//       // Remove empty fields
+//       const nonEmptyUpdates = Object.fromEntries(
+//         Object.entries(updates).filter(([_, value]) => value !== '' && value !== null && value !== undefined)
+//       );
+
+//       // Prepare the update payload
+//       const payload = { caseIds, updates: nonEmptyUpdates };
+
+//       // Process attachment first if exists
+//       if (updateFields.attachment) {
+//   const formData = new FormData();
+//   formData.append('file', updateFields.attachment);
+  
+//   // Append each caseId individually
+//   caseIds.forEach(caseId => {
+//     formData.append('caseIds', caseId);
+//   });
+
+//   await axios.post(
+//     `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
+//     formData,
+//     { headers: { 'Content-Type': 'multipart/form-data' } }
+//   );
+// }
+
+
+//       // Process other updates if any
+//       if (Object.keys(nonEmptyUpdates).length > 0) {
+//         const response = await axios.post(
+//           `${import.meta.env.VITE_Backend_Base_URL}/kyc/batch-update`,
+//           payload
+//         );
+        
+//         // After the axios.post call
+// if (response.data?.success) {
+//   toast.success(
+//     `Updated ${response.data.updatedCount} records. ` +
+//     `${response.data.clientTATUpdates ? response.data.clientTATUpdates + ' TATs calculated' : ''}`
+//   );
+// } else if (response.data?.errors) {
+//   response.data.errors.forEach(error => toast.warning(error));
+// } else {
+//   toast.error(response.data?.message || "Update failed");
+// }
+//       } else if (updateFields.attachment) {
+//         toast.success("Attachment uploaded successfully");
+//       } else {
+//         toast.warning("No update fields filled");
+//       }
+
+//       // Reset form
+//       setUpdateFields({
+//         vendorName: '',
+//         caseStatus: '',
+//         vendorStatus: '',
+//         remarks: '',
+//         status: '',
+//         attachment: null,
+//       });
+//       setAttachmentFileName('')
+//       setSelectedRows([]);
+//       fetchTrackerData(true);
+//     } catch (error) {
+//       console.error("Update error:", error);
+//       toast.error(error.response?.data?.message || error.message || "Update failed");
+//     } finally {
+//       setIsUpdating(false);
+//     }
+//   };
   const handleDateChange = (name, date) => {
       const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
       setFilters({ ...filters, [name]: formattedDate });

@@ -124,33 +124,72 @@ const Table = ({
 
 
   
-  useEffect(() => {
-    if (!data || data.length === 0) {
-      setFilteredData([]);
-      return;
-    }
+//   useEffect(() => {
+//     if (!data || data.length === 0) {
+//       setFilteredData([]);
+//       return;
+//     }
 
-const filtered = data
-      .filter((row) =>
-        Object.entries(filters).every(([key, value]) =>
-          value ? row[key]?.toString().toLowerCase().includes(value.toLowerCase()) : true
-        )
-      )
-      .filter((row) =>
-        Object.values(row).some((value) =>
-          value ? value.toString().toLowerCase().includes(searchQuery.toLowerCase()) : false
-        )
-      );
+// const filtered = data
+//       .filter((row) =>
+//         Object.entries(filters).every(([key, value]) =>
+//           value ? row[key]?.toString().toLowerCase().includes(value.toLowerCase()) : true
+//         )
+//       )
+//       .filter((row) =>
+//         Object.values(row).some((value) =>
+//           value ? value.toString().toLowerCase().includes(searchQuery.toLowerCase()) : false
+//         )
+//       );
 
-    setFilteredData(filtered);
-    const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
-    setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+//     setFilteredData(filtered);
+//     const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
+//     setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
     
-    if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [data, filters, searchQuery, pageSize]);
+//     if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
+//       setCurrentPage(1);
+//     }
+//   }, [data, filters, searchQuery, pageSize]);
+useEffect(() => {
+  if (!data || data.length === 0) {
+    setFilteredData([]);
+    return;
+  }
 
+  const filtered = data
+    .filter((row) =>
+      Object.entries(filters).every(([key, filterValue]) => {
+        if (!filterValue) return true;
+        
+        // Handle array filter values (multiple selections)
+        if (Array.isArray(filterValue)) {
+          if (filterValue.length === 0) return true;
+          const rowValue = row[key];
+          return filterValue.includes(rowValue);
+        }
+        
+        // Handle single string filter value
+        const rowValue = row[key];
+        if (rowValue === undefined || rowValue === null) return false;
+        return String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase());
+      })
+    )
+    .filter((row) => {
+      if (!searchQuery) return true;
+      return Object.values(row).some((value) => {
+        if (value === undefined || value === null) return false;
+        return String(value).toLowerCase().includes(String(searchQuery).toLowerCase());
+      })
+    });
+
+  setFilteredData(filtered);
+  const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
+  setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+  
+  if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
+    setCurrentPage(1);
+  }
+}, [data, filters, searchQuery, pageSize]);
 
 
 const selectRow = useCallback((instance, rowIndex, selected) => {
@@ -810,31 +849,14 @@ const createCustomCheckboxRenderer = useCallback(() => {
       rowHeights: 22,
       className: "htCenter htMiddle",
       licenseKey: "non-commercial-and-evaluation",
-//        afterFilter: function (conditionsStack) {
-//   conditionsStack.forEach((condition) => {
-//     const columnIndex = condition.column;
-//     const columnHeader = this.getColHeader(columnIndex);
-//     const conditions = condition.conditions;
-
-//     console.log(`Filter applied on column: ${columnHeader}`);
-
-//     conditions.forEach((c) => {
-//       if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
-//         const selectedValues = c.args[0]; // Extract the array of values
-//         console.log("Selected filter values:", selectedValues);
-
-//         // Example: Use selectedValues[0] to get "ARTEL"
-//         const firstValue = selectedValues[0];
-//         console.log("First selected value:", firstValue);
-//         setSearchQuery(firstValue)
-        
-//       }
-//     });
-//   });
-// },
-       afterFilter: function (conditionsStack) {
+      afterFilter: function (conditionsStack) {
   // Map Handsontable column headers to your React filters keys
   const columnToFilterKeyMap = {
+    "Case Id":"caseId",
+    "Remarks":"remarks",
+    "Details":"details",
+    "Details 1":"details",
+    "Priority":"priority",
     "Product": "product",
     "Product Type": "productType",
     "Status": "status",
@@ -848,13 +870,28 @@ const createCustomCheckboxRenderer = useCallback(() => {
     "Bank Code": "bankCode",
     "Client Code": "clientCode",
     "Vendor Name": "vendorName",
+    "vendorStatus":"vendorStatus",
     "Sent By": "sentBy",
     "Case Done By": "caseDoneBy",
     "List By Employee": "listByEmployee",
     "Auto or Manual": "autoOrManual",
     "Role": "role",
-    "Name":"name",
-    "Account Number":"accountNumber",
+    "Name": "name",
+    "Account Number": "accountNumber",
+    "Account Number Digit":"accountNumberDigit",
+    "Date In Date":"dateInDate",
+    "Date Out":"dateOut",
+    "dateOutInDay":"dateOutInDay",
+    "Client TAT":"clientTAT",
+    "Customer Care":"customerCare",
+    "NameUploadBy":"NameUploadBy",
+    "Sent Date":"sentDate",
+    "sentDateInDay":"sentDateInDay",
+    "Dedup By":"dedupBy"
+
+    
+
+
     // Add more as needed based on your actual column headers
   };
 
@@ -868,11 +905,11 @@ const createCustomCheckboxRenderer = useCallback(() => {
     conditions.forEach((c) => {
       if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
         const selectedValues = c.args[0];
-        const firstValue = selectedValues[0] || ""; // If no value, fallback to empty
-
         const filterKey = columnToFilterKeyMap[columnHeader];
+        
         if (filterKey) {
-          updatedFilters[filterKey] = firstValue;
+          // Store all selected values instead of just the first one
+          updatedFilters[filterKey] = selectedValues.length > 0 ? selectedValues : "";
         }
       }
     });
@@ -883,6 +920,57 @@ const createCustomCheckboxRenderer = useCallback(() => {
     setFilters((prev) => ({ ...prev, ...updatedFilters }));
   }
 },
+//        afterFilter: function (conditionsStack) {
+//   // Map Handsontable column headers to your React filters keys
+//   const columnToFilterKeyMap = {
+//     "Product": "product",
+//     "Product Type": "productType",
+//     "Status": "status",
+//     "Case Status": "caseStatus",
+//     "Date In": "dateIn",
+//     "Date In (To)": "endDate",
+//     "Client Type": "clientType",
+//     "Correct UPN": "correctUPN",
+//     "Updated Product Name": "updatedProductName",
+//     "Updated Requirement": "updatedRequirement",
+//     "Bank Code": "bankCode",
+//     "Client Code": "clientCode",
+//     "Vendor Name": "vendorName",
+//     "Sent By": "sentBy",
+//     "Case Done By": "caseDoneBy",
+//     "List By Employee": "listByEmployee",
+//     "Auto or Manual": "autoOrManual",
+//     "Role": "role",
+//     "Name":"name",
+//     "Account Number":"accountNumber",
+//     // Add more as needed based on your actual column headers
+//   };
+
+//   const updatedFilters = {};
+
+//   conditionsStack.forEach((condition) => {
+//     const columnIndex = condition.column;
+//     const columnHeader = this.getColHeader(columnIndex); // e.g., "Product"
+//     const conditions = condition.conditions;
+
+//     conditions.forEach((c) => {
+//       if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
+//         const selectedValues = c.args[0];
+//         const firstValue = selectedValues[0] || ""; // If no value, fallback to empty
+
+//         const filterKey = columnToFilterKeyMap[columnHeader];
+//         if (filterKey) {
+//           updatedFilters[filterKey] = firstValue;
+//         }
+//       }
+//     });
+//   });
+
+//   // Update React filters state only once to prevent rerenders per filter
+//   if (Object.keys(updatedFilters).length > 0) {
+//     setFilters((prev) => ({ ...prev, ...updatedFilters }));
+//   }
+// },
 
       cells: (row, col) => {
         // Make cells read-only in deduce mode unless field is allowed for updates
