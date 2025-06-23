@@ -193,54 +193,34 @@ useEffect(() => {
 
 
 const selectRow = useCallback((instance, rowIndex, selected) => {
+  console.log('selectRow called', { rowIndex, selected });
   if (checkboxStateRef.current.isProcessing) return;
   checkboxStateRef.current.isProcessing = true;
 
   try {
-    // Get the record from current page's filtered data
     const startIndex = (currentPage - 1) * pageSize;
     const filteredIndex = startIndex + rowIndex;
     const record = filteredData[filteredIndex];
     
     if (!record) return;
 
-    // Find original index in full dataset
     const originalIndex = data.findIndex(item => item.caseId === record.caseId);
     if (originalIndex === -1) return;
 
-    if (selected) {
-      // Unselect previous row if any
-      const prevSelected = checkboxStateRef.current.selectedRow;
-      if (prevSelected !== null && prevSelected !== rowIndex) {
-        instance.setDataAtCell(prevSelected, 0, false, 'silent');
-      }
+    // Use functional update to avoid race conditions
+    setSelectedRows(prevSelectedRows => {
+      const newSelectedRows = selected
+        ? [...prevSelectedRows, originalIndex]
+        : prevSelectedRows.filter(idx => idx !== originalIndex);
+      
+      return newSelectedRows;
+    });
 
-      // Update UI
-      instance.setDataAtCell(rowIndex, 0, true, 'silent');
-      instance.selectRows(rowIndex);
-      checkboxStateRef.current.selectedRow = rowIndex;
-      setSelectedRecord(record);
+    // Update UI
+    instance.setDataAtCell(rowIndex, 0, selected, 'silent');
+    checkboxStateRef.current.selectedRow = selected ? rowIndex : null;
+    setSelectedRecord(selected ? record : null);
 
-      // Update selected rows state
-      setSelectedRows(prev => [...new Set([...prev, originalIndex])]);
-
-      if (handleRowSelection) {
-        handleRowSelection(originalIndex, true);
-      }
-    } else {
-      // Update UI
-      instance.setDataAtCell(rowIndex, 0, false, 'silent');
-      instance.deselectCell();
-      checkboxStateRef.current.selectedRow = null;
-      setSelectedRecord(null);
-
-      // Update selected rows state
-      setSelectedRows(prev => prev.filter(idx => idx !== originalIndex));
-
-      if (handleRowSelection) {
-        handleRowSelection(originalIndex, false);
-      }
-    }
   } finally {
     setTimeout(() => {
       checkboxStateRef.current.isProcessing = false;
@@ -256,8 +236,8 @@ const createCustomCheckboxRenderer = useCallback(() => {
       checkbox.type = 'checkbox';
       checkbox.className = 'select-all-checkbox';
       
-      // Check if all filtered rows are selected
-      const allSelected = filteredData.every(item => {
+      // Calculate if all filtered rows are selected
+      const allSelected = filteredData.length > 0 && filteredData.every(item => {
         const originalIndex = data.findIndex(d => d.caseId === item.caseId);
         return selectedRows.includes(originalIndex);
       });
@@ -304,24 +284,31 @@ const createCustomCheckboxRenderer = useCallback(() => {
     checkbox.type = 'checkbox';
     checkbox.className = 'custom-checkbox';
 
-    // Get the record for this row
-    const recordIndex = (currentPage - 1) * pageSize + row;
-    const record = filteredData[recordIndex];
+    // Get the record for this row (accounting for pagination)
+    const startIndex = (currentPage - 1) * pageSize;
+    const filteredIndex = startIndex + row;
+    const record = filteredData[filteredIndex];
     
-    // Check if this row is selected
+    // Find original index in full dataset
     const originalIndex = record ? data.findIndex(item => item.caseId === record.caseId) : -1;
     const isSelected = originalIndex >= 0 && selectedRows.includes(originalIndex);
     checkbox.checked = isSelected;
 
     const handleClick = (e) => {
       e.stopPropagation();
-      if (checkboxStateRef.current.isProcessing) {
-        e.preventDefault();
+      e.preventDefault(); // Prevent default behavior to avoid duplicate events
+      
+      // Debounce rapid clicks
+      const now = Date.now();
+      if (checkboxStateRef.current.lastClick && now - checkboxStateRef.current.lastClick < 100) {
         return;
       }
-      
-      // Toggle selection state
-      selectRow(instance, row, !isSelected);
+      checkboxStateRef.current.lastClick = now;
+
+      // Only proceed if not already processing
+      if (!checkboxStateRef.current.isProcessing) {
+        selectRow(instance, row, !isSelected);
+      }
     };
 
     checkbox.addEventListener('click', handleClick);
@@ -332,21 +319,21 @@ const createCustomCheckboxRenderer = useCallback(() => {
   };
 }, [selectRow, filteredData, data, currentPage, pageSize, selectedRows]);
 
-
 // const selectRow = useCallback((instance, rowIndex, selected) => {
 //   if (checkboxStateRef.current.isProcessing) return;
 //   checkboxStateRef.current.isProcessing = true;
 
 //   try {
-//     // Get the actual record from filtered data (accounting for pagination)
+//     // Get the record from current page's filtered data
 //     const startIndex = (currentPage - 1) * pageSize;
 //     const filteredIndex = startIndex + rowIndex;
 //     const record = filteredData[filteredIndex];
     
 //     if (!record) return;
 
-//     // Find the original index in the full dataset
+//     // Find original index in full dataset
 //     const originalIndex = data.findIndex(item => item.caseId === record.caseId);
+//     if (originalIndex === -1) return;
 
 //     if (selected) {
 //       // Unselect previous row if any
@@ -355,25 +342,26 @@ const createCustomCheckboxRenderer = useCallback(() => {
 //         instance.setDataAtCell(prevSelected, 0, false, 'silent');
 //       }
 
-//       // Select the new row
+//       // Update UI
 //       instance.setDataAtCell(rowIndex, 0, true, 'silent');
 //       instance.selectRows(rowIndex);
 //       checkboxStateRef.current.selectedRow = rowIndex;
 //       setSelectedRecord(record);
 
-//       // Update selected rows state with original index
-//       setSelectedRows(prev => [...prev, originalIndex]);
+//       // Update selected rows state
+//       setSelectedRows(prev => [...new Set([...prev, originalIndex])]);
 
 //       if (handleRowSelection) {
 //         handleRowSelection(originalIndex, true);
 //       }
 //     } else {
+//       // Update UI
 //       instance.setDataAtCell(rowIndex, 0, false, 'silent');
 //       instance.deselectCell();
 //       checkboxStateRef.current.selectedRow = null;
 //       setSelectedRecord(null);
 
-//       // Remove from selected rows state
+//       // Update selected rows state
 //       setSelectedRows(prev => prev.filter(idx => idx !== originalIndex));
 
 //       if (handleRowSelection) {
@@ -395,49 +383,41 @@ const createCustomCheckboxRenderer = useCallback(() => {
 //       checkbox.type = 'checkbox';
 //       checkbox.className = 'select-all-checkbox';
       
-//       // Calculate if all filtered rows are selected
-//       const allFilteredSelected = filteredData.every((item, index) => {
+//       // Check if all filtered rows are selected
+//       const allSelected = filteredData.every(item => {
 //         const originalIndex = data.findIndex(d => d.caseId === item.caseId);
 //         return selectedRows.includes(originalIndex);
 //       });
       
-//       checkbox.checked = allFilteredSelected;
+//       checkbox.checked = allSelected;
 
 //       checkbox.onclick = (e) => {
 //         e.stopPropagation();
 //         const selectAll = checkbox.checked;
         
-//         // Calculate original indices for all filtered rows
+//         // Get original indices of all filtered rows
 //         const originalIndices = filteredData.map(item => 
 //           data.findIndex(d => d.caseId === item.caseId)
 //         ).filter(i => i >= 0);
 
 //         if (selectAll) {
-//           // Select all filtered rows
+//           // Select all
 //           setSelectedRows(prev => [...new Set([...prev, ...originalIndices])]);
           
-//           // Update checkboxes in current page
-//           const startIndex = (currentPage - 1) * pageSize;
-//           const endIndex = Math.min(startIndex + pageSize, filteredData.length);
-//           const pageRowIndices = Array.from({ length: endIndex - startIndex }, (_, i) => i);
-          
-//           pageRowIndices.forEach(r => {
+//           // Update current page checkboxes
+//           const pageRowCount = Math.min(pageSize, filteredData.length - (currentPage - 1) * pageSize);
+//           for (let r = 0; r < pageRowCount; r++) {
 //             instance.setDataAtCell(r, 0, true, 'silent');
-//           });
+//           }
 //         } else {
-//           // Deselect all filtered rows
-//           setSelectedRows(prev => prev.filter(idx => 
-//             !originalIndices.includes(idx)
-//           ));
+//           // Deselect all
+//           setSelectedRows(prev => prev.filter(idx => !originalIndices.includes(idx)));
           
-//           // Update checkboxes in current page
-//           const startIndex = (currentPage - 1) * pageSize;
-//           const endIndex = Math.min(startIndex + pageSize, filteredData.length);
-//           const pageRowIndices = Array.from({ length: endIndex - startIndex }, (_, i) => i);
-          
-//           pageRowIndices.forEach(r => {
+//           // Update current page checkboxes
+//           const pageRowCount = Math.min(pageSize, filteredData.length - (currentPage - 1) * pageSize);
+//           for (let r = 0; r < pageRowCount; r++) {
 //             instance.setDataAtCell(r, 0, false, 'silent');
-//           });
+//           }
 //         }
 //       };
       
@@ -450,29 +430,25 @@ const createCustomCheckboxRenderer = useCallback(() => {
 //     const checkbox = document.createElement('input');
 //     checkbox.type = 'checkbox';
 //     checkbox.className = 'custom-checkbox';
-//     // checkbox.checked = selectRow.includes()
 
-//     // Get the record for this row (accounting for pagination)
-//     const dataIndex = (currentPage - 1) * pageSize + row;
-//     const record = filteredData[dataIndex];
-    
-//     // Find original index
-//     const originalIndex = record ? data.findIndex(item => item.caseId === record.caseId) : -1;
+//     // Get the record for this row
+//     const recordIndex = (currentPage - 1) * pageSize + row;
+//     const record = filteredData[recordIndex];
     
 //     // Check if this row is selected
-//     checkbox.checked = selectedRows.includes(originalIndex);
+//     const originalIndex = record ? data.findIndex(item => item.caseId === record.caseId) : -1;
+//     const isSelected = originalIndex >= 0 && selectedRows.includes(originalIndex);
+//     checkbox.checked = isSelected;
 
 //     const handleClick = (e) => {
 //       e.stopPropagation();
-//       if (checkbox.checked && row === checkboxStateRef.current.selectedRow) return;
-      
-//       // Prevent multiple rapid clicks
 //       if (checkboxStateRef.current.isProcessing) {
 //         e.preventDefault();
 //         return;
 //       }
       
-//       selectRow(instance, row, !checkbox.checked);
+//       // Toggle selection state
+//       selectRow(instance, row, !isSelected);
 //     };
 
 //     checkbox.addEventListener('click', handleClick);
@@ -483,78 +459,6 @@ const createCustomCheckboxRenderer = useCallback(() => {
 //   };
 // }, [selectRow, filteredData, data, currentPage, pageSize, selectedRows]);
 
-
-
-  
-  
-
-// const createCustomCheckboxRenderer = useCallback(() => {
-//   return function(instance, td, row, col, prop, value, cellProperties) {
-//     // Header checkbox (select all)
-//     if (row === -1) {
-//       const checkbox = document.createElement('input');
-//       checkbox.type = 'checkbox';
-//       checkbox.className = 'select-all-checkbox';
-//       checkbox.checked = selectedRows.length === filteredData.length;
-      
-//       checkbox.onclick = (e) => {
-//         e.stopPropagation();
-//         const selectAll = checkbox.checked;
-        
-//         if (selectAll) {
-//           // Map filtered indices to original indices
-//           const allOriginalIndices = filteredData.map(item => 
-//             data.findIndex(d => d.caseId === item.caseId)
-//           ).filter(i => i >= 0);
-          
-//           setSelectedRows(allOriginalIndices);
-//           Array.from({ length: filteredData.length }, (_, i) => i).forEach(r => {
-//             instance.setDataAtCell(r, 0, true);
-//           });
-//         } else {
-//           setSelectedRows([]);
-//           filteredData.forEach((_, r) => {
-//             instance.setDataAtCell(r, 0, false);
-//           });
-//         }
-//       };
-      
-//       td.innerHTML = '';
-//       td.appendChild(checkbox);
-//       return td;
-//     }
-    
-//     // Normal row checkbox
-//     const checkbox = document.createElement('input');
-//     checkbox.type = 'checkbox';
-//     checkbox.className = 'custom-checkbox';
-    
-//     // Check if this row is selected by mapping filtered indices to original indices
-//     const originalIndex = data.findIndex(item => 
-//       item.caseId === filteredData[(currentPage - 1) * pageSize + row]?.caseId
-//     );
-//     checkbox.checked = selectedRows.includes(originalIndex);
-
-//     const handleClick = (e) => {
-//       e.stopPropagation();
-//       if (checkbox.checked && row === checkboxStateRef.current.selectedRow) return;
-      
-//       // Prevent multiple rapid clicks
-//       if (checkboxStateRef.current.isProcessing) {
-//         e.preventDefault();
-//         return;
-//       }
-      
-//       selectRow(instance, row, checkbox.checked);
-//     };
-    
-//     checkbox.addEventListener('click', handleClick);
-    
-//     td.innerHTML = '';
-//     td.appendChild(checkbox);
-//     return td;
-//   };
-// }, [selectRow, filteredData, data, currentPage, pageSize, selectedRows]);
 
 
   const handleCellValueChange = useCallback((e) => {

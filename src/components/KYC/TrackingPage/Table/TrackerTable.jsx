@@ -137,22 +137,33 @@ const fetchTrackerData = async () => {
     if (role) fetchTrackerData();
   }, [role, userId, name, filterType]);
 
-  const handleRowSelection = useCallback((r, isChecked) => {
-    setData(prevData => {
-      const updatedData = [...prevData];
-      updatedData[r]["☑"] = isChecked;
-      return updatedData;
-    });
+  // const handleRowSelection = useCallback((r, isChecked) => {
+  //   setData(prevData => {
+  //     const updatedData = [...prevData];
+  //     updatedData[r]["☑"] = isChecked;
+  //     return updatedData;
+  //   });
 
-    setSelectedRows(prevSelectedRows => {
-      const newSelectedRows = isChecked 
-        ? [...prevSelectedRows, r] 
-        : prevSelectedRows.filter(row => row !== r);
-      return newSelectedRows;
-    });
+  //   setSelectedRows(prevSelectedRows => {
+  //     const newSelectedRows = isChecked 
+  //       ? [...prevSelectedRows, r] 
+  //       : prevSelectedRows.filter(row => row !== r);
+  //     return newSelectedRows;
+  //   });
 
-    setRowData(isChecked && selectedRows.length === 0 ? data[r] : null);
-  }, [data, selectedRows.length]);
+  //   setRowData(isChecked && selectedRows.length === 0 ? data[r] : null);
+  // }, [data, selectedRows.length]);
+  const handleRowSelection = useCallback((rowIndex, isChecked) => {
+  // No need to update `data` here (let Handsontable manage its own state)
+  console.log('handleRowSelection called', { rowIndex, isChecked });
+  setSelectedRows(prev => {
+    return isChecked 
+      ? [...prev, rowIndex] 
+      : prev.filter(idx => idx !== rowIndex);
+  });
+  setRowData(isChecked && selectedRows.length === 0 ? data[rowIndex] : null);
+}, [data, selectedRows.length]);
+  console.log("selected row:",selectedRows)
 
   const handleRecheck = useCallback(() => {
     if (selectedRows.length !== 1) {

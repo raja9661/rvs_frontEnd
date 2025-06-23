@@ -46,6 +46,11 @@ const SEARCH_CONFIG = {
     placeholder: 'Search client types...',
     searchInRecords: false
   },
+  productType: {
+    fields: ['name', 'productType'],
+    placeholder: 'Search product types...',
+    searchInRecords: false
+  },
   clientCode: {
     fields: ['name', 'clientCode'],
     placeholder: 'Search client codes...',
@@ -90,7 +95,8 @@ const LiveDashboard = () => {
       month: null,
       clientType: null,
       clientCode: null,
-      product: null
+      product: null,
+      productType: null
     }
   });
 
@@ -194,7 +200,7 @@ const filteredRecords = useMemo(() => {
 
 
 // Updated fetchCaseDetails function
-const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, product = null) => {
+const fetchCaseDetails = async (type, year = null, month = null, clientType = null,productType = null, clientCode = null, product = null) => {
   setSearchTerm('');
   
   // Determine hierarchy level
@@ -202,12 +208,14 @@ const fetchCaseDetails = async (type, year = null, month = null, clientType = nu
   if (type === 'today') {
     level = product ? 'productDetails' : 
            clientCode ? 'product' : 
-           clientType ? 'clientCode' : 
+           productType ? 'clientCode' : 
+           clientType ? 'productType' : 
            'clientType';
   } else {
     level = product ? 'productDetails' : 
            clientCode ? 'product' : 
-           clientType ? 'clientCode' : 
+           productType ? 'clientCode' : 
+           clientType ? 'productType' : 
            month ? 'clientType' :
            year ? 'month' :
            'year';
@@ -218,7 +226,7 @@ const fetchCaseDetails = async (type, year = null, month = null, clientType = nu
     open: true,
     loading: true,
     title: type === 'today' ? "Today's Cases" : `${type} Cases`,
-    hierarchy: { level, type, year, month, clientType, clientCode, product }
+    hierarchy: { level, type, year, month, clientType, productType, clientCode, product }
   }));
 
   try {
@@ -231,6 +239,7 @@ const fetchCaseDetails = async (type, year = null, month = null, clientType = nu
     }
     
     if (clientType) params.append('clientType', clientType);
+    if (productType) params.append('productType', productType);
     if (clientCode) params.append('clientCode', clientCode);
     if (product) params.append('product', product);
 
@@ -425,33 +434,59 @@ useEffect(() => {
 
   // Drill down handler
   const handleDrillDown = (item) => {
-    const { level, type, year, month, clientType, clientCode } = modalData.hierarchy;
+  const { level, type, year, month, clientType, productType, clientCode } = modalData.hierarchy;
+  
+  switch(level) {
+    case 'year':
+      fetchCaseDetails(type, item.name);
+      break;
+    case 'month':
+      fetchCaseDetails(type, year, item.name);
+      break;
+    case 'clientType':
+      fetchCaseDetails(type, year, month, item.name);
+      break;
+    case 'productType':
+      fetchCaseDetails(type, year, month, clientType, item.name);
+      break;
+    case 'clientCode':
+      fetchCaseDetails(type, year, month, clientType, productType, item.name);
+      break;
+    case 'product':
+      fetchCaseDetails(type, year, month, clientType, productType, clientCode, item.name);
+      break;
+    default:
+      break;
+  }
+};
+  // const handleDrillDown = (item) => {
+  //   const { level, type, year, month, clientType, clientCode } = modalData.hierarchy;
     
-    switch(level) {
-      case 'year':
-        fetchCaseDetails(type, item.name);
-        break;
-      case 'month':
-        fetchCaseDetails(type, year, item.name);
-        break;
-      case 'clientType':
-        fetchCaseDetails(type, year, month, item.name);
-        break;
-      case 'clientCode':
-        fetchCaseDetails(type, year, month, clientType, item.name);
-        break;
-      case 'product':
-        fetchCaseDetails(type, year, month, clientType, clientCode, item.name);
-        break;
-      default:
-        break;
-    }
-  };
+  //   switch(level) {
+  //     case 'year':
+  //       fetchCaseDetails(type, item.name);
+  //       break;
+  //     case 'month':
+  //       fetchCaseDetails(type, year, item.name);
+  //       break;
+  //     case 'clientType':
+  //       fetchCaseDetails(type, year, month, item.name);
+  //       break;
+  //     case 'clientCode':
+  //       fetchCaseDetails(type, year, month, clientType, item.name);
+  //       break;
+  //     case 'product':
+  //       fetchCaseDetails(type, year, month, clientType, clientCode, item.name);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
 const downloadRecords = async (name) => {
   setExportLoading(true);
   try {
-    const { level, type, year, month, clientType, clientCode, product } = modalData.hierarchy;
+    const { level, type, year, month, clientType,productType, clientCode, product } = modalData.hierarchy;
     
     const params = new URLSearchParams();
     params.append('type', type);
@@ -467,6 +502,7 @@ const downloadRecords = async (name) => {
     }
     
     if (clientType) params.append('clientType', clientType);
+    if (productType) params.append('productType', productType);
     if (clientCode) params.append('clientCode', clientCode);
     if (product) params.append('product', product);
     
@@ -477,7 +513,10 @@ const downloadRecords = async (name) => {
         params.append('month', name);
       } else if (level === 'clientType') {
         params.append('clientType', name);
-      } else if (level === 'clientCode') {
+      } else if (level === 'productType') {
+        params.append('productType', name);
+      }
+      else if (level === 'clientCode') {
         params.append('clientCode', name);
       } else if (level === 'product') {
         params.append('product', name);
@@ -650,7 +689,7 @@ const fetchData = async () => {
     );
   }
 
-  const { level, type, year, month, clientType, clientCode, product } = modalData.hierarchy;
+  const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
   const displayData = level === 'productDetails' ? filteredRecords : modalData.data;
 
   // Function to get the appropriate title based on hierarchy level
@@ -664,8 +703,10 @@ const fetchData = async () => {
         return type === 'today' 
           ? `Today's Cases by Client Type` 
           : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
+      case 'productType':
+        return `${type} Cases for ${clientType} by Product Type`;
       case 'clientCode':
-        return `${type} Cases for ${clientType} by Client Code`;
+        return `${type} Cases for ${productType} by Client Code`;
       case 'product':
         return `${type} Cases for ${clientCode} by Product`;
       case 'productDetails':
@@ -674,11 +715,107 @@ const fetchData = async () => {
         return `${type} Cases`;
     }
   };
+  // const getModalTitle = () => {
+  //   switch(level) {
+  //     case 'year':
+  //       return `${type} Cases by Year`;
+  //     case 'month':
+  //       return `${type} Cases for ${year} by Month`;
+  //     case 'clientType':
+  //       return type === 'today' 
+  //         ? `Today's Cases by Client Type` 
+  //         : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
+  //     case 'clientCode':
+  //       return `${type} Cases for ${clientType} by Client Code`;
+  //     case 'product':
+  //       return `${type} Cases for ${clientCode} by Product`;
+  //     case 'productDetails':
+  //       return `${type} Case Details for ${product}`;
+  //     default:
+  //       return `${type} Cases`;
+  //   }
+  // };
 
   return (
     <div className="space-y-4">
       {/* Breadcrumb navigation */}
-      <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
+      
+<div className="flex items-center text-sm mb-4 flex-wrap gap-2">
+  <button 
+    onClick={() => fetchCaseDetails(type)}
+    className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+  >
+    {type} Cases
+  </button>
+  
+  {year && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {year}
+      </button>
+    </>
+  )}
+  
+  {month && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {formatMonth(month, year)}
+      </button>
+    </>
+  )}
+  
+  {clientType && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {clientType}
+      </button>
+    </>
+  )}
+  
+  {productType && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType, productType)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {productType}
+      </button>
+    </>
+  )}
+  
+  {clientCode && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType, productType, clientCode)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {clientCode}
+      </button>
+    </>
+  )}
+  
+  {product && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <span>{product}</span>
+    </>
+  )}
+</div>
+      {/* <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
         <button 
           onClick={() => fetchCaseDetails(type)}
           className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
@@ -740,7 +877,7 @@ const fetchData = async () => {
             <span>{product}</span>
           </>
         )}
-      </div>
+      </div> */}
 
       {/* Search bar */}
       {/* Search bar - replace your existing one */}
