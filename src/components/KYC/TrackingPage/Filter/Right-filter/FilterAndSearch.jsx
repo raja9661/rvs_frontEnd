@@ -1433,6 +1433,29 @@ const handleClientIdChange = (e) => {
       alert(error.response?.data?.message || "Failed to recheck record");
     }
   };
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if focus is not in an input/textarea
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      
+      // Ctrl+D - Delete selected rows
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        handleAddRecheckedRecord(true);
+      }
+      
+      // Ctrl+E - Export data
+      if (e.ctrlKey && e.key === 'h') {
+        e.preventDefault();
+        setNewRecord(true);
+      }
+      
+      
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   
   const modalBackdropStyle = {
     position: 'fixed',
@@ -1507,7 +1530,7 @@ const handleClientIdChange = (e) => {
               : "bg-white border-gray-300 text-gray-700"
           }`}
         >
-          <option value="">All Statuses</option>
+          <option value="">All Status</option>
           <option value="Pending">Pending</option>
           <option value="New Pending">New Pending</option>
           <option value="Sent">Sent</option>

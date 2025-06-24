@@ -423,15 +423,17 @@ const [formData, setFormData] = useState({
                                 <li>Telecom Bills from <span className='font-semibold'>Airtel</span>, <span className='font-semibold'>Jio</span>, <span className='font-semibold'>Vodafone</span>, and others</li>
                               </ul>
 
-                              <h3 className='font-semibold mt-8 mb-1'>Income & Financials</h3>
+                              <h3 className='font-semibold mt-8 mb-1'>ITO</h3>
                                   <ul className='list-disc ps-7'>
                                     <li>Income Tax Returns (ITR)</li>
-                                    <li>Form 26AS & Annual Information Statement (AIS)</li>
+                                    <li>Form 26AS</li>
+                                    <li>Annual Information Statement (AIS)</li>
+                                    <li>GSTR 1, GSRT 3B</li>
                                   </ul>
                                 
                                  <h3 className='font-semibold mt-4 mb-1'>KYC Documents</h3>
                                   <ul className='list-disc ps-7'>
-                                    <li>PAN Card, Aadhaar Card, Passport, Driving License</li>
+                                    <li>PAN Card, Aadhaar Card, Passport, Driving License, RC</li>
                                   </ul>
                             
                           </FadeInOnScroll>

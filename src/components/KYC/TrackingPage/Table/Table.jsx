@@ -81,7 +81,8 @@ const Table = ({
   const [selectedRecordToCopy, setSelectedRecordToCopy] = useState(null);
   const [isdeduceLoading, setIsLoading] = useState(false);
   const [caseId,setCaseId] = useState("");
-
+  const [selectionInProgress, setSelectionInProgress] = useState(false);
+  
   
   const checkboxStateRef = useRef({
     selectedRow: null,
@@ -318,6 +319,9 @@ const createCustomCheckboxRenderer = useCallback(() => {
     return td;
   };
 }, [selectRow, filteredData, data, currentPage, pageSize, selectedRows]);
+
+
+
 
 // const selectRow = useCallback((instance, rowIndex, selected) => {
 //   if (checkboxStateRef.current.isProcessing) return;
@@ -1559,6 +1563,94 @@ const sendUpdateToBackend = debounce(async (update) => {
     if (onMasterReset) onMasterReset();
   };
 
+  const handleSelectAllVisible = useCallback(() => {
+  const instance = hotInstanceRef.current;
+  if (!instance || filteredData.length === 0) return;
+
+  // Save current scroll position
+  const scrollContainer = instance.rootElement.querySelector('.wtHolder');
+  const { scrollTop, scrollLeft } = scrollContainer || { scrollTop: 0, scrollLeft: 0 };
+
+  setSelectionInProgress(true);
+
+  // Calculate visible rows
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+  const visibleRows = filteredData.slice(startIndex, endIndex);
+
+  // Map to original indices
+  const visibleRowIndices = visibleRows.map(row => 
+    data.findIndex(d => d.caseId === row.caseId)
+  ).filter(index => index !== -1);
+
+  // Determine current selection state
+  const allVisibleSelected = visibleRowIndices.length > 0 && 
+    visibleRowIndices.every(index => selectedRows.includes(index));
+
+  // Optimistic UI update
+  instance.batch(() => {
+    visibleRows.forEach((_, i) => {
+      instance.setDataAtCell(i, 0, !allVisibleSelected, 'silent');
+    });
+  });
+
+  // Update state
+  setSelectedRows(prev => {
+    const newSelection = allVisibleSelected
+      ? prev.filter(index => !visibleRowIndices.includes(index))
+      : [...new Set([...prev, ...visibleRowIndices])];
+    return newSelection;
+  });
+
+  // Restore scroll position and clean up
+  requestAnimationFrame(() => {
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollTop;
+      scrollContainer.scrollLeft = scrollLeft;
+    }
+    setSelectionInProgress(false);
+  });
+}, [currentPage, pageSize, filteredData, data, selectedRows]);
+
+
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    // Check if focus is not in an input/textarea
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    
+    // Ctrl+D - Delete selected rows
+    if (e.ctrlKey && e.key === 'd') {
+      e.preventDefault();
+      handleDeleteSelectedRows();
+    }
+    
+    // Ctrl+E - Export data
+    if (e.ctrlKey && e.key === 'e') {
+      e.preventDefault();
+      setIsExportModalOpen(true);
+    }
+    
+    // Ctrl+R - Reset
+    if (e.ctrlKey && e.key === 'r') {
+      e.preventDefault();
+      handleMasterReset();
+    }
+
+    if (e.ctrlKey && e.key === 'p') {
+      e.preventDefault();
+      handleDeduceClick();
+    }
+    
+    if (e.ctrlKey && e.key === 'f') {
+      e.preventDefault();
+      handleSelectAllVisible();
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [handleDeleteSelectedRows, handleMasterReset]);
+
   return (
     <div>
       <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"} p-2 rounded shadow-md`}>
@@ -1592,59 +1684,38 @@ const sendUpdateToBackend = debounce(async (update) => {
   
             <div className={`flex flex-col md:flex-row justify-between items-stretch md:items-center p-1.5 rounded gap-2 ${isDarkMode ? "bg-gray-700" : "bg-gray-50"}`}>
               <div className="flex items-center gap-2">
-                {/* <button
-  onClick={() => {
-    // Calculate if all filtered rows are currently selected
-    const allFilteredSelected = filteredData.every((item, index) => {
-      const originalIndex = data.findIndex(d => d.caseId === item.caseId);
-      return selectedRows.includes(originalIndex);
-    });
-
-    if (allFilteredSelected) {
-      // Deselect all
-      setSelectedRows([]);
-      if (hotInstanceRef.current) {
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = Math.min(startIndex + pageSize, filteredData.length);
-        const pageRowIndices = Array.from({ length: endIndex - startIndex }, (_, i) => i);
-        
-        pageRowIndices.forEach(rowIndex => {
-          hotInstanceRef.current.setDataAtCell(rowIndex, 0, false);
-        });
-      }
-    } else {
-      // Select all filtered rows
-      const originalIndices = filteredData.map(item => 
-        data.findIndex(d => d.caseId === item.caseId)
-      ).filter(i => i >= 0);
-      
-      setSelectedRows(originalIndices);
-      if (hotInstanceRef.current) {
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = Math.min(startIndex + pageSize, filteredData.length);
-        const pageRowIndices = Array.from({ length: endIndex - startIndex }, (_, i) => i);
-        
-        pageRowIndices.forEach(rowIndex => {
-          hotInstanceRef.current.setDataAtCell(rowIndex, 0, true);
-        });
-      }
-    }
-  }}
-  className={`px-3 py-1.5 text-sm rounded ${
-    isDarkMode
-      ? selectedRows.length === filteredData.length 
-        ? "bg-gray-600 text-white" 
-        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-      : selectedRows.length === filteredData.length
-        ? "bg-gray-300 text-gray-700"
-        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                <button
+  onClick={handleSelectAllVisible}
+  className={`px-3 py-1.5 text-sm rounded flex items-center justify-center min-w-[32px] transition-all ${
+    isDarkMode 
+      ? "bg-gray-800 text-gray-300 hover:bg-gray-700" 
+      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+  } ${
+    selectionInProgress ? "opacity-75 cursor-wait" : ""
   }`}
-  disabled={filteredData.length === 0}
+  disabled={filteredData.length === 0 || selectionInProgress}
+  aria-busy={selectionInProgress}
+  title={selectionInProgress ? "Processing selection..." : "Toggle select all visible rows"}
 >
-  {selectedRows.length === filteredData.length ? '✕' : '✓'}
-</button> */}
-
-<button
+  {selectionInProgress ? (
+    <span className="inline-block animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+  ) : (
+    (() => {
+      if (filteredData.length === 0) return '✓';
+      
+      const visibleIndices = filteredData
+        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+        .map(row => data.findIndex(d => d.caseId === row.caseId))
+        .filter(index => index !== -1);
+      
+      return visibleIndices.length > 0 && 
+        visibleIndices.every(index => selectedRows.includes(index))
+        ? '✕' 
+        : '✓';
+    })()
+  )}
+</button>
+{/* <button
                     onClick={() => {
                       const startIndex = (currentPage - 1) * pageSize;
                       const endIndex = Math.min(startIndex + pageSize, filteredData.length);
@@ -1707,7 +1778,7 @@ const sendUpdateToBackend = debounce(async (update) => {
                       );
                       return allVisibleSelected ? '✕' : '✓';
                     })()}
-                </button>
+                </button> */}
   
                 <input
                   type="text"
@@ -1776,10 +1847,9 @@ const sendUpdateToBackend = debounce(async (update) => {
                     )}
                   </>
                 )}
-  
-                {(role === "admin" || role === "employee") && (
-                  <>
-                  <button
+
+                {role === "admin" || role === "employee" || role === "client" && (
+                      <button
                         className={`px-3 py-1.5 text-sm transition-colors ${
                           isDarkMode
                             ? "bg-green-600 hover:bg-green-700 text-white"
@@ -1789,6 +1859,11 @@ const sendUpdateToBackend = debounce(async (update) => {
                       >
                         Download
                       </button>
+                    )}
+  
+                {(role === "admin" || role === "employee" ) && (
+                  <>
+                  
                   <button
                     onClick={handleDeduceClick}
                     className={`px-3 py-1.5 text-sm ${

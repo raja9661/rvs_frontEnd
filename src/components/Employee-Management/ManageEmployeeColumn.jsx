@@ -489,42 +489,43 @@ const ManageEmployeeColumn = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  const [columns, setColumns] = useState([]);
   
   // At the top of your Table component
   const DEFAULT_EMPLOYEE_EDITABLE = ["remarks", "details", "details1", "requirement"];
 
   // Define columns
-  const columns = [
-    "caseId",
-    "remarks",
-    "name",
-    "details",
-    "details1",
-    "priority",
-    "correctUPN",
-    "product",
-    "accountNumber",
-    "requirement",
-    "bankCode",
-    "clientCode",
-    "vendorName",
-    "dateIn",
-    "status",
-    "caseStatus",
-    "productType",
-    "listByEmployee",
-    "dateOut",
-    "sentBy",
-    "autoOrManual",
-    "caseDoneBy",
-    "clientTAT",
-    "customerCare",
-    "sentDate",
-    "clientType",
-    "dedupBy",
-    "vendorRate",
-    "clientRate",
-  ];
+  // const columns = [
+  //   "caseId",
+  //   "remarks",
+  //   "name",
+  //   "details",
+  //   "details1",
+  //   "priority",
+  //   "correctUPN",
+  //   "product",
+  //   "accountNumber",
+  //   "requirement",
+  //   "bankCode",
+  //   "clientCode",
+  //   "vendorName",
+  //   "dateIn",
+  //   "status",
+  //   "caseStatus",
+  //   "productType",
+  //   "listByEmployee",
+  //   "dateOut",
+  //   "sentBy",
+  //   "autoOrManual",
+  //   "caseDoneBy",
+  //   "clientTAT",
+  //   "customerCare",
+  //   "sentDate",
+  //   "clientType",
+  //   "dedupBy",
+  //   "vendorRate",
+  //   "clientRate",
+  // ];
 
   // Toast notification function
   const showToast = (message, type = "success") => {
@@ -556,6 +557,11 @@ const ManageEmployeeColumn = () => {
   };
 
   useEffect(() => {
+
+        axios
+      .get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/columns`)
+      .then(res => setColumns(res.data))
+      .catch(err => console.error('Failed to load columns:', err));
     // Fetch all employees for dropdown
     axios
       .get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/getEmpName`)

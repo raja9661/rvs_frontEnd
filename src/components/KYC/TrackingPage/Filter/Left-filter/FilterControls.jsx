@@ -491,6 +491,29 @@ const resetFields = () => {
     setAttachmentFileName(''); // Reset file name here
   }
 };
+useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check if focus is not in an input/textarea
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      
+      // Ctrl+D - Delete selected rows
+      if (e.ctrlKey && e.key === 'm') {
+        e.preventDefault();
+        handleUpdate(true);
+      }
+      
+      // Ctrl+E - Export data
+      if (e.ctrlKey && e.key === 'b') {
+        e.preventDefault();
+        resetFields();
+      }
+      
+      
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleButtonClass = (active) => 
     `px-4 py-2 rounded-t-lg transition-colors ${
