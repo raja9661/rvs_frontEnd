@@ -1785,8 +1785,7 @@ useEffect(() => {
                   </>
                 )}
 
-                {role === "admin" || role === "employee" || role === "client" && (
-                      <button
+                <button
                         className={`px-3 py-1.5 text-sm transition-colors ${
                           isDarkMode
                             ? "bg-green-600 hover:bg-green-700 text-white"
@@ -1796,8 +1795,6 @@ useEffect(() => {
                       >
                         Download
                       </button>
-                    )}
-  
                 {(role === "admin" || role === "employee" ) && (
                   <>
                   
