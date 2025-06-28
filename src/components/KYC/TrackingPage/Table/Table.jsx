@@ -73,6 +73,7 @@ const Table = ({
   const [isDeleting, setIsDeleting] = useState(false);
   // const [selectedRecord, setSelectedRecord] = useState(null);
   const DEFAULT_EMPLOYEE_EDITABLE = ["remarks", "details", "details1", "requirement"];
+  const DEFAULT_CLIENT_EDITABLE = ["priority"];
   const [showAttachment, setShowAttachment] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
@@ -612,13 +613,23 @@ const createCustomCheckboxRenderer = useCallback(() => {
       columns: headers.map((header, index) => {
         // const isEditable = role === "admin" ? true : role === "employee" ? editableColumns.includes(header) : false;
         let isEditable = false;
-  
+
         if (role === "admin") {
-          isEditable = true; 
-        } else if (role === "employee") {
-          isEditable = DEFAULT_EMPLOYEE_EDITABLE.includes(header) || 
-                      (editableColumns && editableColumns.includes(header));
-        }   
+  isEditable = true;
+} else if (role === "employee") {
+  isEditable = DEFAULT_EMPLOYEE_EDITABLE.includes(header) || 
+              (editableColumns && editableColumns.includes(header));
+} else if (role === "client") {
+  isEditable = DEFAULT_CLIENT_EDITABLE.includes(header) || 
+              (editableColumns && editableColumns.includes(header));
+}
+  
+        // if (role === "admin") {
+        //   isEditable = true; 
+        // } else if (role === "employee") {
+        //   isEditable = DEFAULT_EMPLOYEE_EDITABLE.includes(header) || 
+        //               (editableColumns && editableColumns.includes(header));
+        // }   
         if (index === 0) {
           return {
             type: "checkbox",
@@ -923,8 +934,14 @@ afterSelection: function(row, column, row2, column2, preventScrolling) {
   if (selectedCell) {
     selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-    const isEditable = role === "admin" ? true : 
-      role === "employee" ? editableColumns.includes(headerName) : false;
+
+  const isEditable = 
+  role === "admin" ? true : 
+  ["employee", "client"].includes(role) ? editableColumns.includes(headerName) : 
+  false;
+
+    // const isEditable = role === "admin" ? true : 
+    //   role === "employee" ? editableColumns.includes(headerName) :role === "client" ? editableColumns.includes(headerName) : false;
 
     setSelectedCellInfo({
       row,

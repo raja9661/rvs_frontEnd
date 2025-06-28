@@ -409,12 +409,13 @@ const Layout = ({ children }) => {
           { title: "Vendor-Management", path: "/vandor-management", icon: Store },
           { title: "Access-Management", path: "/column-management", icon: Lock },
           { title: "User-Management", path: "/user-management", icon: UserCheck },
+          { title: "Support-Service", path: "/support", icon: Lock },
           // { title: "New-Dashboard", path: "/live-dashboard", icon: LayoutDashboard }
           
         ];
       case "client":
         return [
-
+          { title: "Dashboard", path: "/live-dashboard", icon: LayoutDashboard },
           { title: "Dashboard", path: "/client-dashboard", icon: LayoutDashboard },
           { title: "KYC", path: "/kyc", icon: CheckSquare },
           { title: "Tracker", path: "/tracker", icon: Activity },
@@ -426,8 +427,8 @@ const Layout = ({ children }) => {
         ];
       case "employee":
         return [
-          { title: "New-Dashboard", path: "/live-dashboard", icon: LayoutDashboard },
-          { title: "Dashboard", path: "/employee-dashboard", icon: LayoutDashboard },
+          { title: "Dashboard", path: "/live-dashboard", icon: LayoutDashboard },
+          // { title: "Dashboard", path: "/employee-dashboard", icon: LayoutDashboard },
           { title: "KYC Management", path: "/kyc", icon: CheckSquare },
           { title: "Tracker", path: "/tracker", icon: Users },
         ];

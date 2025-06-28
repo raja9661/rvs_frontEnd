@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Layout from "./../Layout/Layout";
+import Select from 'react-select';
 import { Search, Save, Plus, Edit, Trash2, X, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 
 const VendorManagement = () => {
@@ -55,6 +56,7 @@ const VendorManagement = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_Backend_Base_URL}/mapping/getProducts`
         );
+        console.log(response)
         setProducts(response.data);
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -311,8 +313,8 @@ const VendorManagement = () => {
               >
                 <option value="">Select a Product</option>
                 {products.map((product) => (
-                  <option key={product._id} value={product.updatedProduct}>
-                    {product.updatedProduct}
+                  <option key={product}  value={product}>
+                    {product}
                   </option>
                 ))}
               </select>
