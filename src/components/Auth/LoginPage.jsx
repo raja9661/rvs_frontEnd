@@ -223,8 +223,7 @@ export default function LoginPage() {
           navigate("/live-dashboard");
           break;
         case "client":
-        case "subclient":
-          navigate("/client-dashboard");
+          navigate("/live-dashboard");
           break;
         case "employee":
         case "subemployee":
@@ -345,7 +344,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <div className='fixed right-0 bottom-0 text-gray-300 text-sm bg-gray-900 p-1.5 px-2'>Design & developed by : <a href='https://www.ufsnetworks.com/' className='text-amber-300 hover:text-blue-500 hover:underline'>Unified Consultancy Services</a></div>
+      {/* <div className='fixed right-0 bottom-0 text-gray-300 text-sm bg-gray-900 p-1.5 px-2'>Design & developed by : <a href='https://www.ufsnetworks.com/' className='text-amber-300 hover:text-blue-500 hover:underline'>Unified Consultancy Services</a></div> */}
     </div>
   );
 }

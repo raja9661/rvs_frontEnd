@@ -301,6 +301,7 @@ function FileUpload({ isDarkMode }) {
     recordCount: 0
   });
   const [results, setResults] = useState(null);
+  const [ReferBy,setReferBy] = useState("")
   
   // New states for client code dropdown
   const [clientCodes, setClientCodes] = useState([]);
@@ -351,6 +352,10 @@ function FileUpload({ isDarkMode }) {
     setShowClientCodes(true);
   };
 
+   const handleInputChange = (e) => {
+    setReferBy(e.target.value);
+  };
+
   const normalizeInput = (input) => {
     return input.trim().toUpperCase().replace(/\s+/g, "");
   };
@@ -377,6 +382,7 @@ function FileUpload({ isDarkMode }) {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("userId", user.userId);
+      formData.append("ReferBy", ReferBy);
       if (userRole === "employee" || userRole === "admin") {
         formData.append("clientId", clientId);
       }
@@ -411,7 +417,8 @@ function FileUpload({ isDarkMode }) {
         { 
           userId: user.userId, 
           clientId,
-          ipAddress: extractResponse.data.ipAddress
+          ipAddress: extractResponse.data.ipAddress,
+          ReferBy
         }
       );
 
@@ -423,7 +430,7 @@ function FileUpload({ isDarkMode }) {
         <div>
           <div>Processing complete!</div>
           <div className="text-sm mt-1">
-            {processResponse.data.results.inserted} inserted, {processResponse.data.results.duplicates} duplicates, 
+            {processResponse.data.results.total} total,{processResponse.data.results.inserted} inserted, {processResponse.data.results.duplicates} duplicates, 
             {processResponse.data.results.failed} failed
           </div>
         </div>
@@ -550,6 +557,15 @@ function FileUpload({ isDarkMode }) {
           )}
         </div>
       )}
+      <div className="relative" >
+          <input
+            type="text"
+            value={ReferBy}
+            onChange={handleInputChange}
+            placeholder="Refer By"
+            className={inputStyles}
+          />
+        </div>
 
       <div className="space-y-4">
         <input
@@ -598,7 +614,7 @@ function FileUpload({ isDarkMode }) {
           }`}>
             <h4 className="font-medium mb-2">Processing Results:</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>Total Records: <span className="font-medium">{progress.recordCount}</span></div>
+              <div>Total Records: <span className="font-medium">{results.total}</span></div>
               <div className="text-green-600">Inserted: <span className="font-medium">{results.inserted}</span></div>
               <div className="text-yellow-600">Duplicates: <span className="font-medium">{results.duplicates}</span></div>
               <div className="text-red-600">Failed: <span className="font-medium">{results.failed}</span></div>

@@ -248,7 +248,7 @@ const VendorManagement = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="w-auto mx-auto space-y-4">
         {/* Add New Vendor Section */}
         <div className={`${
           isDarkMode 
@@ -298,7 +298,117 @@ const VendorManagement = () => {
             </div>
 
             {/* Product Dropdown */}
-            <div>
+            {/*Product Dropdown*/}
+<div>
+  <label className={`block font-medium mb-2 ${
+    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+  }`}>Select Products:</label>
+  <Select
+    id="product-select"
+    name="product"
+    value={
+      newVendor.products.map(product => ({ 
+        value: product, 
+        label: product 
+      }))
+    }
+    onChange={(selectedOptions) => {
+      // Handle both single and multi-select cases
+      const selectedValues = selectedOptions 
+        ? (Array.isArray(selectedOptions) 
+            ? selectedOptions.map(option => option.value)
+            : [selectedOptions.value]
+          )
+        : [];
+      setNewVendor({ ...newVendor, products: selectedValues });
+    }}
+    options={[ 
+      ...(products || []).map(product => ({ 
+        value: typeof product === 'string' ? product : product.productName || product.name,
+        label: typeof product === 'string' ? product : product.productName || product.name
+      }))
+    ]}
+    styles={{
+      control: (provided, state) => ({
+        ...provided,
+        minHeight: '48px',
+        borderColor: state.isFocused 
+          ? '#3b82f6' 
+          : (isDarkMode ? '#4b5563' : '#d1d5db'),
+        backgroundColor: isDarkMode ? '#374151' : 'white',
+        color: isDarkMode ? 'white' : '#111827',
+        boxShadow: state.isFocused 
+          ? '0 0 0 2px rgba(59, 130, 246, 0.5)' 
+          : 'none',
+        borderRadius: '0.5rem',
+        '&:hover': {
+          borderColor: state.isFocused 
+            ? '#3b82f6' 
+            : (isDarkMode ? '#6b7280' : '#9ca3af'),
+        }
+      }),
+      valueContainer: (provided) => ({
+        ...provided,
+        padding: '8px 12px',
+      }),
+      input: (provided) => ({
+        ...provided,
+        color: isDarkMode ? 'white' : '#111827',
+      }),
+      placeholder: (provided) => ({
+        ...provided,
+        color: isDarkMode ? '#9ca3af' : '#6b7280',
+      }),
+      menu: (provided) => ({
+        ...provided,
+        zIndex: 50,
+        backgroundColor: isDarkMode ? '#374151' : 'white',
+        border: `1px solid ${isDarkMode ? '#4b5563' : '#d1d5db'}`,
+        borderRadius: '0.5rem',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      }),
+      menuPortal: (provided) => ({
+        ...provided,
+        zIndex: 50,
+      }),
+      option: (provided, state) => ({
+        ...provided,
+        backgroundColor: state.isFocused 
+          ? (isDarkMode ? '#4b5563' : '#f3f4f6') 
+          : (isDarkMode ? '#374151' : 'white'),
+        color: isDarkMode ? 'white' : '#111827',
+        '&:hover': {
+          backgroundColor: isDarkMode ? '#4b5563' : '#f3f4f6',
+        }
+      }),
+      multiValue: (provided) => ({
+        ...provided,
+        backgroundColor: isDarkMode ? '#4b5563' : '#e5e7eb',
+        color: isDarkMode ? 'white' : '#111827',
+      }),
+      multiValueLabel: (provided) => ({
+        ...provided,
+        color: isDarkMode ? 'white' : '#111827',
+      }),
+      multiValueRemove: (provided) => ({
+        ...provided,
+        color: isDarkMode ? '#9ca3af' : '#6b7280',
+        '&:hover': {
+          backgroundColor: isDarkMode ? '#6b7280' : '#d1d5db',
+          color: isDarkMode ? 'white' : '#111827',
+        }
+      }),
+    }}
+    placeholder="Select Products"
+    isClearable
+    isMulti
+    menuPortalTarget={document.body}
+    className="text-sm"
+    isLoading={loading}
+    noOptionsMessage={() => products?.length === 0 ? "No products available" : "No matching products"}
+  />
+</div>
+            {/* <div>
               <label className={`block font-medium mb-2 ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>Select Products:</label>
@@ -318,7 +428,7 @@ const VendorManagement = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
           </div>
 
           {/* Selected Products List */}

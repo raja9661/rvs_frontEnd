@@ -517,7 +517,7 @@ const [formData, setFormData] = useState({
                     </div>
                 <div className='bg-gray-400 w-full p-4 px-6 text-white grid md:grid-cols-2' style={{backgroundColor:"rgba(0, 0, 0, 0.8)"}}>
                     <div>Copyright &copy; 2025 RVS Doc</div>
-                    <div className='md:text-end text-gray-400'>Design & developed by : <a href='https://www.ufsnetworks.com/' className='Link'>Unified Consultancy Services</a></div>
+                    {/* <div className='md:text-end text-gray-400'>Design & developed by : <a href='https://www.ufsnetworks.com/' className='Link'>Unified Consultancy Services</a></div> */}
                 </div>
                 
             </div>

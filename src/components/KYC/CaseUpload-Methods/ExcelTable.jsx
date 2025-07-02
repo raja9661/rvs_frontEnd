@@ -4395,6 +4395,7 @@ function ExcelTable() {
   
   // Client code dropdown states
   const [clientCodes, setClientCodes] = useState([]);
+  const [ReferBy,setReferBy] = useState("")
   const [showClientCodes, setShowClientCodes] = useState(false);
 
   // 1. Add new state variable after existing useState declarations
@@ -4764,6 +4765,10 @@ const resetTable = () => {
     setShowClientCodes(true);
   };
 
+  const handleInputChange = (e) => {
+    setReferBy(e.target.value);
+  };
+
   const handleClientCodeSelect = (code) => {
     setClientId(code);
     setShowClientCodes(false);
@@ -4839,6 +4844,7 @@ const resetTable = () => {
             product: product.toString().trim(),
             accountNumber: accountNumber.toString().trim(),
             requirement: requirement.toString().trim(),
+            ReferBy:ReferBy,
             ...(userRole === "employee" || userRole === "admin" ? { clientId } : {})
           });
         }
@@ -5034,6 +5040,29 @@ if (response.status === 200) {
               </div>
             </div>
           )}
+          <div className={`mb-6 p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+              <div className="space-y-2">
+                <label className={`block text-sm font-medium ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Refer By
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={ReferBy}
+                    onChange={handleInputChange}
+                    placeholder="ReferBy"
+                    className={`w-full px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border border-gray-600 text-white focus:ring-blue-500' 
+                        : 'bg-white border border-gray-200 text-gray-900 focus:ring-blue-400'
+                    }`}
+                  />
+                  
+                </div>
+              </div>
+            </div>
 
 
                     {/* Simplified Validation Summary (without individual swap buttons) */}

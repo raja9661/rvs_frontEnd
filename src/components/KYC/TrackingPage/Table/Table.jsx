@@ -1636,10 +1636,12 @@ useEffect(() => {
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
     
     // Ctrl+D - Delete selected rows
+    if(role === "admin"){
     if (e.ctrlKey && e.key === 'd') {
       e.preventDefault();
       handleDeleteSelectedRows();
     }
+  }
     
     // Ctrl+E - Export data
     if (e.ctrlKey && e.key === 'e') {
@@ -1652,11 +1654,13 @@ useEffect(() => {
       e.preventDefault();
       handleMasterReset();
     }
-
+    
+    if(role === "admin"){
     if (e.ctrlKey && e.key === 'p') {
       e.preventDefault();
       handleDeduceClick();
     }
+  }
     
     if (e.ctrlKey && e.key === 'f') {
       e.preventDefault();
@@ -1837,6 +1841,30 @@ useEffect(() => {
                   </button>
                   </>
                 )}
+                {role === "client" && (
+                      <button
+                  onClick={handleMasterReset}
+                  disabled={isLoading}
+                  className={`px-3 py-1.5 text-sm flex items-center gap-1 ${
+                    isDarkMode
+                      ? "bg-purple-600 hover:bg-purple-700 text-white"
+                      : "bg-purple-600 hover:bg-purple-700 text-white"
+                  }`}
+                  title="Reset all filters and selections"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Refreshing...
+                    </>
+                  ) : (
+                    "Refresh"
+                  )}
+                </button>
+                    )}
   
                 <button
                   onClick={handleMasterReset}

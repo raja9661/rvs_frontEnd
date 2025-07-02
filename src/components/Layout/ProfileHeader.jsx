@@ -255,10 +255,10 @@ const ProfileHeader = () => {
                   <User className={`h-6 w-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                 </div>
                 <div>
-                  <p className="font-medium">{user.name || 'User'}</p>
-                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className="font-medium">{user.userId || 'User'}</p>
+                  {/* <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     {user.email || 'user@example.com'}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -274,8 +274,8 @@ const ProfileHeader = () => {
                     <span className="text-sm font-medium">{user.role || 'User'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm opacity-70">User ID:</span>
-                    <span className="text-sm font-medium">{user.userId || 'N/A'}</span>
+                    <span className="text-sm opacity-70">User Name:</span>
+                    <span className="text-sm font-medium">{user.name || 'N/A'}</span>
                   </div>
                   {/* <div className="flex justify-between">
                     <span className="text-sm opacity-70">Phone:</span>

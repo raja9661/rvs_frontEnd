@@ -180,7 +180,7 @@ const ManageAccessColumns = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="w-auto mx-auto space-y-4">
         {/* Access Type Toggle */}
         <div className={`flex items-center justify-center ${
           isDarkMode ? 'bg-gray-800' : 'bg-white'

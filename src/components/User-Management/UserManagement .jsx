@@ -5,6 +5,7 @@ import Layout from "../Layout/Layout";
 import { toast } from "react-toastify";
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
+
 const UserManagement = () => {
   // State management
   const [users, setUsers] = useState([]);
@@ -273,7 +274,7 @@ const UserManagement = () => {
                         Name
                       </th>
                       <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"} uppercase tracking-wider`}>
-                        Email
+                        User ID
                       </th>
                       <th className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"} uppercase tracking-wider`}>
                         Role
@@ -297,7 +298,7 @@ const UserManagement = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-500"}`}>
-                              {user.email}
+                              {user.userId}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
