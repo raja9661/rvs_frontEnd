@@ -71,6 +71,8 @@ const Table = ({
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportColumns, setSelectedExportColumns] = useState(headers);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   // const [selectedRecord, setSelectedRecord] = useState(null);
   const DEFAULT_EMPLOYEE_EDITABLE = ["remarks", "details", "details1", "requirement"];
   const DEFAULT_CLIENT_EDITABLE = ["priority"];
@@ -1274,36 +1276,77 @@ const sendUpdateToBackend = debounce(async (update) => {
       saveAs(blob, `export_${dateString}.xlsx`);
       
     };
+
     const exportToText = (data, headers, dateString) => {
-      const formatField = (key, value) => value;
+  const formatField = (key, value) => value;
+
+  let textContent = data.map((row, index) => {
+    // Check if this is a banking product AND user explicitly selected only accountNumber & requirement
+    const isBanking = row.productType?.toLowerCase() === 'banking';
+    const userSelectedBankingFields = 
+      headers.some(h => h.key === 'accountNumber') && 
+      headers.some(h => h.key === 'requirement');
+    const userSelectedOtherFields = headers.some(h => 
+      h.key !== 'accountNumber' && h.key !== 'requirement');
+
+    // Only use banking format if:
+    // 1. It's a banking product AND
+    // 2. User selected only accountNumber and requirement (no other fields)
+    const useBankingFormat = isBanking && userSelectedBankingFields && !userSelectedOtherFields;
+
+    if (useBankingFormat) {
+      // Special banking format
+      const acc = formatField('accountNumber', row['accountNumber'] || '');
+      const req = formatField('requirement', row['requirement'] || '');
+      return `${acc}\n${req}`;
+    } else {
+      // Normal format - show all selected columns
+      const pairs = headers
+        .filter(h => h.key !== "productType") // Still exclude productType
+        .map(header => {
+          const key = header.label === "Updated Product Name" ? "Product" : header.label;
+          const value = formatField(header.key, row[header.key] || '');
+          return `${key}=${value}`;
+        })
+        .join(',\n'); // Each value on new line after comma
+      
+      return `${pairs}.`;
+    }
+  }).join('\n' + '-'.repeat(60) + '\n'); // Separator between records
+
+  const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+  saveAs(blob, `export_${dateString}.txt`);
+};
+    // const exportToText = (data, headers, dateString) => {
+    //   const formatField = (key, value) => value;
     
-      let textContent = data.map((row, index) => {
-        let recordText = '';
+    //   let textContent = data.map((row, index) => {
+    //     let recordText = '';
     
-        if (row.productType?.toLowerCase() === 'banking') {
-          const acc = formatField('accountNumber', row['accountNumber'] || '');
-          const req = formatField('requirement', row['requirement'] || '');
-          recordText = `${acc}\n${req}`;
-        } else {
-          const filteredHeaders = headers.filter(h => h.key !== "productType");
+    //     if (row.productType?.toLowerCase() === 'banking') {
+    //       const acc = formatField('accountNumber', row['accountNumber'] || '');
+    //       const req = formatField('requirement', row['requirement'] || '');
+    //       recordText = `${acc}\n${req}`;
+    //     } else {
+    //       const filteredHeaders = headers.filter(h => h.key !== "productType");
     
-          const pairs = filteredHeaders.map(header => {
-            const key = header.label === "Updated Product Name" ? "Product" : header.label;
-            const value = formatField(header.key, row[header.key] || '');
-            return `${key}=${value}`;
-          }).join(', ');
+    //       const pairs = filteredHeaders.map(header => {
+    //         const key = header.label === "Updated Product Name" ? "Product" : header.label;
+    //         const value = formatField(header.key, row[header.key] || '');
+    //         return `${key}=${value}`;
+    //       }).join(', ');
     
-          recordText = `${pairs}.`;
-        }
+    //       recordText = `${pairs}.`;
+    //     }
     
-        // Add separator after every record except the last one
-        const separator = index < data.length - 1 ? '\n' + '-'.repeat(60) + '\n' : '';
-        return recordText + separator;
-      }).join('\n');
+    //     // Add separator after every record except the last one
+    //     const separator = index < data.length - 1 ? '\n' + '-'.repeat(60) + '\n' : '';
+    //     return recordText + separator;
+    //   }).join('\n');
     
-      const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
-      saveAs(blob, `export_${dateString}.txt`);
-    };
+    //   const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+    //   saveAs(blob, `export_${dateString}.txt`);
+    // };
     
   
     const exportToCSV = (data, headers, dateString) => {
@@ -1337,6 +1380,7 @@ const sendUpdateToBackend = debounce(async (update) => {
       }
     
       try {
+        setIsPermanentlyDeleting(true); 
         // Clear selections before deletion
         setSelectedRows([]);
         checkboxStateRef.current = {
@@ -1377,11 +1421,14 @@ const sendUpdateToBackend = debounce(async (update) => {
         console.error("Delete error:", error);
         toast.error(`Delete failed: ${error.message}`);
       } finally {
+        
         // Ensure selections are cleared even if error occurs
         setSelectedRows([]);
         if (hotInstanceRef.current) {
           hotInstanceRef.current.deselectCell();
         }
+        setIsPermanentlyDeleting(false);
+
       }
     };
     
@@ -1402,6 +1449,7 @@ const sendUpdateToBackend = debounce(async (update) => {
       }
     
       try {
+         setIsRestoring(true); 
         const response = await axios.post(
           `${import.meta.env.VITE_Backend_Base_URL}/kyc/restore-records`,
           { caseIds }
@@ -1440,7 +1488,9 @@ const sendUpdateToBackend = debounce(async (update) => {
       } catch (error) {
         console.error("Restore error:", error);
         toast.error(`Restore failed: ${error.message}`);
-      }
+      }finally {
+    setIsRestoring(false); // Reset restoring state
+  }
     }; 
    
     useEffect(() => {
@@ -1754,29 +1804,69 @@ useEffect(() => {
               <div className="flex items-center gap-4">
                 {filterType === "deleted" ? (
                   <>
-                    {role === "admin" && (
-                      <button
-                        onClick={handleRestoreRecords}
-                        className={`px-3 py-1.5 text-sm ${
-                          isDarkMode ? "bg-green-600 text-white" : "bg-green-500 text-white"
-                        }`}
-                        disabled={selectedRows.length === 0}
-                      >
-                        Restore
-                      </button>
-                    )}
-                    {role === "admin" && (
-                      <button
-                        onClick={handleDeletePermanently}
-                        className={`px-3 py-1.5 text-sm ${
-                          isDarkMode ? "bg-red-700 text-white" : "bg-red-600 text-white"
-                        }`}
-                        disabled={selectedRows.length === 0}
-                      >
-                        Delete Permanently
-                      </button>
-                    )}
-                  </>
+    {role === "admin" && (
+      <button
+        onClick={handleRestoreRecords}
+        className={`px-3 py-1.5 text-sm ${
+          isDarkMode ? "bg-green-600 text-white" : "bg-green-500 text-white"
+        } flex items-center justify-center min-w-[80px]`}
+        disabled={selectedRows.length === 0 || isRestoring}
+      >
+        {isRestoring ? (
+          <>
+            <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Restoring...
+          </>
+        ) : 'Restore'}
+      </button>
+    )}
+    {role === "admin" && (
+      <button
+        onClick={handleDeletePermanently}
+        className={`px-3 py-1.5 text-sm ${
+          isDarkMode ? "bg-red-700 text-white" : "bg-red-600 text-white"
+        } flex items-center justify-center min-w-[150px]`}
+        disabled={selectedRows.length === 0 || isPermanentlyDeleting}
+      >
+        {isPermanentlyDeleting ? (
+          <>
+            <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Deleting...
+          </>
+        ) : 'Delete Permanently'}
+      </button>
+    )}
+  </>
+                  // <>
+                  //   {role === "admin" && (
+                  //     <button
+                  //       onClick={handleRestoreRecords}
+                  //       className={`px-3 py-1.5 text-sm ${
+                  //         isDarkMode ? "bg-green-600 text-white" : "bg-green-500 text-white"
+                  //       }`}
+                  //       disabled={selectedRows.length === 0}
+                  //     >
+                  //       Restore
+                  //     </button>
+                  //   )}
+                  //   {role === "admin" && (
+                  //     <button
+                  //       onClick={handleDeletePermanently}
+                  //       className={`px-3 py-1.5 text-sm ${
+                  //         isDarkMode ? "bg-red-700 text-white" : "bg-red-600 text-white"
+                  //       }`}
+                  //       disabled={selectedRows.length === 0}
+                  //     >
+                  //       Delete Permanently
+                  //     </button>
+                  //   )}
+                  // </>
                 ) : (
                   <>
 
@@ -1791,8 +1881,28 @@ useEffect(() => {
                       </button>
                       </>
                     )}
-  
+
                     {role === "admin" && (
+      <button
+        onClick={handleDeleteSelectedRows}
+        className={`px-3 py-1.5 text-sm ${
+          isDarkMode ? "bg-red-600 text-white" : "bg-red-500 text-white"
+        } flex items-center justify-center min-w-[80px]`}
+        disabled={selectedRows.length === 0 || isDeleting}
+      >
+        {isDeleting ? (
+          <>
+            <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Deleting...
+          </>
+        ) : 'Delete'}
+      </button>
+    )}
+  
+                    {/* {role === "admin" && (
                       <button
                         className={`px-3 py-1.5 text-sm ${
                           isDarkMode ? "bg-red-600 text-white" : "bg-red-500 text-white"
@@ -1802,7 +1912,7 @@ useEffect(() => {
                       >
                         Delete
                       </button>
-                    )}
+                    )} */}
                   </>
                 )}
 
