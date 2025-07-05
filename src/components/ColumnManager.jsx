@@ -1,6 +1,4 @@
-// import React, { useState, useEffect } from 'react';
-// import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-// import axios from 'axios';
+
 import Layout from './Layout/Layout'
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
