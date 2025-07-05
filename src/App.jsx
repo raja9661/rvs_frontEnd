@@ -18,6 +18,7 @@ import UserManagement from "./components/User-Management/UserManagement ";
 import About from "./components/About/About";
 import LiveDashboard from "./components/Dashboard/LiveDashboard";
 import HelpSupportPanel from "./components/Auth/HelpSupportPanel";
+import ColumnManager from "./components/ColumnManager";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/tracker" element={<TrackerTable />} />
           <Route path="/support" element={<HelpSupportPanel />} />
+          <Route path="/column-order" element={<ColumnManager />} />
           <Route path="/excel-upload" element={<ExcelTable />} />
           <Route path="/single" element={<SingleUpload />} />
           <Route path="/newuser" element={<CreateUser/>}/>

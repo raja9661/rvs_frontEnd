@@ -409,8 +409,10 @@ const Layout = ({ children }) => {
           { title: "Vendor-Management", path: "/vandor-management", icon: Store },
           { title: "Access-Management", path: "/column-management", icon: Lock },
           { title: "User-Management", path: "/user-management", icon: UserCheck },
-          { title: "Help & Support", path: "/support", icon: Lock },
-          // { title: "New-Dashboard", path: "/live-dashboard", icon: LayoutDashboard }
+          { title: "Column-Manager", path: "/column-order", icon: LayoutDashboard },
+          { title: "Help & Support", path: "/support", icon: Lock }
+
+          
           
         ];
       case "client":

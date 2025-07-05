@@ -686,7 +686,7 @@ const VendorManagement = () => {
                                       }`}
                                     >
                                       {product}
-                                      <button
+                                      {/* <button
                                         type="button"
                                         className={`ml-1 rounded-full p-1 ${
                                           isDarkMode 
@@ -696,7 +696,7 @@ const VendorManagement = () => {
                                         onClick={() => handleRemoveProductFromVendor(vendor._id, product)}
                                       >
                                         <X className="w-3 h-3" />
-                                      </button>
+                                      </button> */}
                                     </span>
                                   ))
                                 ) : (

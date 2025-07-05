@@ -875,10 +875,10 @@ const LiveDashboard = () => {
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white/95 backdrop-blur-sm'
         } rounded-lg p-4 shadow-xl`}>
           <div>
-            <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            {/* <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Live Dashboard ({role === 'admin' ? 'Admin View' : role === 'client' ? 'Client View' : 'Employee View'})
               {role === 'client' && clientCode && ` - ${user?.name}`}
-            </h1>
+            </h1> */}
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               {lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}
             </p>

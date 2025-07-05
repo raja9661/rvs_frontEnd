@@ -1308,7 +1308,7 @@ const sendUpdateToBackend = debounce(async (update) => {
           const value = formatField(header.key, row[header.key] || '');
           return `${key}=${value}`;
         })
-        .join(',\n'); // Each value on new line after comma
+        .join('    '); // Each value on new line after comma
       
       return `${pairs}.`;
     }
