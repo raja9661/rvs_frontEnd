@@ -874,15 +874,20 @@ const LiveDashboard = () => {
         <div className={`flex justify-between items-center ${
           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white/95 backdrop-blur-sm'
         } rounded-lg p-4 shadow-xl`}>
-          <div>
-            {/* <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Live Dashboard ({role === 'admin' ? 'Admin View' : role === 'client' ? 'Client View' : 'Employee View'})
-              {role === 'client' && clientCode && ` - ${user?.name}`}
-            </h1> */}
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}
-            </p>
-          </div>
+         <div>
+  <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 text-transparent bg-clip-text">
+    WELCOME TO RVS DOC
+    <span className={`text-sm ml-4 font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+      ({role === 'admin' ? 'Admin View' : role === 'client' ? 'Client View' : 'Employee View'}
+      {role === 'client' && clientCode ? ` - ${user?.name}` : ''})
+    </span>
+  </h1>
+
+  <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+    {lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}
+  </p>
+</div>
+
           <div className="flex space-x-2">
             <button 
               onClick={fetchData}

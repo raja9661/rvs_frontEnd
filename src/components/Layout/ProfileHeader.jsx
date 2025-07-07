@@ -148,7 +148,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, ChevronDown, LogOut, Settings } from 'lucide-react';
 import axios from 'axios';  // Import axios for logout API request
 
-const ProfileHeader = () => {
+ const ProfileHeader = () => {
   const [user, setUser] = useState({
     name: '',
     email: '',
@@ -213,39 +213,17 @@ const ProfileHeader = () => {
   };
 
   return (
-      <div className={`w-full px-4 py-3 rounded flex justify-between items-center shadow-md ${
-      isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
-    }`}>
-      {/* Left Side - Welcome Section (Enhanced) */}
-      <div className="flex items-center space-x-4">
-  {/* Document Icon with Strong Blue */}
-  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg">
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      className="h-10 w-10 text-white"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <path d="M14 2v6h6" fill="#93c5fd"/>
-    </svg>
-  </div>
-
-  {/* High-Contrast Text */}
-  <div>
-    <h1 className="text-2xl font-extrabold tracking-tight">
-      <span className="text-gray-900 dark:text-dark">WELCOME TO </span>
-      <span className="text-gray-900 dark:text-dark">RVS DOC</span>
-    </h1>
-    <p className={`text-sm font-semibold mt-1 ${
-      isDarkMode ? 'text-blue-300' : 'text-blue-600'
-    }`}>
-      {user.role ? `${user.role.toUpperCase()} DASHBOARD` : 'LOADING...'}
-    </p>
-  </div>
-</div>
+      <div className={`w-full px-4 py-2 p-4 rounded flex justify-between items-center shadow-md ${
+        isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+      }`}>
+      <div className="flex items-center">
+        <h1 className={`text-xl font-bold ${
+          isDarkMode ? 'text-blue-400' : 'text-blue-700'
+        }`}>
+          {/* KYC Tracker */}
+        </h1>
+      </div>
       
-      {/* Right Side with User Profile */}
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -260,6 +238,7 @@ const ProfileHeader = () => {
           }`}>
             <User className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
           </div>
+          {/* <div className="text-sm font-medium hidden md:block">{user.name || 'User'}</div> */}
           <div className="text-sm font-medium hidden md:block">{user.userId || 'User'}</div>
           <ChevronDown className="h-4 w-4" />
         </button>
@@ -277,6 +256,9 @@ const ProfileHeader = () => {
                 </div>
                 <div>
                   <p className="font-medium">{user.userId || 'User'}</p>
+                  {/* <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {user.email || 'user@example.com'}
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -295,13 +277,18 @@ const ProfileHeader = () => {
                     <span className="text-sm opacity-70">User Name:</span>
                     <span className="text-sm font-medium">{user.name || 'N/A'}</span>
                   </div>
+                  {/* <div className="flex justify-between">
+                    <span className="text-sm opacity-70">Phone:</span>
+                    <span className="text-sm font-medium">{user.phoneNumber || 'N/A'}</span>
+                  </div> */}
                 </div>
               </div>
             </div>
             
             <div className="p-2 pt-0">
+              {/* **Updated logout button** */}
               <button
-                onClick={handleLogout}
+                onClick={handleLogout} // Added the handleLogout function here
                 className={`flex items-center w-full space-x-2 p-2 rounded-md text-sm ${
                   isDarkMode 
                     ? 'hover:bg-gray-700 text-gray-300' 
