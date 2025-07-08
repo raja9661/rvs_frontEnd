@@ -87,6 +87,7 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   const [selectionInProgress, setSelectionInProgress] = useState(false);
   
   
+  
   const checkboxStateRef = useRef({
     selectedRow: null,
     isProcessing: false
@@ -1069,82 +1070,168 @@ const sendUpdateToBackend = debounce(async (update) => {
     setTimeout(() => setUpdateStatus(null), 5000);
   }
 }, 500);
-  
-  
-  const handleDeleteSelectedRows = useCallback(async () => {
-    if (selectedRows.length === 0) {
-      toast.warning("No rows selected for deletion.");
+
+const handleDeleteSelectedRows = useCallback(async () => {
+  if (selectedRows.length === 0) {
+    toast.warning("No rows selected for deletion.");
+    return;
+  }
+
+  try {
+    setIsDeleting(true);
+    
+    // Get the actual records from the full data array using the selected indices
+    const selectedItems = selectedRows.map(index => data[index]);
+    const caseIds = selectedItems.map(item => item?.caseId).filter(Boolean);
+
+    if (caseIds.length === 0) {
+      toast.error("No valid caseIds found for selected rows.");
       return;
     }
-  
-    try {
-      setIsDeleting(true);
-      const selectedItems = selectedRows.map(index => data[index]);
-      const caseIds = selectedItems.map(item => item?.caseId).filter(Boolean);
-  
-      if (caseIds.length === 0) {
-        toast.error("No valid caseIds found for selected rows.");
-        return;
-      }
-  
-      const confirmMessage = filterType === "deleted" 
-        ? "permanently delete these records?" 
-        : "delete these records?";
-      
-      if (!window.confirm(`Are you sure you want to ${confirmMessage}`)) {
-        return;
-      }
-  
-      // Clear selection before deletion
-      const instance = hotInstanceRef.current;
-      if (instance) {
-        selectedRows.forEach(rowIndex => {
-          instance.setDataAtCell(rowIndex, 0, false, 'silent');
-        });
-        instance.deselectCell();
-      }
-  
-      const endpoint = filterType === "deleted" 
-        ? `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-permanently`
-        : `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-data`;
-  
-      const response = await fetch(endpoint, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ caseIds }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const result = await response.json();
-      if (result.updatedData) {
-        setData(result.updatedData);
-        setFilteredData(result.updatedData);
-      } else {
-        const selectedIndices = new Set(selectedRows);
-        const newData = data.filter((_, index) => !selectedIndices.has(index));
-        
-        setData(newData);
-        setFilteredData(newData);
-      }
-  
-      setSelectedRows([]);
-      checkboxStateRef.current.selectedRow = null;
-      setCurrentPage(1);
-      
-      toast.success(`${caseIds.length} records ${filterType === "deleted" ? "permanently deleted" : "deleted"} successfully`)
-  
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error(`Delete failed: ${error.message}`);
-    } finally {
-      setIsDeleting(false);
+
+    const confirmMessage = filterType === "deleted" 
+      ? "permanently delete these records?" 
+      : "delete these records?";
+    
+    if (!window.confirm(`Are you sure you want to ${confirmMessage}`)) {
+      return;
     }
-  }, [data, selectedRows, filterType, setData, setFilteredData, setSelectedRows]);
+
+    // Clear selection in the table UI
+    const instance = hotInstanceRef.current;
+    if (instance) {
+      // Find the visible row indices that correspond to the selected rows
+      const startIndex = (currentPage - 1) * pageSize;
+      const visibleData = filteredData.slice(startIndex, startIndex + pageSize);
+      
+      visibleData.forEach((row, visibleRowIndex) => {
+        const originalIndex = data.findIndex(d => d.caseId === row.caseId);
+        if (selectedRows.includes(originalIndex)) {
+          instance.setDataAtCell(visibleRowIndex, 0, false, 'silent');
+        }
+      });
+      
+      instance.deselectCell();
+    }
+
+    // Rest of your delete logic remains the same...
+    const endpoint = filterType === "deleted" 
+      ? `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-permanently`
+      : `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-data`;
+
+    const response = await fetch(endpoint, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ caseIds }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (result.updatedData) {
+      setData(result.updatedData);
+      setFilteredData(result.updatedData);
+    } else {
+      const selectedIndices = new Set(selectedRows);
+      const newData = data.filter((_, index) => !selectedIndices.has(index));
+      
+      setData(newData);
+      setFilteredData(newData);
+    }
+
+    setSelectedRows([]);
+    checkboxStateRef.current.selectedRow = null;
+    setCurrentPage(1);
+    
+    toast.success(`${caseIds.length} records ${filterType === "deleted" ? "permanently deleted" : "deleted"} successfully`)
+
+  } catch (error) {
+    console.error("Delete error:", error);
+    toast.error(`Delete failed: ${error.message}`);
+  } finally {
+    setIsDeleting(false);
+  }
+}, [data, selectedRows, filterType, setData, setFilteredData, setSelectedRows, currentPage, pageSize, filteredData]);
+  
+  
+  // const handleDeleteSelectedRows = useCallback(async () => {
+  //   if (selectedRows.length === 0) {
+  //     toast.warning("No rows selected for deletion.");
+  //     return;
+  //   }
+  
+  //   try {
+  //     setIsDeleting(true);
+  //     const selectedItems = selectedRows.map(index => data[index]);
+  //     const caseIds = selectedItems.map(item => item?.caseId).filter(Boolean);
+  
+  //     if (caseIds.length === 0) {
+  //       toast.error("No valid caseIds found for selected rows.");
+  //       return;
+  //     }
+  
+  //     const confirmMessage = filterType === "deleted" 
+  //       ? "permanently delete these records?" 
+  //       : "delete these records?";
+      
+  //     if (!window.confirm(`Are you sure you want to ${confirmMessage}`)) {
+  //       return;
+  //     }
+  
+  //     // Clear selection before deletion
+  //     const instance = hotInstanceRef.current;
+  //     if (instance) {
+  //       selectedRows.forEach(rowIndex => {
+  //         instance.setDataAtCell(rowIndex, 0, false, 'silent');
+  //       });
+  //       instance.deselectCell();
+  //     }
+  
+  //     const endpoint = filterType === "deleted" 
+  //       ? `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-permanently`
+  //       : `${import.meta.env.VITE_Backend_Base_URL}/kyc/delete-data`;
+  
+  //     const response = await fetch(endpoint, {
+  //       method: "DELETE",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ caseIds }),
+  //     });
+  
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+  
+  //     const result = await response.json();
+  //     if (result.updatedData) {
+  //       setData(result.updatedData);
+  //       setFilteredData(result.updatedData);
+  //     } else {
+  //       const selectedIndices = new Set(selectedRows);
+  //       const newData = data.filter((_, index) => !selectedIndices.has(index));
+        
+  //       setData(newData);
+  //       setFilteredData(newData);
+  //     }
+  
+  //     setSelectedRows([]);
+  //     checkboxStateRef.current.selectedRow = null;
+  //     setCurrentPage(1);
+      
+  //     toast.success(`${caseIds.length} records ${filterType === "deleted" ? "permanently deleted" : "deleted"} successfully`)
+  
+  //   } catch (error) {
+  //     console.error("Delete error:", error);
+  //     toast.error(`Delete failed: ${error.message}`);
+  //   } finally {
+  //     setIsDeleting(false);
+  //   }
+  // }, [data, selectedRows, filterType, setData, setFilteredData, setSelectedRows]);
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
       setCurrentPage(newPage);
