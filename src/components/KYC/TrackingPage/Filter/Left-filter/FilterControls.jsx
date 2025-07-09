@@ -195,10 +195,10 @@ const FilterControls = ({
       const file = updateFields.attachment;
 
   
-  if (file.size > 2 * 1024 * 1024) {
-    alert('⚠️ Attachment size must be 2MB or less.');
-    return; // Stop further execution
-  }
+  // if (file.size > 2 * 1024 * 1024) {
+  //   alert('⚠️ Attachment size must be 2MB or less.');
+  //   return; // Stop further execution
+  // }
       const formData = new FormData();
       formData.append('file', file);
       caseIds.forEach(caseId => formData.append('caseIds', caseId));
