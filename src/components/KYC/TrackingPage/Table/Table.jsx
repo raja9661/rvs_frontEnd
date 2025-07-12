@@ -85,6 +85,8 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   const [isdeduceLoading, setIsLoading] = useState(false);
   const [caseId,setCaseId] = useState("");
   const [selectionInProgress, setSelectionInProgress] = useState(false);
+  const [columnOrder, setColumnOrder] = useState([]);
+
   
   
   
@@ -755,7 +757,7 @@ const createCustomCheckboxRenderer = useCallback(() => {
       rowHeaders: function(row) {
         return (currentPage - 1) * pageSize + row + 1;
       },
-      manualColumnMove: true,
+      manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
       contextMenu: [
     'cut',
     'copy',
@@ -771,6 +773,10 @@ const createCustomCheckboxRenderer = useCallback(() => {
       rowHeights: 22,
       className: "htCenter htMiddle",
       licenseKey: "non-commercial-and-evaluation",
+      afterColumnMove: (columns, target) => {
+  setColumnOrder(hotInstanceRef.current?.getPlugin('manualColumnMove')?.columnsMapper?.manualColumnPositions || []);
+},
+
       afterFilter: function (conditionsStack) {
   // Map Handsontable column headers to your React filters keys
   const columnToFilterKeyMap = {

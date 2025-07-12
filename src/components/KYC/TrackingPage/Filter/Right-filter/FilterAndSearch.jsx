@@ -1408,6 +1408,10 @@ const handleClientIdChange = (e) => {
 
   const handleRecheckSubmit = async (e) => {
     e.preventDefault();
+      if(rowData.caseStatus !== "sent" && rowData.status !== "closed"){
+        alert("Your case is not verified yet")
+        return
+      }
     try {
       const payload = {
         caseId: rowData.caseId,

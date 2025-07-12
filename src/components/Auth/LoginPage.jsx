@@ -210,8 +210,10 @@ export default function LoginPage() {
 
       toast.success(res.data.message);
       const user = res.data.user;
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.user.role);
+      // localStorage.setItem("token", res.data.token);
+      // localStorage.setItem("role", res.data.user.role);
+      sessionStorage.setItem("token", res.data.token);
+      sessionStorage.setItem("role", res.data.user.role);
       localStorage.setItem("loginUser", JSON.stringify(res.data.user));
 
       // Role-based navigation
