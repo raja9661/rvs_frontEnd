@@ -86,6 +86,7 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   const [caseId,setCaseId] = useState("");
   const [selectionInProgress, setSelectionInProgress] = useState(false);
   const [columnOrder, setColumnOrder] = useState([]);
+  
 
   
   
@@ -609,6 +610,8 @@ const createCustomCheckboxRenderer = useCallback(() => {
     const statusDropDown = ["New Data","Closed","Negative","CNV"];
     const readOnlyColumns = ["name", "accountNumber"];
     const caseStatusDropDown = ["New Pending","Sent"];
+    const vendorStatus = ["Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
+    const priorityDropdown = ["High","Medium","Low"]
     
     const formattedHeaders = formatHeaderDisplay(headers);
     const attachmentRenderer = createAttachmentRenderer();
@@ -657,6 +660,44 @@ const createCustomCheckboxRenderer = useCallback(() => {
           return {
             type: 'dropdown',
             source: employeeList,
+            strict: false,
+            allowInvalid: false,
+            className: 'htDropdown',
+            renderer: improvedCellRenderer,
+            readOnly: !isEditable,
+            // Critical dropdown settings:
+            editor: DropdownEditor,
+            dropdownMenu: {
+              className: 'htDropdownMenu',
+              // itemsLimit: 10,
+            },
+            
+            
+          };
+        }
+        if (header === "vendorStatus") {
+          return {
+            type: 'dropdown',
+            source: vendorStatus,
+            strict: false,
+            allowInvalid: false,
+            className: 'htDropdown',
+            renderer: improvedCellRenderer,
+            readOnly: !isEditable,
+            // Critical dropdown settings:
+            editor: DropdownEditor,
+            dropdownMenu: {
+              className: 'htDropdownMenu',
+              // itemsLimit: 10,
+            },
+            
+            
+          };
+        }
+        if (header === "priority") {
+          return {
+            type: 'dropdown',
+            source: priorityDropdown,
             strict: false,
             allowInvalid: false,
             className: 'htDropdown',
@@ -912,27 +953,51 @@ const createCustomCheckboxRenderer = useCallback(() => {
         return {};
       },
       afterChange: (changes, source) => {
-        if (source === "edit") {
-
-    const updatedRowIndex = changes[0][0];
-    const updatedColIndex = changes[0][1];
-    const updatedHeader = headers[updatedColIndex];
-    const newValue = changes[0][3];
+  if (source === "edit" || source === "paste") {
+    const updates = [];
+    const startIndex = (currentPage - 1) * pageSize;
     
-    const rowData = hotInstanceRef.current.getDataAtRow(updatedRowIndex);
-    const rowId = filteredData[startIndex + updatedRowIndex].caseId;
+    changes.forEach(change => {
+      const [row, col, oldValue, newValue] = change;
+      if (oldValue !== newValue) {
+        const rowData = hotInstanceRef.current.getDataAtRow(row);
+        const rowId = filteredData[startIndex + row].caseId;
+        
+        updates.push({
+          caseId: rowId,
+          changedField: headers[col],
+          [headers[col]]: newValue
+        });
+      }
+    });
+    
+    if (updates.length > 0) {
+      sendBatchUpdatesToBackend(updates);
+    }
+  }
+},
+    //   afterChange: (changes, source) => {
+    //     if (source === "edit") {
 
-    const update = {
-      caseId: rowId,
-      changedField: headers[updatedColIndex], 
-      [headers[updatedColIndex]]: newValue   
-    };
+    // const updatedRowIndex = changes[0][0];
+    // const updatedColIndex = changes[0][1];
+    // const updatedHeader = headers[updatedColIndex];
+    // const newValue = changes[0][3];
+    
+    // const rowData = hotInstanceRef.current.getDataAtRow(updatedRowIndex);
+    // const rowId = filteredData[startIndex + updatedRowIndex].caseId;
+
+    // const update = {
+    //   caseId: rowId,
+    //   changedField: headers[updatedColIndex], 
+    //   [headers[updatedColIndex]]: newValue   
+    // };
 
     
     
-    sendUpdateToBackend(update);
-        }
-      },
+    // sendUpdateToBackend(update);
+    //     }
+    //   },
    
       
 afterSelection: function(row, column, row2, column2, preventScrolling) {
@@ -1024,7 +1089,39 @@ const mapSelectedRowToCurrentPage = () => {
       });
     };
   }, [filteredData, headers, searchQuery, pageSize, isDarkMode, currentPage, createCustomCheckboxRenderer, selectRow, role, editableColumns]);
- 
+ const sendBatchUpdatesToBackend = debounce(async (updates) => {
+  try {
+    const getUser = localStorage.getItem("loginUser");
+    const user = getUser ? JSON.parse(getUser) : null;
+    
+    if (!user || !user.name) {
+      throw new Error("User information not available");
+    }
+
+    const payload = updates.map(update => ({
+      ...update,
+      userId: user.userId,
+      userName: user.name
+    }));
+
+    const response = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/kyc/update-data`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updatedData: payload })
+    });
+
+    if (!response.ok) {
+      throw new Error("Batch update failed");
+    }
+
+    setUpdateStatus(`${updates.length} updates successful`);
+    setTimeout(() => setUpdateStatus(null), 3000);
+  } catch (error) {
+    console.error("Batch update error:", error);
+    setUpdateStatus(`Error: ${error.message}`);
+    setTimeout(() => setUpdateStatus(null), 5000);
+  }
+}, 500);
 const sendUpdateToBackend = debounce(async (update) => {
   try {
     const getUser = localStorage.getItem("loginUser");
@@ -1370,76 +1467,37 @@ const handleDeleteSelectedRows = useCallback(async () => {
       
     };
 
+
     const exportToText = (data, headers, dateString) => {
-  const formatField = (key, value) => value;
-
-  let textContent = data.map((row, index) => {
-    // Check if this is a banking product AND user explicitly selected only accountNumber & requirement
-    const isBanking = row.productType?.toLowerCase() === 'banking';
-    const userSelectedBankingFields = 
-      headers.some(h => h.key === 'accountNumber') && 
-      headers.some(h => h.key === 'requirement');
-    const userSelectedOtherFields = headers.some(h => 
-      h.key !== 'accountNumber' && h.key !== 'requirement');
-
-    // Only use banking format if:
-    // 1. It's a banking product AND
-    // 2. User selected only accountNumber and requirement (no other fields)
-    const useBankingFormat = isBanking && userSelectedBankingFields && !userSelectedOtherFields;
-
-    if (useBankingFormat) {
-      // Special banking format
-      const acc = formatField('accountNumber', row['accountNumber'] || '');
-      const req = formatField('requirement', row['requirement'] || '');
-      return `${acc}\n${req}`;
-    } else {
-      // Normal format - show all selected columns
-      const pairs = headers
-        .filter(h => h.key !== "productType") // Still exclude productType
-        .map(header => {
-          const key = header.label === "Updated Product Name" ? "Product" : header.label;
-          const value = formatField(header.key, row[header.key] || '');
-          return `${key}=${value}`;
-        })
-        .join('    '); // Each value on new line after comma
-      
-      return `${pairs}.`;
-    }
-  }).join('\n' + '-'.repeat(60) + '\n'); // Separator between records
-
-  const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
-  saveAs(blob, `export_${dateString}.txt`);
-};
-    // const exportToText = (data, headers, dateString) => {
-    //   const formatField = (key, value) => value;
+      const formatField = (key, value) => value;
     
-    //   let textContent = data.map((row, index) => {
-    //     let recordText = '';
+      let textContent = data.map((row, index) => {
+        let recordText = '';
     
-    //     if (row.productType?.toLowerCase() === 'banking') {
-    //       const acc = formatField('accountNumber', row['accountNumber'] || '');
-    //       const req = formatField('requirement', row['requirement'] || '');
-    //       recordText = `${acc}\n${req}`;
-    //     } else {
-    //       const filteredHeaders = headers.filter(h => h.key !== "productType");
+        if (row.productType?.toLowerCase() === 'banking') {
+          const acc = formatField('accountNumber', row['accountNumber'] || '');
+          const req = formatField('requirement', row['requirement'] || '');
+          recordText = `${acc}\n${req}`;
+        } else {
+          const filteredHeaders = headers.filter(h => h.key !== "productType");
     
-    //       const pairs = filteredHeaders.map(header => {
-    //         const key = header.label === "Updated Product Name" ? "Product" : header.label;
-    //         const value = formatField(header.key, row[header.key] || '');
-    //         return `${key}=${value}`;
-    //       }).join(', ');
+          const pairs = filteredHeaders.map(header => {
+            const key = header.label === "Updated Product Name" ? "Product" : header.label;
+            const value = formatField(header.key, row[header.key] || '');
+            return `${key}=${value}`;
+          }).join(', ');
     
-    //       recordText = `${pairs}.`;
-    //     }
+          recordText = `${pairs}.`;
+        }
     
-    //     // Add separator after every record except the last one
-    //     const separator = index < data.length - 1 ? '\n' + '-'.repeat(60) + '\n' : '';
-    //     return recordText + separator;
-    //   }).join('\n');
+        // Add separator after every record except the last one
+        const separator = index < data.length - 1 ? '\n' + '-'.repeat(60) + '\n' : '';
+        return recordText + separator;
+      }).join('\n');
     
-    //   const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
-    //   saveAs(blob, `export_${dateString}.txt`);
-    // };
+      const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+      saveAs(blob, `export_${dateString}.txt`);
+    };
     
   
     const exportToCSV = (data, headers, dateString) => {
@@ -1815,6 +1873,38 @@ useEffect(() => {
   return () => window.removeEventListener('keydown', handleKeyDown);
 }, [handleDeleteSelectedRows, handleMasterReset]);
 
+const handleSaveChanges = () => {
+  const instance = hotInstanceRef.current;
+  if (!instance) return;
+  
+  // Get all changes since last save
+  const changes = instance.getSourceData();
+  const originalData = filteredData.slice(
+    (currentPage - 1) * pageSize, 
+    currentPage * pageSize
+  );
+  
+  const updates = [];
+  
+  changes.forEach((row, rowIndex) => {
+    headers.forEach((header, colIndex) => {
+      if (row[colIndex] !== originalData[rowIndex]?.[header]) {
+        updates.push({
+          caseId: originalData[rowIndex]?.caseId,
+          changedField: header,
+          [header]: row[colIndex]
+        });
+      }
+    });
+  });
+  
+  if (updates.length > 0) {
+    sendBatchUpdatesToBackend(updates);
+  } else {
+    toast.info("No changes to save");
+  }
+};
+
   return (
     <div>
       <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"} p-2 rounded shadow-md`}>
@@ -1962,6 +2052,17 @@ useEffect(() => {
                   // </>
                 ) : (
                   <>
+                  { (role === "admin" || role === "employee" ) && (
+                    <button
+  onClick={handleSaveChanges}
+  className={`px-3 py-1.5 text-sm ${
+    isDarkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
+  }`}
+>
+  Save Changes
+</button>
+                  ) }
+                  
 
                     {selectedRecord && (role === "admin" || role === "employee") && (
                       <>
@@ -2044,8 +2145,31 @@ useEffect(() => {
                   </button>
                   </>
                 )}
-                {role === "client" && (
-                      <button
+                <button
+  onClick={handleMasterReset}
+  disabled={isLoading}
+  className={`px-3 py-1.5 text-sm flex items-center gap-1 rounded ${
+    isDarkMode
+      ? "bg-yellow-500 hover:bg-yellow-600 text-black"
+      : "bg-yellow-400 hover:bg-yellow-500 text-black"
+  }`}
+  title="Reset all filters and selections"
+>
+  {isLoading ? (
+    <>
+      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Refreshing...
+    </>
+  ) : (
+    "Refresh"
+  )}
+</button>
+
+                
+                      {/* <button
                   onClick={handleMasterReset}
                   disabled={isLoading}
                   className={`px-3 py-1.5 text-sm flex items-center gap-1 ${
@@ -2066,8 +2190,7 @@ useEffect(() => {
                   ) : (
                     "Refresh"
                   )}
-                </button>
-                    )}
+                </button> */}
   
                 <button
                   onClick={handleMasterReset}

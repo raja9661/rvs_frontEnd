@@ -4415,7 +4415,7 @@ const [totalRecordCount, setTotalRecordCount] = useState(0);
   // Get user data and role
   useEffect(() => {
     const getUser = localStorage.getItem("loginUser");
-    const role = localStorage.getItem("role");
+    const role = sessionStorage.getItem("role");
     setUserRole(role);
     
     if (getUser) {
@@ -5052,6 +5052,7 @@ if (response.status === 200) {
                     type="text"
                     value={ReferBy}
                     onChange={handleInputChange}
+                    
                     placeholder="ReferBy"
                     className={`w-full px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 ${
                       isDarkMode 

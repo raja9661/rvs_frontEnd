@@ -310,7 +310,7 @@ function FileUpload({ isDarkMode }) {
 
   useEffect(() => {
     const getUser = localStorage.getItem("loginUser");
-    const role = localStorage.getItem("role");
+    const role = sessionStorage.getItem("role");;
     setUserRole(role);
     if (getUser) setUser(JSON.parse(getUser));
 
@@ -564,6 +564,7 @@ function FileUpload({ isDarkMode }) {
             onChange={handleInputChange}
             placeholder="Refer By"
             className={inputStyles}
+            
           />
         </div>
 

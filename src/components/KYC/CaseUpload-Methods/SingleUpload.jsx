@@ -49,7 +49,7 @@ function SingleUpload({ isDarkMode }) {
 
   useEffect(() => {
     fetchProductName();
-    const role = localStorage.getItem("role");
+    const role = sessionStorage.getItem("role");
     setUserRole(role);
     
     const getUser = localStorage.getItem("loginUser");
@@ -369,6 +369,7 @@ function SingleUpload({ isDarkMode }) {
             onChange={handleChange}
             placeholder="Refer By"
             className={inputStyles}
+            required
           />
         </div>
 

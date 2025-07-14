@@ -1203,6 +1203,7 @@ const FilterAndSearch = ({
     product: "",
     accountNumber: "",
     requirement: "",
+    ReferBy:""
   });
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
   // Add these state variables after the existing useState declarations:
@@ -1217,7 +1218,7 @@ const clientCodeRef = useRef(null);
 
   useEffect(() => {
     const getUser = localStorage.getItem("loginUser");
-    const role = localStorage.getItem("role");
+    const role = sessionStorage.getItem("role");
     setUserRole(role);
     
     if (getUser) {
@@ -1745,6 +1746,22 @@ const handleClientIdChange = (e) => {
                   name="requirement"
                   placeholder="Enter Requirement"
                   value={formData.requirement}
+                  onChange={handleChange}
+                  className={isDarkMode ? darkInputStyle : lightInputStyle}
+                  required
+                />
+              </div>
+              <div>
+                <label className={`block mb-1 ${
+                  isDarkMode ? "text-gray-300" : "text-gray-700"
+                }`}>
+                  Refer By
+                </label>
+                <input
+                  type="text"
+                  name="ReferBy"
+                  placeholder="Refer By"
+                  value={formData.ReferBy}
                   onChange={handleChange}
                   className={isDarkMode ? darkInputStyle : lightInputStyle}
                   required
