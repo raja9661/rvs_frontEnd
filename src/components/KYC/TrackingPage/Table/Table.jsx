@@ -607,12 +607,12 @@ const createCustomCheckboxRenderer = useCallback(() => {
 
     const dropdownOptions = ["Pending", "Done"];
     // const employeelist = ["KAIF", "UMAR", "SUNIL", "NAWSHAD"];
-    const statusDropDown = ["New Data","Closed","Negative","CNV"];
+    const statusDropDown = [ "", "New Data","Closed","Negative","CNV"];
     const readOnlyColumns = ["name", "accountNumber"];
-    const caseStatusDropDown = ["New Pending","Sent"];
-    const vendorStatus = ["Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
-    const priorityDropdown = ["High","Medium","Low"]
-    
+    const caseStatusDropDown = ["","New Pending","Sent"];
+    const vendorStatus = ["","Closed","Invalid","CNV","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
+    const priorityDropdown = ["","Urgent","",""]
+    const isAdmin = role === 'admin';
     const formattedHeaders = formatHeaderDisplay(headers);
     const attachmentRenderer = createAttachmentRenderer();
     hotInstanceRef.current = new Handsontable(tableRef.current, {
@@ -788,8 +788,17 @@ const createCustomCheckboxRenderer = useCallback(() => {
           readOnly: !isEditable,
         };
       }),
-      dropdownMenu: true,
+      dropdownMenu: isAdmin
+    ? true
+    : ['filter_by_value', 'filter_action_bar'],
+      // dropdownMenu: true,
+      // dropdownMenu: ['filter_by_value', 'filter_action_bar'],
+
       filters: true,
+      hiddenColumns: {
+    columns: headers,
+    indicators: true, // shows small indicators for hidden columns
+  },
       // columnSorting: true,
       search: true,
       manualColumnResize: true, // Allow manual resizing
@@ -799,18 +808,48 @@ const createCustomCheckboxRenderer = useCallback(() => {
         return (currentPage - 1) * pageSize + row + 1;
       },
       manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
-      contextMenu: [
-    'cut',
-    'copy',
-    '---------',
-    'row_above',
-    'row_below',
-    'remove_row',
-    '---------',
-    'alignment',
-    'make_read_only',
-    'clear_column',
-  ],
+      // contextMenu: true,
+      contextMenu: {
+  items: {
+    'add_full_border': {
+      name: 'Add Full Border',
+      callback: function () {
+        const selected = this.getSelectedRange();
+        if (selected) {
+          const bordersPlugin = this.getPlugin('customBorders');
+          selected.forEach((range) => {
+            for (let row = range.from.row; row <= range.to.row; row++) {
+              for (let col = range.from.col; col <= range.to.col; col++) {
+                bordersPlugin.setBorders([[row, col]], {
+                  top: { width: 1, color: 'black' },
+                  left: { width: 1, color: 'black' },
+                  bottom: { width: 1, color: 'black' },
+                  right: { width: 1, color: 'black' }
+                });
+              }
+            }
+          });
+        }
+      }
+    },
+    'borders': {},
+    'remove_col': {},
+    'hidden_columns_hide': { name: 'Hide column' },
+    'hidden_columns_show': { name: 'Show column' }
+  }
+},
+  //     contextMenu: [
+  //   'cut',
+  //   'copy',
+  //   'row_above',
+  //   'row_below',
+  //   'remove_row',
+  //   'alignment',
+  //   'make_read_only',
+  //   'clear_column',
+  //   'remove_col'
+
+  // ],
       rowHeights: 22,
       className: "htCenter htMiddle",
       licenseKey: "non-commercial-and-evaluation",
