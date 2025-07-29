@@ -27,15 +27,28 @@ const TrackerTable = () => {
   });
   const [originalData, setOriginalData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isdeduceLoading, setdedupLoading] = useState(false);
   const [filters, setFilters] = useState({
-    product: "",
-    productType: "",
-    dateIn: "",
-    sentDate: "",
-    dateOut: "",
-    status: "",
-    caseStatus: "",
-  });
+  product: "",
+  productType: "",
+  dateIn: "",      
+  dateInStart: "", 
+  dateInEnd: "",   
+  dateOut: "",     
+  dateOutStart: "",
+  dateOutEnd: "",  
+  status: "",
+  caseStatus: "",
+});
+  // const [filters, setFilters] = useState({
+  //   product: "",
+  //   productType: "",
+  //   dateIn: "",
+  //   sentDate: "",
+  //   dateOut: "",
+  //   status: "",
+  //   caseStatus: "",
+  // });
   const [selectedRows, setSelectedRows] = useState([]);
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
 
@@ -137,22 +150,7 @@ const fetchTrackerData = async () => {
     if (role) fetchTrackerData();
   }, [role, userId, name, filterType]);
 
-  // const handleRowSelection = useCallback((r, isChecked) => {
-  //   setData(prevData => {
-  //     const updatedData = [...prevData];
-  //     updatedData[r]["☑"] = isChecked;
-  //     return updatedData;
-  //   });
-
-  //   setSelectedRows(prevSelectedRows => {
-  //     const newSelectedRows = isChecked 
-  //       ? [...prevSelectedRows, r] 
-  //       : prevSelectedRows.filter(row => row !== r);
-  //     return newSelectedRows;
-  //   });
-
-  //   setRowData(isChecked && selectedRows.length === 0 ? data[r] : null);
-  // }, [data, selectedRows.length]);
+  
   const handleRowSelection = useCallback((rowIndex, isChecked) => {
   // No need to update `data` here (let Handsontable manage its own state)
   console.log('handleRowSelection called', { rowIndex, isChecked });
@@ -183,70 +181,54 @@ const fetchTrackerData = async () => {
     await fetchTrackerData();
   }, [fetchTrackerData]);
 
+  const handleDeduceClick = async () => {
+      try {
+        setdedupLoading(true);
+          // If no rows selected, find duplicates in all "New Data"/"Pending" records
+          const response = await axios.post(
+            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,
+       
+          );
+          
+          if (response.data?.success && response.data.duplicates?.length > 0) {
+            setData(response.data.duplicates);
+            // toast.success(`Found ${response.data.duplicates.length} duplicate records`);
+          } else {
+            toast.info("No duplicate records found");
+          }
+          setDeduceMode(true)
+          setdedupLoading(false)
+
+      } catch (error) {
+        console.error("Deduce error:", error);
+        toast.error(error.response?.data?.message || error.message || "Failed to find duplicates");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
   const handleMasterReset = useCallback(async () => {
     setFilters({
-      product: "",
-      productType: "",
-      dateIn: "",
-      endDate: "",
-      dateOut: "",
-      status: "",
-      caseStatus: "",
-    });
+    product: "",
+    productType: "",
+    dateIn: "",
+    dateInStart: "",
+    dateInEnd: "",
+    dateOut: "",
+    dateOutStart: "",
+    dateOutEnd: "",
+    status: "",
+    caseStatus: "",
+  });
     setSearchQuery("");
     setPageSize(50);
     setSelectedRows([]);
     setRowData(null);
     setSelectedRecord(null);
+    setDeduceMode(false)
     await fetchTrackerData(false); // Skip filters on reset
   }, [fetchTrackerData]);
 
-  const handleDeduce = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setDeduceMode(true);
-      
-      const statusFilter = ["New Data", "Pending"];
-      const caseStatusFilter = ["New", "Pending"];
-      
-      let recordsToCheck = originalData.filter(record => 
-        statusFilter.includes(record.status) || 
-        caseStatusFilter.includes(record.caseStatus)
-      );
-      
-      if (deduceFilters.applyFilters) {
-        recordsToCheck = filterRecords(recordsToCheck, filters, dateFilters);
-      }
-      
-      const grouped = new Map();
-      recordsToCheck.forEach(record => {
-        const key = `${record.product}|${record.accountNumber}|${record.requirement}`;
-        if (!grouped.has(key)) {
-          grouped.set(key, []);
-        }
-        grouped.get(key).push(record);
-      });
-      
-      const duplicates = Array.from(grouped.values()).filter(group => group.length > 1);
-      
-      if (duplicates.length > 0) {
-        const duplicateRecords = duplicates.flat();
-        setData(duplicateRecords);
-        toast.success(`Found ${duplicateRecords.length} duplicate records`);
-      } else {
-        toast.info("No duplicate records found");
-        setDeduceMode(false);
-        fetchTrackerData();
-      }
-    } catch (error) {
-      console.error("Deduce error:", error);
-      toast.error("Failed to find duplicates");
-      setDeduceMode(false);
-      fetchTrackerData();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [originalData, deduceFilters.applyFilters, filters, dateFilters, fetchTrackerData]);
 
   return (
     <Layout>
@@ -254,7 +236,8 @@ const fetchTrackerData = async () => {
         <div className={`w-full rounded-xl shadow-lg overflow-hidden ${themeClass}`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className={`${panelClass} p-4 rounded-lg shadow-md`}>
-              <FilterControls 
+              <FilterControls
+                deduceMode = {deduceMode} 
                 filters={filters} 
                 setFilters={setFilters} 
                 isDarkMode={isDarkMode}
@@ -262,6 +245,7 @@ const fetchTrackerData = async () => {
                 data={data}
                 fetchTrackerData={fetchTrackerData}
                 setSelectedRows={setSelectedRows}
+                handleDeduceClick = {handleDeduceClick}
               />
             </div>
             <div className={`${panelClass} p-4 rounded shadow-md`}>
@@ -299,10 +283,13 @@ const fetchTrackerData = async () => {
               setSearchQuery={setSearchQuery}
               onMasterReset={handleMasterReset}
               deduceMode={deduceMode}
+              setDeduceMode = {setDeduceMode}
               deduceFilters={deduceFilters}
               setFilters={setFilters}
               selectedRecord={selectedRecord}
               setSelectedRecord={setSelectedRecord}
+              handleDeduceClick = {handleDeduceClick}
+              isdeduceLoading = {isdeduceLoading}
             />
           </div>          
         </div>

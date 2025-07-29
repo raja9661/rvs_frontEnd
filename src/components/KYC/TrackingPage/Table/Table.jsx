@@ -16,7 +16,10 @@ import axios from "axios";
 import AttachmentManager from "../../AttachmentManager";
 import { Paperclip } from 'lucide-react';
 import AttachmentsModal from "../../AttachmentsModal";
-import CopyFieldsModal from "../../CopyFieldsModal";
+// import CopyFieldsModal from "../../CopyFieldsModal";
+import moment from "moment-timezone";
+import CopyFieldsModal from "./CopyFieldsModal";
+
 // import "../Table/TableStyles.css";
 
 // Register all Handsontable modules
@@ -55,7 +58,10 @@ const Table = ({
   deduceFilters,
   setFilters,
   selectedRecord,
-  setSelectedRecord 
+  setSelectedRecord,
+  setDeduceMode,
+  handleDeduceClick,
+  isdeduceLoading
   // onRestoreRecords
 }) => {
   const tableRef = useRef(null);
@@ -82,10 +88,15 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   const [isDeduceModalOpen, setIsDeduceModalOpen] = useState(false);
   const [similarRecords, setSimilarRecords] = useState([]);
   const [selectedRecordToCopy, setSelectedRecordToCopy] = useState(null);
-  const [isdeduceLoading, setIsLoading] = useState(false);
+  
   const [caseId,setCaseId] = useState("");
   const [selectionInProgress, setSelectionInProgress] = useState(false);
   const [columnOrder, setColumnOrder] = useState([]);
+  const [copyFields, setCopyFields] = useState([]);
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  // const [sourceRecordToCopy, setSourceRecordToCopy] = useState(null);
+  const [sourceRecordToCopy, setSourceRecordToCopy] = useState(null);
+const [targetRows, setTargetRows] = useState([]);
   
 
   
@@ -158,6 +169,7 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
 //       setCurrentPage(1);
 //     }
 //   }, [data, filters, searchQuery, pageSize]);
+
 useEffect(() => {
   if (!data || data.length === 0) {
     setFilteredData([]);
@@ -168,6 +180,12 @@ useEffect(() => {
     .filter((row) =>
       Object.entries(filters).every(([key, filterValue]) => {
         if (!filterValue) return true;
+        
+        // Handle date range filters first
+        if (key === 'dateInStart' || key === 'dateInEnd' || 
+            key === 'dateOutStart' || key === 'dateOutEnd') {
+          return true; // We'll handle these separately
+        }
         
         // Handle array filter values (multiple selections)
         if (Array.isArray(filterValue)) {
@@ -182,12 +200,40 @@ useEffect(() => {
         return String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase());
       })
     )
+    // Apply date range filters after the general filtering
+    .filter((row) => {
+      // Date In range filter
+      if (filters.dateInStart || filters.dateInEnd) {
+        if (!row.dateIn) return false;
+        
+        const rowDateIn = moment(row.dateIn.split(',')[0].trim(), "DD-MM-YYYY");
+        const startDate = filters.dateInStart ? moment(filters.dateInStart, "DD-MM-YYYY") : null;
+        const endDate = filters.dateInEnd ? moment(filters.dateInEnd, "DD-MM-YYYY") : null;
+
+        if (startDate && rowDateIn.isBefore(startDate, 'day')) return false;
+        if (endDate && rowDateIn.isAfter(endDate, 'day')) return false;
+      }
+
+      // Date Out range filter
+      if (filters.dateOutStart || filters.dateOutEnd) {
+        if (!row.dateOut) return false;
+        
+        const rowDateOut = moment(row.dateOut.split(',')[0].trim(), "DD-MM-YYYY");
+        const startDate = filters.dateOutStart ? moment(filters.dateOutStart, "DD-MM-YYYY") : null;
+        const endDate = filters.dateOutEnd ? moment(filters.dateOutEnd, "DD-MM-YYYY") : null;
+
+        if (startDate && rowDateOut.isBefore(startDate, 'day')) return false;
+        if (endDate && rowDateOut.isAfter(endDate, 'day')) return false;
+      }
+
+      return true;
+    })
     .filter((row) => {
       if (!searchQuery) return true;
       return Object.values(row).some((value) => {
         if (value === undefined || value === null) return false;
         return String(value).toLowerCase().includes(String(searchQuery).toLowerCase());
-      })
+      });
     });
 
   setFilteredData(filtered);
@@ -198,6 +244,46 @@ useEffect(() => {
     setCurrentPage(1);
   }
 }, [data, filters, searchQuery, pageSize]);
+// useEffect(() => {
+//   if (!data || data.length === 0) {
+//     setFilteredData([]);
+//     return;
+//   }
+
+//   const filtered = data
+//     .filter((row) =>
+//       Object.entries(filters).every(([key, filterValue]) => {
+//         if (!filterValue) return true;
+        
+//         // Handle array filter values (multiple selections)
+//         if (Array.isArray(filterValue)) {
+//           if (filterValue.length === 0) return true;
+//           const rowValue = row[key];
+//           return filterValue.includes(rowValue);
+//         }
+        
+//         // Handle single string filter value
+//         const rowValue = row[key];
+//         if (rowValue === undefined || rowValue === null) return false;
+//         return String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase());
+//       })
+//     )
+//     .filter((row) => {
+//       if (!searchQuery) return true;
+//       return Object.values(row).some((value) => {
+//         if (value === undefined || value === null) return false;
+//         return String(value).toLowerCase().includes(String(searchQuery).toLowerCase());
+//       })
+//     });
+
+//   setFilteredData(filtered);
+//   const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
+//   setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
+  
+//   if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
+//     setCurrentPage(1);
+//   }
+// }, [data, filters, searchQuery, pageSize]);
 
 
 const selectRow = useCallback((instance, rowIndex, selected) => {
@@ -554,14 +640,35 @@ const createCustomCheckboxRenderer = useCallback(() => {
     };
   }, [isDarkMode ,headers]);
 
+  const saveScrollPosition = () => {
+  const scrollableContainer = tableRef.current?.querySelector('.wtHolder');
+  if (scrollableContainer) {
+    scrollPositionRef.current = {
+      top: scrollableContainer.scrollTop,
+      left: scrollableContainer.scrollLeft
+    };
+  }
+};
 
-  useEffect(() => {
+const restoreScrollPosition = () => {
+  const scrollableContainer = tableRef.current?.querySelector('.wtHolder');
+  if (scrollableContainer && scrollPositionRef.current) {
+    scrollableContainer.scrollTop = scrollPositionRef.current.top;
+    scrollableContainer.scrollLeft = scrollPositionRef.current.left;
+  }
+};
+
+
+
+ useEffect(() => {
     if (!tableRef.current || !headers || headers.length === 0 || !filteredData) return;
 
     const startIndex = (currentPage - 1) * pageSize;
     const paginatedData = filteredData
       .slice(startIndex, startIndex + pageSize)
       .map((row) => headers.map((key) => row[key] ?? ""));
+
+      saveScrollPosition()
 
     if (hotInstanceRef.current) {
       // saveScrollPosition();
@@ -607,12 +714,12 @@ const createCustomCheckboxRenderer = useCallback(() => {
 
     const dropdownOptions = ["Pending", "Done"];
     // const employeelist = ["KAIF", "UMAR", "SUNIL", "NAWSHAD"];
-    const statusDropDown = [ "", "New Data","Closed","Negative","CNV"];
+    const statusDropDown = ["New Data","Closed","Negative","CNV"];
     const readOnlyColumns = ["name", "accountNumber"];
-    const caseStatusDropDown = ["","New Pending","Sent"];
-    const vendorStatus = ["","Closed","Invalid","CNV","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
-    const priorityDropdown = ["","Urgent","",""]
-    const isAdmin = role === 'admin';
+    const caseStatusDropDown = ["New Pending","Sent"];
+    const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
+    const priorityDropdown = ["","Urgent",""]
+    
     const formattedHeaders = formatHeaderDisplay(headers);
     const attachmentRenderer = createAttachmentRenderer();
     hotInstanceRef.current = new Handsontable(tableRef.current, {
@@ -782,23 +889,20 @@ const createCustomCheckboxRenderer = useCallback(() => {
             if (header === "ipAddress") {
               td.style.maxWidth = '150px'; // Even more restrictive for IPs
             }
+
+            if (rowData?._dedupColor) {
+    td.style.backgroundColor = rowData._dedupColor === 'blue' 
+      ? 'rgba(0, 0, 255, 0.1)' 
+      : 'rgba(0, 255, 0, 0.1)';
+  }
             
             return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
           },
           readOnly: !isEditable,
         };
       }),
-      dropdownMenu: isAdmin
-    ? true
-    : ['filter_by_value', 'filter_action_bar'],
-      // dropdownMenu: true,
-      // dropdownMenu: ['filter_by_value', 'filter_action_bar'],
-
+      dropdownMenu: true,
       filters: true,
-      hiddenColumns: {
-    columns: headers,
-    indicators: true, // shows small indicators for hidden columns
-  },
       // columnSorting: true,
       search: true,
       manualColumnResize: true, // Allow manual resizing
@@ -808,48 +912,18 @@ const createCustomCheckboxRenderer = useCallback(() => {
         return (currentPage - 1) * pageSize + row + 1;
       },
       manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
-      // contextMenu: true,
-      contextMenu: {
-  items: {
-    'add_full_border': {
-      name: 'Add Full Border',
-      callback: function () {
-        const selected = this.getSelectedRange();
-        if (selected) {
-          const bordersPlugin = this.getPlugin('customBorders');
-          selected.forEach((range) => {
-            for (let row = range.from.row; row <= range.to.row; row++) {
-              for (let col = range.from.col; col <= range.to.col; col++) {
-                bordersPlugin.setBorders([[row, col]], {
-                  top: { width: 1, color: 'black' },
-                  left: { width: 1, color: 'black' },
-                  bottom: { width: 1, color: 'black' },
-                  right: { width: 1, color: 'black' }
-                });
-              }
-            }
-          });
-        }
-      }
-    },
-    'borders': {},
-    'remove_col': {},
-    'hidden_columns_hide': { name: 'Hide column' },
-    'hidden_columns_show': { name: 'Show column' }
-  }
-},
-  //     contextMenu: [
-  //   'cut',
-  //   'copy',
-  //   'row_above',
-  //   'row_below',
-  //   'remove_row',
-  //   'alignment',
-  //   'make_read_only',
-  //   'clear_column',
-  //   'remove_col'
-
-  // ],
+      contextMenu: [
+    'cut',
+    'copy',
+    '---------',
+    'row_above',
+    'row_below',
+    'remove_row',
+    '---------',
+    'alignment',
+    'make_read_only',
+    'clear_column',
+  ],
       rowHeights: 22,
       className: "htCenter htMiddle",
       licenseKey: "non-commercial-and-evaluation",
@@ -1117,6 +1191,7 @@ const mapSelectedRowToCurrentPage = () => {
 
     setTimeout(() => {
       mapSelectedRowToCurrentPage();
+      restoreScrollPosition();
       // restoreScrollPosition();
     }, 10);
     
@@ -1127,7 +1202,580 @@ const mapSelectedRowToCurrentPage = () => {
         }
       });
     };
-  }, [filteredData, headers, searchQuery, pageSize, isDarkMode, currentPage, createCustomCheckboxRenderer, selectRow, role, editableColumns]);
+     }, [filteredData, headers, searchQuery, pageSize, isDarkMode, currentPage, createCustomCheckboxRenderer, selectRow, role, editableColumns]);
+//   useEffect(() => {
+//     if (!tableRef.current || !headers || headers.length === 0 || !filteredData) return;
+
+//     const startIndex = (currentPage - 1) * pageSize;
+//     const paginatedData = filteredData
+//       .slice(startIndex, startIndex + pageSize)
+//       .map((row) => headers.map((key) => row[key] ?? ""));
+
+//     if (hotInstanceRef.current) {
+//       // saveScrollPosition();
+    
+//       hotInstanceRef.current.destroy();
+//     }
+//     const createImprovedCellRenderer = (searchQuery, enhancedHighlightRenderer) => {
+//       return function(instance, td, row, col, prop, value, cellProperties) {
+//         // First apply the recheck styling (if any)
+//         const rowData = instance.getSourceDataAtRow(row);
+//         // const isRechecked = rowData[rowData.length - 1] === true;
+//         const recheckStatusIndex = headers.indexOf('isRechecked'); 
+//          const isRechecked = recheckStatusIndex >= 0 ? rowData[recheckStatusIndex] === true : false;
+        
+//         if (isRechecked) {
+//           td.style.backgroundColor = '#FFF9C4';
+//           td.style.fontWeight = 'bold';
+//         }
+        
+//         // Then apply the search highlighting
+//         if (searchQuery && value && value.toString().toLowerCase().includes(searchQuery.toLowerCase())) {
+//           enhancedHighlightRenderer(instance, td, row, col, prop, value, cellProperties);
+//         } else {
+//           Handsontable.renderers.TextRenderer.apply(this, arguments);
+//         }
+        
+//         return td;
+//       };
+//     };
+//     const enhancedHighlightRenderer = createEnhancedHighlightRenderer(searchQuery, isDarkMode);
+//     const customCheckboxRenderer = createCustomCheckboxRenderer();
+//     const improvedCellRenderer = createImprovedCellRenderer(searchQuery, enhancedHighlightRenderer);
+    
+//     const styleEl = createTableStyles(isDarkMode);
+//     const paginationStyleEl = addPaginationStyles();
+//     const previewStyleEl = addCellPreviewStyles();
+
+//     tableRef.current.className = `mt-2 border border-${
+//       isDarkMode ? "gray-700" : "gray-300"
+//     } shadow-md rounded-lg handsontable-${
+//       isDarkMode ? "dark" : "light"
+//     } overflow-auto`;
+
+//     const dropdownOptions = ["Pending", "Done"];
+//     // const employeelist = ["KAIF", "UMAR", "SUNIL", "NAWSHAD"];
+//     const statusDropDown = [ "", "New Data","Closed","Negative","CNV"];
+//     const readOnlyColumns = ["name", "accountNumber"];
+//     const caseStatusDropDown = ["","New Pending","Sent"];
+//     const vendorStatus = ["","Closed","Invalid","CNV","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
+//     const priorityDropdown = ["","Urgent","",""]
+//     const isAdmin = role === 'admin';
+//     const formattedHeaders = formatHeaderDisplay(headers);
+//     const attachmentRenderer = createAttachmentRenderer();
+//     hotInstanceRef.current = new Handsontable(tableRef.current, {
+//       data: paginatedData,
+//       colHeaders: formattedHeaders,
+//       columns: headers.map((header, index) => {
+//         // const isEditable = role === "admin" ? true : role === "employee" ? editableColumns.includes(header) : false;
+//         let isEditable = false;
+
+//         if (role === "admin") {
+//   isEditable = true;
+// } else if (role === "employee") {
+//   isEditable = DEFAULT_EMPLOYEE_EDITABLE.includes(header) || 
+//               (editableColumns && editableColumns.includes(header));
+// } else if (role === "client") {
+//   isEditable = DEFAULT_CLIENT_EDITABLE.includes(header) || 
+//               (editableColumns && editableColumns.includes(header));
+// }
+  
+//         // if (role === "admin") {
+//         //   isEditable = true; 
+//         // } else if (role === "employee") {
+//         //   isEditable = DEFAULT_EMPLOYEE_EDITABLE.includes(header) || 
+//         //               (editableColumns && editableColumns.includes(header));
+//         // }   
+//         if (index === 0) {
+//           return {
+//             type: "checkbox",
+//             readOnly: false,
+//             renderer: customCheckboxRenderer,
+            
+//           };
+//         }
+//         // In your Table component, update the columns configuration for the attachments column
+//         if (header === "attachments" || header.toLowerCase().includes("attachment")) {
+//           return {
+//             type: "text",
+//             readOnly: true,
+//             renderer: attachmentRenderer,
+//             width: 100, // Make it wider for debugging
+//             className: 'debug-attachment-cell', // Add debug class
+//           };
+//         }
+//         if (header === "listByEmployee") {
+//           return {
+//             type: 'dropdown',
+//             source: employeeList,
+//             strict: false,
+//             allowInvalid: false,
+//             className: 'htDropdown',
+//             renderer: improvedCellRenderer,
+//             readOnly: !isEditable,
+//             // Critical dropdown settings:
+//             editor: DropdownEditor,
+//             dropdownMenu: {
+//               className: 'htDropdownMenu',
+//               // itemsLimit: 10,
+//             },
+            
+            
+//           };
+//         }
+//         if (header === "vendorStatus") {
+//           return {
+//             type: 'dropdown',
+//             source: vendorStatus,
+//             strict: false,
+//             allowInvalid: false,
+//             className: 'htDropdown',
+//             renderer: improvedCellRenderer,
+//             readOnly: !isEditable,
+//             // Critical dropdown settings:
+//             editor: DropdownEditor,
+//             dropdownMenu: {
+//               className: 'htDropdownMenu',
+//               // itemsLimit: 10,
+//             },
+            
+            
+//           };
+//         }
+//         if (header === "priority") {
+//           return {
+//             type: 'dropdown',
+//             source: priorityDropdown,
+//             strict: false,
+//             allowInvalid: false,
+//             className: 'htDropdown',
+//             renderer: improvedCellRenderer,
+//             readOnly: !isEditable,
+//             // Critical dropdown settings:
+//             editor: DropdownEditor,
+//             dropdownMenu: {
+//               className: 'htDropdownMenu',
+//               // itemsLimit: 10,
+//             },
+            
+            
+//           };
+//         }
+//         if (header === "status") {
+//           return {
+//             type: "dropdown",
+//             source: statusDropDown,
+//             editorClassName: 'custom-dropdown',
+//             renderer: (instance, td, row, col, prop, value, cellProperties) => {
+//       td.style.textAlign = 'left';
+      
+//       return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
+//     },
+//             readOnly: !isEditable,
+//           };
+//         }
+//         if (header === "caseStatus") {
+//           return {
+//             type: "dropdown",
+//             source: caseStatusDropDown,
+//             editorClassName: 'custom-dropdown',
+//             renderer: (instance, td, row, col, prop, value, cellProperties) => {
+//       td.style.textAlign = 'left';
+      
+//       return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
+//     },
+//             readOnly: !isEditable,
+//           };
+//         }
+//         if (readOnlyColumns.includes(header)) {
+//           return { type: "text", readOnly: true, 
+//             renderer: (instance, td, row, col, prop, value, cellProperties) => {
+//       // Apply base styling first
+//       td.style.whiteSpace = 'nowrap';
+//       td.style.overflow = 'hidden';
+//       td.style.textOverflow = 'ellipsis';
+//       td.style.textAlign = 'left'; 
+//       return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
+//     } 
+//           };
+//         }
+        
+//         return {
+//           type: "text",
+//           renderer: (instance, td, row, col, prop, value, cellProperties) => {
+//             const rowData = instance.getSourceDataAtRow(row);
+//             const recheckStatusIndex = headers.indexOf('isRechecked');
+//             const isRechecked = recheckStatusIndex >= 0 ? rowData[recheckStatusIndex] === true : false;
+
+//             // Apply base styling first
+//             td.style.whiteSpace = 'nowrap';
+//             td.style.overflow = 'hidden';
+//             td.style.textOverflow = 'ellipsis';
+//             td.style.maxWidth = '200px'; // Set a reasonable max width
+//             td.style.textAlign = 'left'
+            
+//             if (isRechecked) {
+//               td.style.backgroundColor = '#FFF9C4'; // Light yellow background
+//               td.style.fontWeight = 'bold';
+//               td.style.color = '#000'
+              
+//               // Special styling for caseId column
+//               if (header === "caseId") {
+//                 td.style.borderLeft = '3px solid #FFC107'; // Gold border
+//                 td.innerHTML = `<span style="color:#FF8F00">↻</span> ${value}`;
+//               }
+//             }
+            
+//             // For IP address column (or any column that shouldn't expand)
+//             if (header === "ipAddress") {
+//               td.style.maxWidth = '150px'; // Even more restrictive for IPs
+//             }
+            
+//             return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
+//           },
+//           readOnly: !isEditable,
+//         };
+//       }),
+//       dropdownMenu: isAdmin
+//     ? true
+//     : ['filter_by_value', 'filter_action_bar'],
+//       // dropdownMenu: true,
+//       // dropdownMenu: ['filter_by_value', 'filter_action_bar'],
+
+//       filters: true,
+//       hiddenColumns: {
+//     columns: headers,
+//     indicators: true, // shows small indicators for hidden columns
+//   },
+//       // columnSorting: true,
+//       search: true,
+//       manualColumnResize: true, // Allow manual resizing
+//       stretchH: 'none', // Don't stretch columns to fit
+//       height: "450px",
+//       rowHeaders: function(row) {
+//         return (currentPage - 1) * pageSize + row + 1;
+//       },
+//       manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
+//       // contextMenu: true,
+//       contextMenu: {
+//   items: {
+//     'add_full_border': {
+//       name: 'Add Full Border',
+//       callback: function () {
+//         const selected = this.getSelectedRange();
+//         if (selected) {
+//           const bordersPlugin = this.getPlugin('customBorders');
+//           selected.forEach((range) => {
+//             for (let row = range.from.row; row <= range.to.row; row++) {
+//               for (let col = range.from.col; col <= range.to.col; col++) {
+//                 bordersPlugin.setBorders([[row, col]], {
+//                   top: { width: 1, color: 'black' },
+//                   left: { width: 1, color: 'black' },
+//                   bottom: { width: 1, color: 'black' },
+//                   right: { width: 1, color: 'black' }
+//                 });
+//               }
+//             }
+//           });
+//         }
+//       }
+//     },
+//     'borders': {},
+//     'remove_col': {},
+//     'hidden_columns_hide': { name: 'Hide column' },
+//     'hidden_columns_show': { name: 'Show column' }
+//   }
+// },
+//   //     contextMenu: [
+//   //   'cut',
+//   //   'copy',
+//   //   'row_above',
+//   //   'row_below',
+//   //   'remove_row',
+//   //   'alignment',
+//   //   'make_read_only',
+//   //   'clear_column',
+//   //   'remove_col'
+
+//   // ],
+//       rowHeights: 22,
+//       className: "htCenter htMiddle",
+//       licenseKey: "non-commercial-and-evaluation",
+//       afterColumnMove: (columns, target) => {
+//   setColumnOrder(hotInstanceRef.current?.getPlugin('manualColumnMove')?.columnsMapper?.manualColumnPositions || []);
+// },
+
+//       afterFilter: function (conditionsStack) {
+//   // Map Handsontable column headers to your React filters keys
+//   const columnToFilterKeyMap = {
+//     "Case Id":"caseId",
+//     "Remarks":"remarks",
+//     "Details":"details",
+//     "Details 1":"details",
+//     "Priority":"priority",
+//     "Product": "product",
+//     "Product Type": "productType",
+//     "Status": "status",
+//     "Case Status": "caseStatus",
+//     "Date In": "dateIn",
+//     "Date In (To)": "endDate",
+//     "Client Type": "clientType",
+//     "Correct UPN": "correctUPN",
+//     "Updated Product Name": "updatedProductName",
+//     "Updated Requirement": "updatedRequirement",
+//     "Bank Code": "bankCode",
+//     "Client Code": "clientCode",
+//     "Vendor Name": "vendorName",
+//     "vendorStatus":"vendorStatus",
+//     "Sent By": "sentBy",
+//     "Case Done By": "caseDoneBy",
+//     "List By Employee": "listByEmployee",
+//     "Auto or Manual": "autoOrManual",
+//     "Role": "role",
+//     "Name": "name",
+//     "Account Number": "accountNumber",
+//     "Account Number Digit":"accountNumberDigit",
+//     "Date In Date":"dateInDate",
+//     "Date Out":"dateOut",
+//     "dateOutInDay":"dateOutInDay",
+//     "Client TAT":"clientTAT",
+//     "Customer Care":"customerCare",
+//     "NameUploadBy":"NameUploadBy",
+//     "Sent Date":"sentDate",
+//     "sentDateInDay":"sentDateInDay",
+//     "Dedup By":"dedupBy"
+
+    
+
+
+//     // Add more as needed based on your actual column headers
+//   };
+
+//   const updatedFilters = {};
+
+//   conditionsStack.forEach((condition) => {
+//     const columnIndex = condition.column;
+//     const columnHeader = this.getColHeader(columnIndex); // e.g., "Product"
+//     const conditions = condition.conditions;
+
+//     conditions.forEach((c) => {
+//       if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
+//         const selectedValues = c.args[0];
+//         const filterKey = columnToFilterKeyMap[columnHeader];
+        
+//         if (filterKey) {
+//           // Store all selected values instead of just the first one
+//           updatedFilters[filterKey] = selectedValues.length > 0 ? selectedValues : "";
+//         }
+//       }
+//     });
+//   });
+
+//   // Update React filters state only once to prevent rerenders per filter
+//   if (Object.keys(updatedFilters).length > 0) {
+//     setFilters((prev) => ({ ...prev, ...updatedFilters }));
+//   }
+// },
+// //        afterFilter: function (conditionsStack) {
+// //   // Map Handsontable column headers to your React filters keys
+// //   const columnToFilterKeyMap = {
+// //     "Product": "product",
+// //     "Product Type": "productType",
+// //     "Status": "status",
+// //     "Case Status": "caseStatus",
+// //     "Date In": "dateIn",
+// //     "Date In (To)": "endDate",
+// //     "Client Type": "clientType",
+// //     "Correct UPN": "correctUPN",
+// //     "Updated Product Name": "updatedProductName",
+// //     "Updated Requirement": "updatedRequirement",
+// //     "Bank Code": "bankCode",
+// //     "Client Code": "clientCode",
+// //     "Vendor Name": "vendorName",
+// //     "Sent By": "sentBy",
+// //     "Case Done By": "caseDoneBy",
+// //     "List By Employee": "listByEmployee",
+// //     "Auto or Manual": "autoOrManual",
+// //     "Role": "role",
+// //     "Name":"name",
+// //     "Account Number":"accountNumber",
+// //     // Add more as needed based on your actual column headers
+// //   };
+
+// //   const updatedFilters = {};
+
+// //   conditionsStack.forEach((condition) => {
+// //     const columnIndex = condition.column;
+// //     const columnHeader = this.getColHeader(columnIndex); // e.g., "Product"
+// //     const conditions = condition.conditions;
+
+// //     conditions.forEach((c) => {
+// //       if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
+// //         const selectedValues = c.args[0];
+// //         const firstValue = selectedValues[0] || ""; // If no value, fallback to empty
+
+// //         const filterKey = columnToFilterKeyMap[columnHeader];
+// //         if (filterKey) {
+// //           updatedFilters[filterKey] = firstValue;
+// //         }
+// //       }
+// //     });
+// //   });
+
+// //   // Update React filters state only once to prevent rerenders per filter
+// //   if (Object.keys(updatedFilters).length > 0) {
+// //     setFilters((prev) => ({ ...prev, ...updatedFilters }));
+// //   }
+// // },
+
+//       cells: (row, col) => {
+//         // Make cells read-only in deduce mode unless field is allowed for updates
+//         if (deduceMode) {
+//           const header = headers[col];
+//           const isUpdatable = deduceFilters.updateFields && deduceFilters[header];
+//           return {
+//             readOnly: !isUpdatable
+//           };
+//         }
+//         return {};
+//       },
+//       afterChange: (changes, source) => {
+//   if (source === "edit" || source === "paste") {
+//     const updates = [];
+//     const startIndex = (currentPage - 1) * pageSize;
+    
+//     changes.forEach(change => {
+//       const [row, col, oldValue, newValue] = change;
+//       if (oldValue !== newValue) {
+//         const rowData = hotInstanceRef.current.getDataAtRow(row);
+//         const rowId = filteredData[startIndex + row].caseId;
+        
+//         updates.push({
+//           caseId: rowId,
+//           changedField: headers[col],
+//           [headers[col]]: newValue
+//         });
+//       }
+//     });
+    
+//     if (updates.length > 0) {
+//       sendBatchUpdatesToBackend(updates);
+//     }
+//   }
+// },
+//     //   afterChange: (changes, source) => {
+//     //     if (source === "edit") {
+
+//     // const updatedRowIndex = changes[0][0];
+//     // const updatedColIndex = changes[0][1];
+//     // const updatedHeader = headers[updatedColIndex];
+//     // const newValue = changes[0][3];
+    
+//     // const rowData = hotInstanceRef.current.getDataAtRow(updatedRowIndex);
+//     // const rowId = filteredData[startIndex + updatedRowIndex].caseId;
+
+//     // const update = {
+//     //   caseId: rowId,
+//     //   changedField: headers[updatedColIndex], 
+//     //   [headers[updatedColIndex]]: newValue   
+//     // };
+
+    
+    
+//     // sendUpdateToBackend(update);
+//     //     }
+//     //   },
+   
+      
+// afterSelection: function(row, column, row2, column2, preventScrolling) {
+//   if (row >= 0 && column > 0) {
+//     const selectedValue = this.getDataAtCell(row, column);
+//     const headerName = headers[column];
+//     const selectedCell = this.getCell(row, column);
+//   if (selectedCell) {
+//     selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+//   }
+
+//   const isEditable = 
+//   role === "admin" ? true : 
+//   ["employee", "client"].includes(role) ? editableColumns.includes(headerName) : 
+//   false;
+
+//     // const isEditable = role === "admin" ? true : 
+//     //   role === "employee" ? editableColumns.includes(headerName) :role === "client" ? editableColumns.includes(headerName) : false;
+
+//     setSelectedCellInfo({
+//       row,
+//       col: column,
+//       value: selectedValue || "",
+//       header: headerName,
+//       isEditable
+//     });
+    
+//     setEditingCellValue(selectedValue || "");
+//   }
+// },
+// // In your column configuration
+// renderer: (instance, td, row, col, prop, value, cellProperties) => {
+//   const rowData = instance.getSourceDataAtRow(row);
+//   if (rowData?.isRechecked) {
+//     td.style.backgroundColor = '#FFF9C4';
+//     td.style.fontWeight = 'bold';
+//   }
+//   return improvedCellRenderer(instance, td, row, col, prop, value, cellProperties);
+// },
+      
+//       // afterScrollVertically: () => {
+//       //   const scrollableContainer = tableRef.current?.querySelector('.wtHolder');
+//       //   if (scrollableContainer) {
+//       //     scrollPositionRef.current.top = scrollableContainer.scrollTop;
+//       //   }
+//       // },
+//       // afterScrollHorizontally: () => {
+//       //   const scrollableContainer = tableRef.current?.querySelector('.wtHolder');
+//       //   if (scrollableContainer) {
+//       //     scrollPositionRef.current.left = scrollableContainer.scrollLeft;
+//       //   }
+//       // },
+//       viewportColumnRenderingOffset: 10,
+//       mergeCells: true,
+//       customBorders: true,
+//       allowInsertColumn: false,
+//       allowInsertRow: false,
+//     });
+    
+    
+// const mapSelectedRowToCurrentPage = () => {
+//   const selectedGlobalRow = checkboxStateRef.current.selectedRow;
+  
+//   if (selectedGlobalRow !== null) {
+//     const pageIndex = Math.floor(selectedGlobalRow / pageSize);
+    
+//     if (pageIndex + 1 === currentPage) {
+//       const localRowIndex = selectedGlobalRow % pageSize;
+//       if (localRowIndex < paginatedData.length) {
+//         requestAnimationFrame(() => {
+//           hotInstanceRef.current.selectRows(localRowIndex);
+//           hotInstanceRef.current.setDataAtCell(localRowIndex, 0, true, 'silent');
+//         });
+//       }
+//     }
+//   }
+// };
+
+//     setTimeout(() => {
+//       mapSelectedRowToCurrentPage();
+//       // restoreScrollPosition();
+//     }, 10);
+    
+//     return () => {
+//       [styleEl, paginationStyleEl, previewStyleEl].forEach(el => {
+//         if (document.head.contains(el)) {
+//           document.head.removeChild(el);
+//         }
+//       });
+//     };
+//   }, [filteredData, headers, searchQuery, pageSize, isDarkMode, currentPage, createCustomCheckboxRenderer, selectRow, role, editableColumns]);
  const sendBatchUpdatesToBackend = debounce(async (updates) => {
   try {
     const getUser = localStorage.getItem("loginUser");
@@ -1692,100 +2340,6 @@ const handleDeleteSelectedRows = useCallback(async () => {
         }
       }
     }, [selectedRows]);
-    const handleDeduceClick = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Check if we have valid data to work with
-        if (!filteredData || !Array.isArray(filteredData) || !data || !Array.isArray(data)) {
-          toast.error("Data not loaded yet");
-          return;
-        }
-    
-        if (selectedRows.length === 0) {
-          // If no rows selected, find duplicates in all "New Data"/"Pending" records
-          const response = await axios.post(
-            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,
-            {
-              statusFilter: ["New Data", "Pending"],
-              caseStatusFilter: ["New Pending"],
-              applyFilters: deduceFilters.applyFilters,
-              filters: deduceFilters.applyFilters ? filters : {}
-            }
-          );
-          
-          if (response.data?.success && response.data.duplicates?.length > 0) {
-            setData(response.data.duplicates);
-            toast.success(`Found ${response.data.duplicates.length} duplicate records`);
-          } else {
-            toast.info("No duplicate records found");
-          }
-        } 
-        else if (selectedRows.length === 1) {
-          // Existing single-record deduce logic
-          const rowIndex = selectedRows[0];
-          const rowData = data[rowIndex];
-          
-          if (!rowData) {
-            toast.error("Selected record not found");
-            return;
-          }
-    
-          const response = await axios.post(
-            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,
-            {
-              product: rowData.product,
-              accountNumber: rowData.accountNumber,
-              requirement: rowData.requirement,
-              caseId: rowData.caseId
-            }
-          );
-    
-          if (response.data?.success && response.data.records?.length > 0) {
-            setSimilarRecords(response.data.records);
-            setIsDeduceModalOpen(true);
-          } else {
-            toast.info("No similar historical records found");
-          }
-        }
-        else {
-          // For multiple selected rows
-          const selectedRecords = selectedRows
-            .map(index => data[index])
-            .filter(record => record); // Filter out undefined records
-          
-          if (selectedRecords.length === 0) {
-            toast.error("No valid records selected");
-            return;
-          }
-    
-          // Client-side duplicate detection
-          const seen = new Set();
-          const duplicates = [];
-          
-          selectedRecords.forEach(record => {
-            const key = `${record.product}|${record.accountNumber}|${record.requirement}`;
-            if (seen.has(key)) {
-              duplicates.push(record);
-            } else {
-              seen.add(key);
-            }
-          });
-          
-          if (duplicates.length > 0) {
-            setData(duplicates);
-            toast.success(`Found ${duplicates.length} duplicates in selected records`);
-          } else {
-            toast.info("No duplicates found in selected records");
-          }
-        }
-      } catch (error) {
-        console.error("Deduce error:", error);
-        toast.error(error.response?.data?.message || error.message || "Failed to find duplicates");
-      } finally {
-        setIsLoading(false);
-      }
-    };
   
   const handleMasterReset = () => {
     // Clear local selected rows state
@@ -1944,6 +2498,127 @@ const handleSaveChanges = () => {
   }
 };
 
+
+
+
+const handleCopySelected = () => {
+  if (selectedRows.length !== 1) {
+    toast.warning("Please select exactly one row to copy");
+    return;
+  }
+  
+  const sourceIndex = selectedRows[0];
+  const sourceRecord = data[sourceIndex];
+  
+  // Store the source record temporarily
+  setSourceRecordToCopy(sourceRecord);
+  setIsCopyModalOpen(true);
+};
+
+const handlePasteSelected = async () => {
+  if (selectedRows.length === 0) {
+    toast.warning("Please select at least one row to paste to");
+    return;
+  }
+
+  if (!sourceRecordToCopy) {
+    toast.warning("No source record selected for copying");
+    return;
+  }
+
+  if (copyFields.length === 0) {
+    toast.warning("No fields selected for copying");
+    return;
+  }
+
+  const targetRecords = selectedRows
+    .map(index => data[index])
+    .filter(record => record.caseId !== sourceRecordToCopy.caseId); // skip source
+
+  if (targetRecords.length === 0) {
+    toast.warning("No valid target rows selected");
+    return;
+  }
+
+  try {
+    const getUser = localStorage.getItem("loginUser");
+    const user = getUser ? JSON.parse(getUser) : null;
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_Backend_Base_URL}/kyc/copy-paste-dedup`,
+      {
+        sourceId: sourceRecordToCopy.caseId,
+        targetIds: targetRecords.map(r => r.caseId),
+        fields: copyFields,
+        userId: user.userId,
+        userName: user.name
+      }
+    );
+
+    if (response.data.success) {
+      toast.success("Fields copied to multiple rows successfully");
+      handleDeduceClick(); // refresh or re-fetch
+    } else {
+      toast.error(response.data.message || "Copy failed");
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message || "Copy failed");
+  }
+};
+
+
+// const handlePasteSelected = async () => {
+//   if (!selectedRecord) {
+//     toast.warning("Please select a target row to paste to");
+//     return;
+//   }
+  
+//   if (!sourceRecordToCopy) {
+//     toast.warning("No source record selected for copying");
+//     return;
+//   }
+  
+//   if (copyFields.length === 0) {
+//     toast.warning("No fields selected for copying");
+//     return;
+//   }
+
+//   // Check if trying to copy to same record
+//   if (sourceRecordToCopy.caseId === selectedRecord.caseId) {
+//     toast.warning("Cannot paste to the same record");
+//     return;
+//   }
+
+//   try {
+//     const getUser = localStorage.getItem("loginUser");
+//     const user = getUser ? JSON.parse(getUser) : null;
+    
+//     const response = await axios.post(
+//       `${import.meta.env.VITE_Backend_Base_URL}/kyc/copy-paste-dedup`,
+//       {
+//         sourceId: sourceRecordToCopy.caseId,
+//         targetId: selectedRecord.caseId,
+//         fields: copyFields,
+//         userId: user.userId,
+//         userName: user.name
+//       }
+//     );
+    
+//     if (response.data.success) {
+//       toast.success("Fields copied successfully");
+//       handleDeduceClick()
+//     } else {
+//       toast.error(response.data.message || "Copy failed");
+//     }
+//   } catch (error) {
+//     toast.error(error.response?.data?.message || error.message || "Copy failed");
+//   }
+// };
+
+
+
+
+
   return (
     <div>
       <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"} p-2 rounded shadow-md`}>
@@ -2092,6 +2767,34 @@ const handleSaveChanges = () => {
                 ) : (
                   <>
                   { (role === "admin" || role === "employee" ) && (
+
+                    <>
+                            {deduceMode && (
+  <>
+    <button
+      onClick={handleCopySelected}
+      className={`px-3 py-1.5 text-sm ${
+        isDarkMode 
+          ? "bg-purple-600 hover:bg-purple-700 text-white" 
+          : "bg-purple-500 hover:bg-purple-600 text-white"
+      }`}
+      disabled={selectedRows.length !== 1}
+    >
+      Copy
+    </button>
+    <button
+      onClick={handlePasteSelected}
+      className={`px-3 py-1.5 text-sm ${
+        isDarkMode 
+          ? "bg-green-600 hover:bg-green-700 text-white" 
+          : "bg-green-500 hover:bg-green-600 text-white"
+      }`}
+      disabled={!selectedRecord || copyFields.length === 0}
+    >
+      Paste
+    </button>
+  </>
+)}
                     <button
   onClick={handleSaveChanges}
   className={`px-3 py-1.5 text-sm ${
@@ -2100,6 +2803,7 @@ const handleSaveChanges = () => {
 >
   Save Changes
 </button>
+</>
                   ) }
                   
 
@@ -2172,7 +2876,7 @@ const handleSaveChanges = () => {
                     disabled={isLoading || (selectedRows.length > 1 && selectedRows.length !== filteredData.length)}
                     title="Find similar previous records"
                   >
-                    {isLoading ? (
+                    {isdeduceLoading ? (
                       <>
                         <svg className="animate-spin h-4 w-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -2381,8 +3085,22 @@ const handleSaveChanges = () => {
           caseId={selectedCase?.caseId}
           onClose={() => setShowAttachments(false)}
         />
+
+
+{isCopyModalOpen && (
+  <CopyFieldsModal
+    headers={headers}
+    onClose={() => setIsCopyModalOpen(false)}
+    onSelectFields={(fields) => {
+      setCopyFields(fields);
+      setIsCopyModalOpen(false);
+      toast.success(`${fields.length} fields selected for copying`);
+    }}
+    isDarkMode={isDarkMode}
+  />
+)}
   
-        {isDeduceModalOpen && <DeduceModal />}
+        {/* {isDeduceModalOpen && <DeduceModal />}
         {selectedRecordToCopy && (
           <CopyFieldsModal 
             record={selectedRecordToCopy}
@@ -2391,7 +3109,7 @@ const handleSaveChanges = () => {
             fetchTrackerData={fetchTrackerData}
             isDarkMode={isDarkMode}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

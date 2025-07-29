@@ -194,7 +194,8 @@ function SingleUpload({ isDarkMode }) {
           product: "", 
           accountNumber: "", 
           requirement: "",
-          clientId: "" 
+          clientId: "" ,
+          ReferBy:""
         });
       } else {
         showToast(response.data.message || "Failed to upload data.", "error");
