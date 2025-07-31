@@ -289,9 +289,51 @@ function FileUpload({ isDarkMode }) {
   return (
     <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
       rounded-lg p-6 space-y-5 border`}>
+        <div className="flex gap-5">
       <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
         Upload Excel File
       </h3>
+
+{/* instructions */}
+<div className="relative inline-block group">
+  <button className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-200 ${
+    isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'
+  }`}>
+    <span className="text-xs font-bold">i</span>
+  </button>
+
+  {/* Tooltip on the right side */}
+  <div className={`absolute left-full top-1/2 transform -translate-y-1/2 ml-3 w-80 p-4 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none ${
+    isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+  }`}>
+    
+    {/* Arrow */}
+    <div className={`absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent ${
+      isDarkMode ? 'border-r-gray-800' : 'border-r-white'
+    }`}></div>
+
+    <div className="flex items-start">
+      <AlertCircle className={`w-5 h-5 mr-2 mt-0.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+      <div>
+        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          Instructions
+        </p>
+        <ul className={`mt-2 space-y-1 list-disc list-inside ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
+          <li><strong>All fields are mandatory:</strong> Refer By and Client Code must be filled before uploading the file.</li>
+          <li><strong>File Format:</strong> Ensure the uploaded file is in Excel (.xlsx, .xls) or CSV format.</li>
+          <li><strong>Smart Validation:</strong> The system will validate the file contents during the upload process.</li>
+          <li><strong>Progress Tracking:</strong> You will see the progress of the upload and processing steps.</li>
+          <li><strong>Results Summary:</strong> After processing, a summary of the results will be displayed, including total records, inserted, duplicates, and failed records.</li>
+          <li><strong>Download Template:</strong> Use the "Download Template" button to get a sample file format for your uploads.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+      {/* <h3 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        Upload Excel File
+      </h3> */}
 
       {user && (
         <div className={`p-3 rounded-lg ${
@@ -493,26 +535,6 @@ function FileUpload({ isDarkMode }) {
           </button>
         </div>
       </div>
-
-      {/* // Add this instruction section above the main content in the return statement */}
-<div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-6`}>
-  <div className="flex items-start">
-    <AlertCircle className={`w-5 h-5 mr-2 mt-0.5 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-    <div>
-      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-        Instructions
-      </p>
-      <ul className={`mt-2 space-y-1 list-disc list-inside ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
-        <li><strong>All fields are mandatory:</strong> Refer By and Client Code must be filled before uploading the file.</li>
-        <li><strong>File Format:</strong> Ensure the uploaded file is in Excel (.xlsx, .xls) or CSV format.</li>
-        <li><strong>Smart Validation:</strong> The system will validate the file contents during the upload process.</li>
-        <li><strong>Progress Tracking:</strong> You will see the progress of the upload and processing steps.</li>
-        <li><strong>Results Summary:</strong> After processing, a summary of the results will be displayed, including total records, inserted, duplicates, and failed records.</li>
-        <li><strong>Download Template:</strong> Use the "Download Template" button to get a sample file format for your uploads.</li>
-      </ul>
-    </div>
-  </div>
-</div>
     </div>
   );
 }

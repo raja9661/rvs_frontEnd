@@ -34,7 +34,8 @@ const UserManagement = () => {
     createdBy: "admin",
     isEnable: "enable",
     showPassword: "",
-    createdAt: ""
+    createdAt: "",
+    createdDay:"",
   });
 
   const navigate = useNavigate();
@@ -109,7 +110,8 @@ const UserManagement = () => {
             createdBy: user.createdBy || "admin",
             isEnable: user.isEnable || "enable",
             showPassword: user.showPassword || "",
-            createdAt: user.createdAt || ""
+            createdAt: user.createdAt || "",
+            createdDay: user.createdDay || ""
           }
         : {
             name: "",
@@ -506,13 +508,26 @@ const UserManagement = () => {
                       {currentUser ? "Edit User" : "Add User"}
                     </h3>
                     <button
+  onClick={() => {
+    setIsModalOpen(false);
+    setShowPassword(false); // toggle password visibility
+  }}
+  className={`p-1 rounded-full ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+>
+  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+</button>
+
+                    {/* <button
                       onClick={() => setIsModalOpen(false)}
+                      
                       className={`p-1 rounded-full ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
                     >
                       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                    </button>
+                    </button> */}
                   </div>
                   
                   <form onSubmit={handleSubmit}>
@@ -649,8 +664,8 @@ const UserManagement = () => {
                             id="clientCode"
                             value={formData.clientCode || ""}
                             onChange={handleInputChange}
-                            disabled={false}
-                            readOnly={false}
+                            
+                            readOnly={true}
                             className={`w-full rounded-md border py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                               isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
                             }`}
@@ -792,6 +807,21 @@ const UserManagement = () => {
                           name="createdAt"
                           id="createdAt"
                           value={formData.createdAt || ""}
+                          readOnly={true}
+                          className={`w-full rounded-md border py-2 px-3 ${
+                            isDarkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-300 text-gray-500"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="createdDay" className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                          Created Day
+                        </label>
+                        <input
+                          type="text"
+                          name="createdDay"
+                          id="createdDay"
+                          value={formData.createdDay || ""}
                           readOnly={true}
                           className={`w-full rounded-md border py-2 px-3 ${
                             isDarkMode ? "bg-gray-700 border-gray-600 text-gray-300" : "bg-gray-100 border-gray-300 text-gray-500"

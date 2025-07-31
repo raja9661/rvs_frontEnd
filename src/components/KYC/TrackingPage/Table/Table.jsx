@@ -719,6 +719,9 @@ const restoreScrollPosition = () => {
     const caseStatusDropDown = ["New Pending","Sent"];
     const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Records Not Updated","Not Found","Records Not Found"]
     const priorityDropdown = ["","Urgent",""]
+
+    console.log("paginatedData",paginatedData)
+    console.log("headers",headers)
     
     const formattedHeaders = formatHeaderDisplay(headers);
     const attachmentRenderer = createAttachmentRenderer();
@@ -912,18 +915,40 @@ const restoreScrollPosition = () => {
         return (currentPage - 1) * pageSize + row + 1;
       },
       manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
-      contextMenu: [
-    'cut',
-    'copy',
-    '---------',
-    'row_above',
-    'row_below',
-    'remove_row',
-    '---------',
-    'alignment',
-    'make_read_only',
-    'clear_column',
-  ],
+      hiddenColumns: {
+    columns: headers,
+    indicators: true, // shows small indicators for hidden columns
+  },
+      
+            contextMenu: {
+  items: {
+    'add_full_border': {
+      name: 'Add Full Border',
+      callback: function () {
+        const selected = this.getSelectedRange();
+        if (selected) {
+          const bordersPlugin = this.getPlugin('customBorders');
+          selected.forEach((range) => {
+            for (let row = range.from.row; row <= range.to.row; row++) {
+              for (let col = range.from.col; col <= range.to.col; col++) {
+                bordersPlugin.setBorders([[row, col]], {
+                  top: { width: 1, color: 'black' },
+                  left: { width: 1, color: 'black' },
+                  bottom: { width: 1, color: 'black' },
+                  right: { width: 1, color: 'black' }
+                });
+              }
+            }
+          });
+        }
+      }
+    },
+    'borders': {},
+    'remove_col': {},
+    'hidden_columns_hide': { name: 'Hide column' },
+    'hidden_columns_show': { name: 'Show column' }
+  }
+},
       rowHeights: 22,
       className: "htCenter htMiddle",
       licenseKey: "non-commercial-and-evaluation",
@@ -2449,7 +2474,7 @@ useEffect(() => {
       handleMasterReset();
     }
     
-    if(role === "admin"){
+    if(role === "admin"  || role === "employee"){
     if (e.ctrlKey && e.key === 'p') {
       e.preventDefault();
       handleDeduceClick();
@@ -2501,18 +2526,93 @@ const handleSaveChanges = () => {
 
 
 
+// const handleCopySelected = () => {
+//   if (selectedRows.length !== 1) {
+//     toast.warning("Please select exactly one row to copy");
+//     return;
+//   }
+  
+//   const sourceIndex = selectedRows[0];
+//   const sourceRecord = data[sourceIndex];
+  
+//   // Store the source record temporarily
+//   setSourceRecordToCopy(sourceRecord);
+//   setIsCopyModalOpen(true);
+// };
+
+// const handlePasteSelected = async () => {
+//   if (selectedRows.length === 0) {
+//     toast.warning("Please select at least one row to paste to");
+//     return;
+//   }
+
+//   if (!sourceRecordToCopy) {
+//     toast.warning("No source record selected for copying");
+//     return;
+//   }
+
+//   if (copyFields.length === 0) {
+//     toast.warning("No fields selected for copying");
+//     return;
+//   }
+
+//   const targetRecords = selectedRows
+//     .map(index => data[index])
+//     .filter(record => record.caseId !== sourceRecordToCopy.caseId); // skip source
+
+//   if (targetRecords.length === 0) {
+//     toast.warning("No valid target rows selected");
+//     return;
+//   }
+
+//   try {
+//     const getUser = localStorage.getItem("loginUser");
+//     const user = getUser ? JSON.parse(getUser) : null;
+
+//     const response = await axios.post(
+//       `${import.meta.env.VITE_Backend_Base_URL}/kyc/copy-paste-dedup`,
+//       {
+//         sourceId: sourceRecordToCopy.caseId,
+//         targetIds: targetRecords.map(r => r.caseId),
+//         fields: copyFields,
+//         userId: user.userId,
+//         userName: user.name
+//       }
+//     );
+
+//     if (response.data.success) {
+//       toast.success("Fields copied to multiple rows successfully");
+//       handleDeduceClick(); // refresh or re-fetch
+//     } else {
+//       toast.error(response.data.message || "Copy failed");
+//     }
+//   } catch (error) {
+//     toast.error(error.response?.data?.message || error.message || "Copy failed");
+//   }
+// };
 const handleCopySelected = () => {
   if (selectedRows.length !== 1) {
     toast.warning("Please select exactly one row to copy");
     return;
   }
-  
+
   const sourceIndex = selectedRows[0];
   const sourceRecord = data[sourceIndex];
-  
-  // Store the source record temporarily
-  setSourceRecordToCopy(sourceRecord);
-  setIsCopyModalOpen(true);
+
+  // Automatically copy specific fields
+  const fieldsToCopy = ["attachment", "detail", "detail1"];
+
+  const copyPayload = {};
+  fieldsToCopy.forEach(field => {
+    if (sourceRecord[field] !== undefined) {
+      copyPayload[field] = sourceRecord[field];
+    }
+  });
+
+  // Store the copied values
+  setSourceRecordToCopy({ ...sourceRecord, ...copyPayload });
+  setCopyFields(fieldsToCopy); // ensure paste can still check copyFields
+  toast.success("Record copied successfully");
 };
 
 const handlePasteSelected = async () => {
@@ -2526,8 +2626,11 @@ const handlePasteSelected = async () => {
     return;
   }
 
-  if (copyFields.length === 0) {
-    toast.warning("No fields selected for copying");
+  const getUser = localStorage.getItem("loginUser");
+  const user = getUser ? JSON.parse(getUser) : null;
+
+  if (!user) {
+    toast.error("User session expired");
     return;
   }
 
@@ -2539,81 +2642,34 @@ const handlePasteSelected = async () => {
     toast.warning("No valid target rows selected");
     return;
   }
+  console.log("sourceRecordToCopy:",sourceRecordToCopy)
 
   try {
-    const getUser = localStorage.getItem("loginUser");
-    const user = getUser ? JSON.parse(getUser) : null;
-
     const response = await axios.post(
       `${import.meta.env.VITE_Backend_Base_URL}/kyc/copy-paste-dedup`,
       {
-        sourceId: sourceRecordToCopy.caseId,
+        // sourceData: {
+        //   attachment: sourceRecordToCopy.attachment,
+        //   detail: sourceRecordToCopy.detail,
+        //   detail1: sourceRecordToCopy.detail1
+        // },
+        sourceRecordToCopy,
         targetIds: targetRecords.map(r => r.caseId),
-        fields: copyFields,
         userId: user.userId,
         userName: user.name
       }
     );
 
     if (response.data.success) {
-      toast.success("Fields copied to multiple rows successfully");
-      handleDeduceClick(); // refresh or re-fetch
+      toast.success("Fields copied and updated successfully");
+      handleDeduceClick(); // refresh
     } else {
-      toast.error(response.data.message || "Copy failed");
+      toast.error(response.data.message || "Paste failed");
     }
   } catch (error) {
-    toast.error(error.response?.data?.message || error.message || "Copy failed");
+    toast.error(error.response?.data?.message || error.message || "Paste failed");
   }
 };
-
-
-// const handlePasteSelected = async () => {
-//   if (!selectedRecord) {
-//     toast.warning("Please select a target row to paste to");
-//     return;
-//   }
-  
-//   if (!sourceRecordToCopy) {
-//     toast.warning("No source record selected for copying");
-//     return;
-//   }
-  
-//   if (copyFields.length === 0) {
-//     toast.warning("No fields selected for copying");
-//     return;
-//   }
-
-//   // Check if trying to copy to same record
-//   if (sourceRecordToCopy.caseId === selectedRecord.caseId) {
-//     toast.warning("Cannot paste to the same record");
-//     return;
-//   }
-
-//   try {
-//     const getUser = localStorage.getItem("loginUser");
-//     const user = getUser ? JSON.parse(getUser) : null;
-    
-//     const response = await axios.post(
-//       `${import.meta.env.VITE_Backend_Base_URL}/kyc/copy-paste-dedup`,
-//       {
-//         sourceId: sourceRecordToCopy.caseId,
-//         targetId: selectedRecord.caseId,
-//         fields: copyFields,
-//         userId: user.userId,
-//         userName: user.name
-//       }
-//     );
-    
-//     if (response.data.success) {
-//       toast.success("Fields copied successfully");
-//       handleDeduceClick()
-//     } else {
-//       toast.error(response.data.message || "Copy failed");
-//     }
-//   } catch (error) {
-//     toast.error(error.response?.data?.message || error.message || "Copy failed");
-//   }
-// };
 
 
 
@@ -2772,27 +2828,28 @@ const handlePasteSelected = async () => {
                             {deduceMode && (
   <>
     <button
-      onClick={handleCopySelected}
-      className={`px-3 py-1.5 text-sm ${
-        isDarkMode 
-          ? "bg-purple-600 hover:bg-purple-700 text-white" 
-          : "bg-purple-500 hover:bg-purple-600 text-white"
-      }`}
-      disabled={selectedRows.length !== 1}
-    >
-      Copy
-    </button>
-    <button
-      onClick={handlePasteSelected}
-      className={`px-3 py-1.5 text-sm ${
-        isDarkMode 
-          ? "bg-green-600 hover:bg-green-700 text-white" 
-          : "bg-green-500 hover:bg-green-600 text-white"
-      }`}
-      disabled={!selectedRecord || copyFields.length === 0}
-    >
-      Paste
-    </button>
+  onClick={handleCopySelected}
+  className={`px-3 py-1.5 text-sm ${
+    isDarkMode 
+      ? "bg-purple-600 hover:bg-purple-700 text-white" 
+      : "bg-purple-500 hover:bg-purple-600 text-white"
+  }`}
+  disabled={selectedRows.length !== 1}
+>
+  Copy
+</button>
+<button
+  onClick={handlePasteSelected}
+  className={`px-3 py-1.5 text-sm ${
+    isDarkMode 
+      ? "bg-green-600 hover:bg-green-700 text-white" 
+      : "bg-green-500 hover:bg-green-600 text-white"
+  }`}
+  disabled={!sourceRecordToCopy}
+>
+  Paste
+</button>
+
   </>
 )}
                     <button
