@@ -231,7 +231,7 @@ const FilterControls = ({
       caseIds.forEach(caseId => formData.append('caseIds', caseId));
 
       await axios.post(
-        `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-attachment`,
+        `${import.meta.env.VITE_Backend_Base_URL}/upload/upload-attachment`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
