@@ -25,6 +25,92 @@ const formatMonth = (monthNum, year) => {
   return year ? `${monthName} ${year}` : monthName;
 };
 
+// const SEARCH_CONFIG = {
+//   year: {
+//     fields: ['name', '_id'],
+//     placeholder: 'Search years...',
+//     searchInRecords: false
+//   },
+//   month: {
+//     fields: ['name'],
+//     searchTerms: (item) => [
+//       item.name,
+//       formatMonth(item.name),
+//       formatMonth(item.name).toLowerCase(),
+//       formatMonth(item.name).substring(0, 3)
+//     ],
+//     placeholder: 'Search months (e.g. "06", "June", or "jun")...',
+//     searchInRecords: false
+//   },
+//   clientType: {
+//     fields: ['name', 'clientType'],
+//     placeholder: 'Search client types...',
+//     searchInRecords: false
+//   },
+//   productType: {
+//     fields: ['name', 'productType'],
+//     placeholder: 'Search product types...',
+//     searchInRecords: false
+//   },
+//   clientCode: {
+//     fields: ['name', 'clientCode'],
+//     placeholder: 'Search client codes...',
+//     searchInRecords: false
+//   },
+//   product: {
+//     fields: ['name', 'product'],
+//     placeholder: 'Search products...',
+//     searchInRecords: false
+//   },
+//   productDetails: {
+//     fields: ['caseId', 'name', 'clientType', 'clientCode', 'product', 'caseStatus', 'priority'],
+//     placeholder: 'Search cases...',
+//     searchInRecords: true
+//   }
+// };
+// const SEARCH_CONFIG = {
+//   year: {
+//     fields: ['name', '_id'],
+//     placeholder: 'Search years...',
+//     searchInRecords: false
+//   },
+//   month: {
+//     fields: ['name'],
+//     searchTerms: (item) => [
+//       item.name,
+//       formatMonth(item.name),
+//       formatMonth(item.name).toLowerCase(),
+//       formatMonth(item.name).substring(0, 3)
+//     ],
+//     placeholder: 'Search months (e.g. "06", "June", or "jun")...',
+//     searchInRecords: false
+//   },
+//   clientType: {
+//     fields: ['name', 'clientType'],
+//     placeholder: 'Search client types...',
+//     searchInRecords: false
+//   },
+//   productType: {
+//     fields: ['name', 'productType'],
+//     placeholder: 'Search product types...',
+//     searchInRecords: false
+//   },
+//   clientCode: {
+//     fields: ['name', 'clientCode'],
+//     placeholder: 'Search client codes...',
+//     searchInRecords: false
+//   },
+//   updatedProductName: {
+//     fields: ['name', 'updatedProductName'],
+//     placeholder: 'Search updated product names...',
+//     searchInRecords: false
+//   },
+//   productDetails: {
+//     fields: ['caseId', 'name', 'clientType', 'clientCode', 'updatedProductName', 'caseStatus', 'priority'],
+//     placeholder: 'Search cases...',
+//     searchInRecords: true
+//   }
+// };
 const SEARCH_CONFIG = {
   year: {
     fields: ['name', '_id'],
@@ -47,28 +133,22 @@ const SEARCH_CONFIG = {
     placeholder: 'Search client types...',
     searchInRecords: false
   },
-  productType: {
-    fields: ['name', 'productType'],
-    placeholder: 'Search product types...',
-    searchInRecords: false
-  },
   clientCode: {
     fields: ['name', 'clientCode'],
     placeholder: 'Search client codes...',
     searchInRecords: false
   },
-  product: {
-    fields: ['name', 'product'],
-    placeholder: 'Search products...',
+  updatedProductName: {
+    fields: ['name', 'updatedProductName'],
+    placeholder: 'Search updated product names...',
     searchInRecords: false
   },
   productDetails: {
-    fields: ['caseId', 'name', 'clientType', 'clientCode', 'product', 'caseStatus', 'priority'],
+    fields: ['caseId', 'name', 'clientType', 'clientCode', 'updatedProductName', 'caseStatus', 'priority'],
     placeholder: 'Search cases...',
     searchInRecords: true
   }
 };
-
 const LiveDashboard = () => {
   const isDarkMode = localStorage.getItem("theme") === "dark";
   const [dashboardData, setDashboardData] = useState({
@@ -99,7 +179,8 @@ const LiveDashboard = () => {
       clientType: null,
       clientCode: null,
       product: null,
-      productType: null
+      productType: null,
+      updatedProductName:null
     }
   });
 
@@ -175,59 +256,423 @@ const LiveDashboard = () => {
     return filterRecords(recordsToFilter, searchTerm, modalData.hierarchy.level);
   }, [records.data, modalData.data, searchTerm, modalData.hierarchy.level]);
 
-  const fetchCaseDetails = async (type, year = null, month = null, clientType = null, productType = null, clientCode = null, product = null) => {
-    setSearchTerm('');
+  // const fetchCaseDetails = async (type, year = null, month = null, clientType = null, productType = null, clientCode = null, product = null) => {
+  //   setSearchTerm('');
     
-    // Determine hierarchy level
-    let level;
-    if (type === 'today') {
-      level = product ? 'productDetails' : 
-             clientCode ? 'product' : 
-             productType ? 'clientCode' : 
-             clientType ? 'productType' : 
-             'clientType';
-    } else {
-      level = product ? 'productDetails' : 
-             clientCode ? 'product' : 
-             productType ? 'clientCode' : 
-             clientType ? 'productType' : 
-             month ? 'clientType' :
-             year ? 'month' :
-             'year';
+  //   // Determine hierarchy level
+  //   let level;
+  //   if (type === 'today') {
+  //     level = product ? 'productDetails' : 
+  //            clientCode ? 'product' : 
+  //            productType ? 'clientCode' : 
+  //            clientType ? 'productType' : 
+  //            'clientType';
+  //   } else {
+  //     level = product ? 'productDetails' : 
+  //            clientCode ? 'product' : 
+  //            productType ? 'clientCode' : 
+  //            clientType ? 'productType' : 
+  //            month ? 'clientType' :
+  //            year ? 'month' :
+  //            'year';
+  //   }
+
+  //   setModalData(prev => ({
+  //     ...prev,
+  //     open: true,
+  //     loading: true,
+  //     title: type === 'today' ? "Today's Cases" : `${type} Cases`,
+  //     hierarchy: { level, type, year, month, clientType, productType, clientCode, product }
+  //   }));
+
+  //   try {
+  //     const params = new URLSearchParams();
+  //     params.append('type', type);
+      
+  //     if (type !== 'today') {
+  //       if (year) params.append('year', year);
+  //       if (month) params.append('month', month);
+  //     }
+      
+  //     if (clientType) params.append('clientType', clientType);
+  //     if (productType) params.append('productType', productType);
+  //     if (clientCode) params.append('clientCode', clientCode);
+  //     if (product) params.append('product', product);
+
+  //      const requestBody = {
+  //       role,
+  //       user: user?.name
+  //     };
+
+  //     if (role === 'client') {
+  //       requestBody.code = user?.clientCode;
+  //     }
+
+  //     const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+  //       },
+  //       body: JSON.stringify({ 
+  //         requestBody
+  //       })
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (data.success) {
+  //       // For clients, ensure we only show their data
+  //       let filteredData = data.data;
+  //       let filteredRecords = data.records;
+        
+  //       // if (role === 'client') {
+  //       //   if (level === 'productDetails') {
+  //       //     filteredRecords = data.records.filter(item => item.clientCode === user?.clientCode);
+  //       //   } else {
+  //       //     filteredData = data.data.filter(item => {
+  //       //       // This depends on your data structure - adjust as needed
+  //       //       return item.clientCode === user?.clientCode;
+  //       //     });
+  //       //   }
+  //       // }
+
+  //       setModalData(prev => ({
+  //         ...prev,
+  //         data: filteredData,
+  //         loading: false
+  //       }));
+        
+  //       if (level === 'productDetails') {
+  //         setRecords({
+  //           data: filteredRecords,
+  //           loading: false
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching case details:", error);
+  //     setModalData(prev => ({ ...prev, loading: false, data: [] }));
+  //   }
+  // };
+
+  // const handleDrillDown = (item) => {
+  //   const { level, type, year, month, clientType, productType, clientCode } = modalData.hierarchy;
+    
+  //   switch(level) {
+  //     case 'year':
+  //       fetchCaseDetails(type, item.name);
+  //       break;
+  //     case 'month':
+  //       fetchCaseDetails(type, year, item.name);
+  //       break;
+  //     case 'clientType':
+  //       fetchCaseDetails(type, year, month, item.name);
+  //       break;
+  //     case 'productType':
+  //       fetchCaseDetails(type, year, month, clientType, item.name);
+  //       break;
+  //     case 'clientCode':
+  //       fetchCaseDetails(type, year, month, clientType, productType, item.name);
+  //       break;
+  //     case 'product':
+  //       fetchCaseDetails(type, year, month, clientType, productType, clientCode, item.name);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
+  
+  const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null) => {
+  setSearchTerm('');
+  
+  // Determine hierarchy level
+  let level;
+  if (type === 'today') {
+    level = updatedProductName ? 'productDetails' : 
+           clientCode ? 'updatedProductName' : 
+           clientType ? 'clientCode' : 
+           'clientType';
+  } else {
+    level = updatedProductName ? 'productDetails' : 
+           clientCode ? 'updatedProductName' : 
+           clientType ? 'clientCode' : 
+           month ? 'clientType' :
+           year ? 'month' :
+           'year';
+  }
+
+  setModalData(prev => ({
+    ...prev,
+    open: true,
+    loading: true,
+    title: type === 'today' ? "Today's Cases" : `${type} Cases`,
+    hierarchy: { level, type, year, month, clientType, clientCode, updatedProductName }
+  }));
+
+  try {
+    const params = new URLSearchParams();
+    params.append('type', type);
+    
+    if (type !== 'today') {
+      if (year) params.append('year', year);
+      if (month) params.append('month', month);
+    }
+    
+    if (clientType) params.append('clientType', clientType);
+    if (clientCode) params.append('clientCode', clientCode);
+    if (updatedProductName) params.append('updatedProductName', updatedProductName);
+
+    const requestBody = {
+      role,
+      user: user?.name
+    };
+
+    if (role === 'client') {
+      requestBody.code = user?.clientCode;
     }
 
-    setModalData(prev => ({
-      ...prev,
-      open: true,
-      loading: true,
-      title: type === 'today' ? "Today's Cases" : `${type} Cases`,
-      hierarchy: { level, type, year, month, clientType, productType, clientCode, product }
-    }));
+    const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ 
+        requestBody
+      })
+    });
 
-    try {
-      const params = new URLSearchParams();
-      params.append('type', type);
+    const data = await res.json();
+
+    if (data.success) {
+      let filteredData = data.data;
+      let filteredRecords = data.records;
       
-      if (type !== 'today') {
-        if (year) params.append('year', year);
-        if (month) params.append('month', month);
-      }
+      setModalData(prev => ({
+        ...prev,
+        data: filteredData,
+        loading: false
+      }));
       
-      if (clientType) params.append('clientType', clientType);
-      if (productType) params.append('productType', productType);
-      if (clientCode) params.append('clientCode', clientCode);
-      if (product) params.append('product', product);
-
-       const requestBody = {
-        role,
-        user: user?.name
-      };
-
-      if (role === 'client') {
-        requestBody.code = user?.clientCode;
+      if (level === 'productDetails') {
+        setRecords({
+          data: filteredRecords,
+          loading: false
+        });
       }
+    }
+  } catch (error) {
+    console.error("Error fetching case details:", error);
+    setModalData(prev => ({ ...prev, loading: false, data: [] }));
+  }
+};
+const handleDrillDown = (item) => {
+  const { level, type, year, month, clientType, clientCode } = modalData.hierarchy;
+  
+  switch(level) {
+    case 'year':
+      fetchCaseDetails(type, item.name);
+      break;
+    case 'month':
+      fetchCaseDetails(type, year, item.name);
+      break;
+    case 'clientType':
+      fetchCaseDetails(type, year, month, item.name);
+      break;
+    case 'clientCode':
+      fetchCaseDetails(type, year, month, clientType, item.name);
+      break;
+    case 'updatedProductName':
+      fetchCaseDetails(type, year, month, clientType, clientCode, item.name);
+      break;
+    default:
+      break;
+  }
+};
+  
+  // const fetchCaseDetails = async (type, year = null, month = null, clientType = null, productType = null, clientCode = null, updatedProductName = null) => {
+  //   setSearchTerm('');
+    
+  //   // Determine hierarchy level
+  //   let level;
+  //   if (type === 'today') {
+  //     level = updatedProductName ? 'productDetails' : 
+  //            clientCode ? 'updatedProductName' : 
+  //            productType ? 'clientCode' : 
+  //            clientType ? 'productType' : 
+  //            'clientType';
+  //   } else {
+  //     level = updatedProductName ? 'productDetails' : 
+  //            clientCode ? 'updatedProductName' : 
+  //            productType ? 'clientCode' : 
+  //            clientType ? 'productType' : 
+  //            month ? 'clientType' :
+  //            year ? 'month' :
+  //            'year';
+  //   }
 
-      const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
+  //   setModalData(prev => ({
+  //     ...prev,
+  //     open: true,
+  //     loading: true,
+  //     title: type === 'today' ? "Today's Cases" : `${type} Cases`,
+  //     hierarchy: { level, type, year, month, clientType, productType, clientCode, updatedProductName }
+  //   }));
+
+  //   try {
+  //     const params = new URLSearchParams();
+  //     params.append('type', type);
+      
+  //     if (type !== 'today') {
+  //       if (year) params.append('year', year);
+  //       if (month) params.append('month', month);
+  //     }
+      
+  //     if (clientType) params.append('clientType', clientType);
+  //     if (productType) params.append('productType', productType);
+  //     if (clientCode) params.append('clientCode', clientCode);
+  //     if (updatedProductName) params.append('updatedProductName', updatedProductName);
+
+  //     const requestBody = {
+  //       role,
+  //       user: user?.name
+  //     };
+
+  //     if (role === 'client') {
+  //       requestBody.code = user?.clientCode;
+  //     }
+
+  //     const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+  //       },
+  //       body: JSON.stringify({ 
+  //         requestBody
+  //       })
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (data.success) {
+  //       let filteredData = data.data;
+  //       let filteredRecords = data.records;
+        
+  //       setModalData(prev => ({
+  //         ...prev,
+  //         data: filteredData,
+  //         loading: false
+  //       }));
+        
+  //       if (level === 'productDetails') {
+  //         setRecords({
+  //           data: filteredRecords,
+  //           loading: false
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching case details:", error);
+  //     setModalData(prev => ({ ...prev, loading: false, data: [] }));
+  //   }
+  // };
+
+  // const handleDrillDown = (item) => {
+  //   const { level, type, year, month, clientType, productType, clientCode } = modalData.hierarchy;
+    
+  //   switch(level) {
+  //     case 'year':
+  //       fetchCaseDetails(type, item.name);
+  //       break;
+  //     case 'month':
+  //       fetchCaseDetails(type, year, item.name);
+  //       break;
+  //     case 'clientType':
+  //       fetchCaseDetails(type, year, month, item.name);
+  //       break;
+  //     case 'productType':
+  //       fetchCaseDetails(type, year, month, clientType, item.name);
+  //       break;
+  //     case 'clientCode':
+  //       fetchCaseDetails(type, year, month, clientType, productType, item.name);
+  //       break;
+  //     case 'updatedProductName':
+  //       fetchCaseDetails(type, year, month, clientType, productType, clientCode, item.name);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
+
+  const downloadRecords = async (name) => {
+  setExportLoading(true);
+  try {
+    const { 
+      level, 
+      type, 
+      year, 
+      month, 
+      clientType, 
+      clientCode, 
+      productType, 
+      updatedProductName 
+    } = modalData.hierarchy;
+    
+    const params = new URLSearchParams();
+    params.append('type', type);
+    params.append('download', 'true');
+    
+    if (type !== 'today') {
+      if (year) params.append('year', year);
+      if (month) params.append('month', month);
+    }
+    
+    // Add all hierarchy filters
+    if (clientType) params.append('clientType', clientType);
+    if (clientCode) params.append('clientCode', clientCode);
+    if (productType) params.append('productType', productType);
+    if (updatedProductName) params.append('updatedProductName', updatedProductName);
+    
+    // Handle download of specific items
+    if (name) {
+      switch(level) {
+        case 'year':
+          params.append('year', name);
+          break;
+        case 'month':
+          params.append('month', name);
+          break;
+        case 'clientType':
+          params.append('clientType', name);
+          break;
+        case 'clientCode':
+          params.append('clientCode', name);
+          break;
+        case 'productType':
+          params.append('productType', name);
+          break;
+        case 'updatedProductName':
+          params.append('updatedProductName', name);
+          break;
+        default:
+          break;
+      }
+    }
+
+    const requestBody = {
+      role,
+      user: user?.name
+    };
+
+    if (role === 'client') {
+      requestBody.code = user?.clientCode;
+    }
+
+    const response = await fetch(
+      `${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`,
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,160 +681,134 @@ const LiveDashboard = () => {
         body: JSON.stringify({ 
           requestBody
         })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        // For clients, ensure we only show their data
-        let filteredData = data.data;
-        let filteredRecords = data.records;
-        
-        // if (role === 'client') {
-        //   if (level === 'productDetails') {
-        //     filteredRecords = data.records.filter(item => item.clientCode === user?.clientCode);
-        //   } else {
-        //     filteredData = data.data.filter(item => {
-        //       // This depends on your data structure - adjust as needed
-        //       return item.clientCode === user?.clientCode;
-        //     });
-        //   }
-        // }
-
-        setModalData(prev => ({
-          ...prev,
-          data: filteredData,
-          loading: false
-        }));
-        
-        if (level === 'productDetails') {
-          setRecords({
-            data: filteredRecords,
-            loading: false
-          });
-        }
       }
-    } catch (error) {
-      console.error("Error fetching case details:", error);
-      setModalData(prev => ({ ...prev, loading: false, data: [] }));
-    }
-  };
-
-  const handleDrillDown = (item) => {
-    const { level, type, year, month, clientType, productType, clientCode } = modalData.hierarchy;
+    );
     
-    switch(level) {
-      case 'year':
-        fetchCaseDetails(type, item.name);
-        break;
-      case 'month':
-        fetchCaseDetails(type, year, item.name);
-        break;
-      case 'clientType':
-        fetchCaseDetails(type, year, month, item.name);
-        break;
-      case 'productType':
-        fetchCaseDetails(type, year, month, clientType, item.name);
-        break;
-      case 'clientCode':
-        fetchCaseDetails(type, year, month, clientType, productType, item.name);
-        break;
-      case 'product':
-        fetchCaseDetails(type, year, month, clientType, productType, clientCode, item.name);
-        break;
-      default:
-        break;
+    if (!response.ok) throw new Error('Download failed');
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    
+    // Build filename with all hierarchy levels
+    const filenameParts = [type];
+    if (type !== 'today') {
+      if (year) filenameParts.push(year);
+      if (month) filenameParts.push(month);
     }
-  };
+    if (clientType) filenameParts.push(clientType);
+    if (clientCode) filenameParts.push(clientCode);
+    if (productType) filenameParts.push(productType);
+    if (updatedProductName) filenameParts.push(updatedProductName);
+    if (name) filenameParts.push(name);
+    
+    // Clean filename parts and join with underscores
+    const cleanFilenameParts = filenameParts
+      .filter(part => part !== undefined && part !== null)
+      .map(part => part.toString().replace(/[^a-z0-9]/gi, '_').toLowerCase());
+    
+    a.download = `${cleanFilenameParts.join('_')}.xlsx`;
+    
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('Download error:', error);
+    alert('Failed to download. Please try again.');
+  } finally {
+    setExportLoading(false);
+  }
+};
+  // const downloadRecords = async (name) => {
+  //   setExportLoading(true);
+  //   try {
+  //     const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
+      
+  //     const params = new URLSearchParams();
+  //     params.append('type', type);
+  //     params.append('download', 'true');
+      
+  //     if (type !== 'today') {
+  //       if (year) params.append('year', year);
+  //       if (month) params.append('month', month);
+  //     }
+      
+  //     if (clientType) params.append('clientType', clientType);
+  //     if (productType) params.append('productType', productType);
+  //     if (clientCode) params.append('clientCode', clientCode);
+  //     if (product) params.append('product', product);
+      
+  //     if (name) {
+  //       if (level === 'year') {
+  //         params.append('year', name);
+  //       } else if (level === 'month') {
+  //         params.append('month', name);
+  //       } else if (level === 'clientType') {
+  //         params.append('clientType', name);
+  //       } else if (level === 'productType') {
+  //         params.append('productType', name);
+  //       }
+  //       else if (level === 'clientCode') {
+  //         params.append('clientCode', name);
+  //       } else if (level === 'product') {
+  //         params.append('product', name);
+  //       }
+  //     }
 
-  const downloadRecords = async (name) => {
-    setExportLoading(true);
-    try {
-      const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
-      
-      const params = new URLSearchParams();
-      params.append('type', type);
-      params.append('download', 'true');
-      
-      if (type !== 'today') {
-        if (year) params.append('year', year);
-        if (month) params.append('month', month);
-      }
-      
-      if (clientType) params.append('clientType', clientType);
-      if (productType) params.append('productType', productType);
-      if (clientCode) params.append('clientCode', clientCode);
-      if (product) params.append('product', product);
-      
-      if (name) {
-        if (level === 'year') {
-          params.append('year', name);
-        } else if (level === 'month') {
-          params.append('month', name);
-        } else if (level === 'clientType') {
-          params.append('clientType', name);
-        } else if (level === 'productType') {
-          params.append('productType', name);
-        }
-        else if (level === 'clientCode') {
-          params.append('clientCode', name);
-        } else if (level === 'product') {
-          params.append('product', name);
-        }
-      }
+  //     const requestBody = {
+  //       role,
+  //       user: user?.name
+  //     };
 
-      const requestBody = {
-        role,
-        user: user?.name
-      };
+  //     if (role === 'client') {
+  //       requestBody.code = user?.clientCode;
+  //     }
 
-      if (role === 'client') {
-        requestBody.code = user?.clientCode;
-      }
+  //     const response = await fetch(
+  //       `${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Authorization': `Bearer ${localStorage.getItem('token')}`
+  //         },
+  //         body: JSON.stringify({ 
+  //           requestBody
+  //         })
+  //       }
+  //     );
+      
+  //     if (!response.ok) throw new Error('Download failed');
 
-      const response = await fetch(
-        `${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({ 
-            requestBody
-          })
-        }
-      );
+  //     const blob = await response.blob();
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement('a');
+  //     a.href = url;
       
-      if (!response.ok) throw new Error('Download failed');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
+  //     const filenameParts = [type];
+  //     if (type !== 'today') {
+  //       if (year) filenameParts.push(year);
+  //       if (month) filenameParts.push(month);
+  //     }
+  //     if (clientType) filenameParts.push(clientType);
+  //     if (clientCode) filenameParts.push(clientCode);
+  //     if (product) filenameParts.push(product);
+  //     if (name) filenameParts.push(name);
+  //     a.download = `${filenameParts.join('_')}.xlsx`;
       
-      const filenameParts = [type];
-      if (type !== 'today') {
-        if (year) filenameParts.push(year);
-        if (month) filenameParts.push(month);
-      }
-      if (clientType) filenameParts.push(clientType);
-      if (clientCode) filenameParts.push(clientCode);
-      if (product) filenameParts.push(product);
-      if (name) filenameParts.push(name);
-      a.download = `${filenameParts.join('_')}.xlsx`;
-      
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Failed to download. Please try again.');
-    } finally {
-      setExportLoading(false);
-    }
-  };
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     window.URL.revokeObjectURL(url);
+  //     document.body.removeChild(a);
+  //   } catch (error) {
+  //     console.error('Download error:', error);
+  //     alert('Failed to download. Please try again.');
+  //   } finally {
+  //     setExportLoading(false);
+  //   }
+  // };
 
   const exportCurrentView = async () => {
     await downloadRecords();
@@ -596,8 +1015,7 @@ const LiveDashboard = () => {
 
     const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
     const displayData = level === 'productDetails' ? filteredRecords : modalData.data;
-
-    const getModalTitle = () => {
+     const getModalTitle = () => {
       switch(level) {
         case 'year':
           return `${type} Cases by Year`;
@@ -611,14 +1029,37 @@ const LiveDashboard = () => {
           return `${type} Cases for ${clientType} by Product Type`;
         case 'clientCode':
           return `${type} Cases for ${productType} by Client Code`;
-        case 'product':
-          return `${type} Cases for ${clientCode} by Product`;
+        case 'updatedProductName':
+          return `${type} Cases for ${clientCode} by Updated Product Name`;
         case 'productDetails':
-          return `${type} Case Details for ${product}`;
+          return `${type} Case Details for ${updatedProductName}`;
         default:
           return `${type} Cases`;
       }
     };
+
+    // const getModalTitle = () => {
+    //   switch(level) {
+    //     case 'year':
+    //       return `${type} Cases by Year`;
+    //     case 'month':
+    //       return `${type} Cases for ${year} by Month`;
+    //     case 'clientType':
+    //       return type === 'today' 
+    //         ? `Today's Cases by Client Type` 
+    //         : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
+    //     case 'productType':
+    //       return `${type} Cases for ${clientType} by Product Type`;
+    //     case 'clientCode':
+    //       return `${type} Cases for ${productType} by Client Code`;
+    //     case 'product':
+    //       return `${type} Cases for ${clientCode} by Product`;
+    //     case 'productDetails':
+    //       return `${type} Case Details for ${product}`;
+    //     default:
+    //       return `${type} Cases`;
+    //   }
+    // };
 
     return (
       <div className="space-y-4">

@@ -35,13 +35,14 @@ const FilterControls = ({
   const [productOptions, setProductOptions] = useState([]);
   const [vendorOptions, setVendorOptions] = useState([]);
   const [productTypeOptions] = useState(["BANKING", "MOBILE", "ITO", "KYC", "STATEMENT","ACCOUNT CHECK","PAN SEARCH"]);
-  const [statusOptions] = useState(["Pending", "Closed", "Negative", "CNV"]);
+  const [statusOptions] = useState(["Pending", "Closed", "Invalid", "CNV"]);
   const [caseStatusOptions] = useState(["New Pending", "Sent"]);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   const [vendorNames, setVendorNames] = useState([]);
   const [role, setRole] = useState("");
   const productRef = useRef(null);
   const [attachmentFileName, setAttachmentFileName] = useState('');
+  const [attachmentFileSize, setAttachmentFileSize] = useState('');
   const [clientTypeOptions] = useState(["Agency","Corporate", "Other", "Unknown"]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -278,6 +279,7 @@ const FilterControls = ({
       selectedEmployee:""
     });
     setAttachmentFileName('');
+    setAttachmentFileSize('')
     setSelectedRows([]);
     if(deduceMode){
       handleDeduceClick()
@@ -337,6 +339,7 @@ const resetFields = () => {
       attachment: null // Reset attachment here
     });
     setAttachmentFileName(''); // Reset file name here
+    setAttachmentFileSize('')
   }
 };
 useEffect(() => {
@@ -889,6 +892,7 @@ useEffect(() => {
         <option value="Account Closed">Account Closed</option>
         <option value="Restricted Account">Restricted Account</option>
         <option value="Staff Account">Staff Account</option>
+        <option value="Large File">Large File</option>
         <option value="Records Not Updated">Records Not Updated</option>
         <option value="Not Found">Not Found</option>
         <option value="Records Not Found">Records Not Found</option>
@@ -1179,6 +1183,7 @@ useEffect(() => {
           const file = e.target.files[0];
           setUpdateFields({ ...updateFields, attachment: file });
           setAttachmentFileName(file ? file.name : '');
+          setAttachmentFileSize(file?file.size:'')
         }}
         className="hidden"
       />
@@ -1208,7 +1213,7 @@ useEffect(() => {
           </svg>
         </div>
         <span className={`text-xs sm:text-sm truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`} title={attachmentFileName}>
-          {attachmentFileName}
+          {attachmentFileName}({(attachmentFileSize / 1024).toFixed(2)} KB)
         </span>
       </div>
       <button 

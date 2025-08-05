@@ -4399,6 +4399,7 @@ function ExcelTable() {
   // 1. Add new state variable after existing useState declarations
 const [uploadResults, setUploadResults] = useState(null);
 const [totalRecordCount, setTotalRecordCount] = useState(0);
+
   
   // Get theme from localStorage
   useEffect(() => {
@@ -4737,6 +4738,8 @@ const resetTable = () => {
   if (hotInstance && !hotInstance.isDestroyed) {
     hotInstance.loadData(Array.from({ length: 16 }, () => ["", "", "", ""]));
   }
+
+
   
   // Reset client ID for employee/admin
   if (userRole === "employee" || userRole === "admin") {
@@ -4748,8 +4751,8 @@ const resetTable = () => {
   setSwapIconsVisible(new Set());
   
   // Clear upload results
-  setUploadResults(null);
-  setTotalRecordCount(0);
+  // setUploadResults(null);
+  // setTotalRecordCount(0);
 };
 
   const addRow = () => {
@@ -4911,6 +4914,7 @@ if (response.status === 200) {
     failed: stats.failed || 0
   });
   setTotalRecordCount(formattedData.length);
+  
   
   toast.success(
     <div>
@@ -5292,6 +5296,7 @@ if (response.status === 200) {
     </div>
   </div>
 )} */}
+
 
           
           {/* Enhanced Instructions */}
@@ -5868,13 +5873,17 @@ export default ExcelTable;
 
 // if (response.status === 200) {
 //   const { stats } = response.data;
+//   console.log("response",response.data)
   
 //   // Set results for display
 //   setUploadResults({
+         
+//     totalRecords:stats.totalRecords || 0 ,
 //     inserted: stats.inserted || 0,
 //     duplicates: (stats.fileDuplicates || 0) + (stats.dbDuplicates || 0),
 //     failed: stats.failed || 0
 //   });
+//   // console.log("data",uploadResults)
 //   setTotalRecordCount(formattedData.length);
   
 //   toast.success(
@@ -5891,9 +5900,10 @@ export default ExcelTable;
 //       )}
 //     </div>
 //   );
-        
+//       setReferBy("");
+//       // setClientCodes([])
 //         // Reset the table after successful upload
-//         // resetTable();
+//         resetTable();
 //       }
 //     } catch (error) {
 //       console.error("Upload error:", error);
@@ -5921,7 +5931,7 @@ export default ExcelTable;
 //   return (
 //     <Layout>
 //       <div className={`p-4 md:p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-//         <div className="max-w-7xl mx-auto">
+//         <div className="w-auto mx-auto">
 //           {/* Header */}
 //           <div className={`mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
 //             <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
@@ -6008,14 +6018,13 @@ export default ExcelTable;
 //                 <label className={`block text-sm font-medium ${
 //                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
 //                 }`}>
-//                   Refer By
+//                   Refer By *
 //                 </label>
 //                 <div className="relative">
 //                   <input
 //                     type="text"
 //                     value={ReferBy}
 //                     onChange={handleInputChange}
-                    
 //                     placeholder="ReferBy"
 //                     className={`w-full px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 ${
 //                       isDarkMode 
@@ -6159,7 +6168,8 @@ export default ExcelTable;
             
 //             <button 
 //               onClick={handleHandsontableUpload} 
-//               disabled={isUploading || ((userRole === "employee" || userRole === "admin") && !clientId.trim())}
+//               disabled={isUploading || ((userRole === "employee" || userRole === "admin") && !clientId.trim()) || 
+//             !ReferBy.trim()} // Add this condition to check if ReferBy is filled}
 //               className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all ${
 //                 isDarkMode
 //                   ? 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -6275,7 +6285,7 @@ export default ExcelTable;
 //                 <ul className={`mt-2 space-y-1 list-disc list-inside ${
 //                   isDarkMode ? 'text-gray-300' : 'text-gray-700'
 //                 } text-sm`}>
-//                   <li><strong>All fields are now mandatory:</strong> Name, Product, Account Number, and Requirement must be filled</li>
+//                   <li><strong>All fields are now mandatory:</strong> Refer By, Name, Product, Account Number, and Requirement must be filled</li>
 //                   <li><strong>Smart validation with swap functionality:</strong> System will warn if Product contains mostly numbers or Account Number contains mostly letters</li>
 //                   <li><strong>New Swap Feature:</strong> Click the "Swap" button next to warnings to automatically exchange Product and Account Number values</li>
 //                   <li>Account Number can be alphanumeric, but should primarily contain numbers</li>
@@ -6298,6 +6308,5 @@ export default ExcelTable;
 // }
 
 // export default ExcelTable;
-
 
 

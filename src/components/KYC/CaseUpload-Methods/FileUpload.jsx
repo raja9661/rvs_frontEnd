@@ -191,6 +191,7 @@ function FileUpload({ isDarkMode }) {
       );
 
       if (!processResponse.data.success) throw new Error(processResponse.data.message);
+      console.log("RESPONSE:",processResponse.data.results)
 
       // Complete
       setResults(processResponse.data.results);
@@ -510,6 +511,43 @@ function FileUpload({ isDarkMode }) {
             </div>
           </div>
         )}
+        {results && results.failed > 0 && (
+  <div className={`mt-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-red-50'}`}>
+    <h2 className={`text-lg font-semibold mb-3 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+      Error: {results.failed} records failed to process
+    </h2>
+    
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+            <th className="p-2 text-left">Count</th>
+            <th className="p-2 text-left">Name</th>
+            <th className="p-2 text-left">Account Number</th>
+            <th className="p-2 text-left">Product</th>
+            <th className="p-2 text-left">Requirement</th>
+            <th className="p-2 text-left">Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {results.failedRecords.map((record, index) => (
+            <tr 
+              key={index} 
+              className={`border-t ${isDarkMode ? 'border-gray-600 hover:bg-gray-600' : 'border-gray-200 hover:bg-gray-50'}`}
+            >
+              <td className="p-2">{index + 1}</td>
+              <td className="p-2">{record.row?.Name || '-'}</td>
+              <td className="p-2">{record.row?.['Account Number'] || record.row?.accountNumber || '-'}</td>
+              <td className="p-2">{record.row?.Product || '-'}</td>
+              <td className="p-2">{record.row?.Requirement || '-'}</td>
+              <td className="p-2 text-red-500">{record.error}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
