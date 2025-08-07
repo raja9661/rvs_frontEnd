@@ -186,7 +186,7 @@ const fetchTrackerData = async () => {
         setdedupLoading(true);
           // If no rows selected, find duplicates in all "New Data"/"Pending" records
           const response = await axios.post(
-            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,
+            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,{userId}
        
           );
           

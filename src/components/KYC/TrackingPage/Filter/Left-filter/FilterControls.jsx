@@ -191,7 +191,7 @@ const FilterControls = ({
     };
 
     // Handle Closed status
-    if ((updates.status === "Closed" || updates.vendorStatus === "Closed") && user) {
+    if ((updates.status === "Closed" || updates.status == "Invalid" || updates.status == "CNV" || updates.vendorStatus === "Closed") && user) {
       updates.dateOut = getFormattedDateTime();
       updates.dateOutInDay = getFormattedDateDay();
       updates.caseDoneBy = user.userId;
