@@ -56,7 +56,7 @@ const TrackerTable = () => {
   //   caseStatus: "",
   // });
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isUserDataLoading, setIsUserDataLoading] = useState(true);
+  const [isUserDataLoaded, setIsUserDataLoaded] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
 
   // Memoized values
@@ -80,22 +80,45 @@ const TrackerTable = () => {
   }, []);
 
   // User effect for initial user data
+
   useEffect(() => {
-    const getUser = localStorage.getItem("loginUser");
-    if (getUser) {
-      try {
-        const data = JSON.parse(getUser);
-        setRole(data.role || "");
-        setUserId(data.userId || "");
-        setName(data.name || "");
-      } catch (e) {
-        console.error("Error parsing user data:", e);
-      }
+  const getUser = localStorage.getItem("loginUser");
+  if (getUser) {
+    try {
+      const data = JSON.parse(getUser);
+      setRole(data.role || "");
+      setUserId(data.userId || "");
+      setName(data.name || "");
+      setIsUserDataLoaded(true);
+    } catch (e) {
+      console.error("Error parsing user data:", e);
+      setIsUserDataLoaded(false);
     }
-  }, []);
+  } else {
+    setIsUserDataLoaded(false);
+  }
+}, []);
+  // useEffect(() => {
+  //   const getUser = localStorage.getItem("loginUser");
+  //   if (getUser) {
+  //     try {
+  //       const data = JSON.parse(getUser);
+  //       setRole(data.role || "");
+  //       setUserId(data.userId || "");
+  //       setName(data.name || "");
+  //     } catch (e) {
+  //       console.error("Error parsing user data:", e);
+  //     }
+  //   }
+  // }, []);
 
   const fetchTrackerData = async (page = pagination.page, size = pagination.pageSize) => {
-  setIsLoading(true);
+  if (!role || !userId) {
+    console.log('Skipping fetch - missing required user data');
+    return;
+  }
+
+    setIsLoading(true);
   try {
 
     const endpoint =
@@ -188,18 +211,24 @@ const TrackerTable = () => {
     }
   } catch (error) {
     console.error("Error fetching data:", error);
-    // toast.error("Failed to fetch data. Please try again.");
+    toast.error("Failed to fetch data. Please try again.");
   } finally {
     setIsLoading(false);
   }
 };
- 
 
 useEffect(() => {
-  if (role) {
-    fetchTrackerData(1, pagination.pageSize); 
+  if (isUserDataLoaded && role && userId) {
+    fetchTrackerData(1, pagination.pageSize);
   }
-}, [role, userId, name, filterType]);
+}, [isUserDataLoaded, role, userId, name, filterType]);
+ 
+
+// useEffect(() => {
+//   if (role && userId) {
+//     fetchTrackerData(1, pagination.pageSize); 
+//   }
+// }, [role, userId, name, filterType]);
 
 
 useEffect(() => {
