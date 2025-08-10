@@ -176,7 +176,7 @@ jobs:
           curl -f https://rvsdoc.com/ 2>/dev/null
           echo "✅ Frontend deployment completed successfully!"
 
-# name: Deploy Node Application
+# name: Deploy Node App
 
 # on:
 #   push:
