@@ -1396,7 +1396,9 @@ const handleClientIdChange = (e) => {
   };
 
   const handleFilterChange = (e) => {
-    const newFilterType = e.target.value === "deleted" ? "deleted" : "active";
+    const newFilterType =e.target.value === "deleted"? "deleted": e.target.value === "dedup"? "dedup": "active";
+
+    // const newFilterType = e.target.value === "deleted" ? "deleted" : "active";
     if (onFilterTypeChange) {
       onFilterTypeChange(newFilterType);
     }
@@ -1520,6 +1522,7 @@ const handleClientIdChange = (e) => {
           >
             <option value="active">Active Records</option>
             <option value="deleted">Deleted Records</option>
+            <option value="dedup">Dedup Records</option>
           </select>
         )}
   

@@ -10,6 +10,12 @@ import { toast } from 'react-toastify';
 const TrackerTable = () => {
   // State initialization
   const [data, setData] = useState([]);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 50,
+    total: 0,
+    totalPages: 1
+  });
   const [headers, setHeaders] = useState([]);
   const [role, setRole] = useState("");
   const [userId, setUserId] = useState("");
@@ -50,6 +56,7 @@ const TrackerTable = () => {
   //   caseStatus: "",
   // });
   const [selectedRows, setSelectedRows] = useState([]);
+  const [isUserDataLoading, setIsUserDataLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
 
   // Memoized values
@@ -87,70 +94,122 @@ const TrackerTable = () => {
     }
   }, []);
 
-  // Main data fetching function
-const fetchTrackerData = async () => {
-    setIsLoading(true);
-    try {
-      const endpoint = filterType === "deleted" 
-      ? "/kyc/deleted-items" 
-      : "/kyc/tracker-data";
+  const fetchTrackerData = async (page = pagination.page, size = pagination.pageSize) => {
+  setIsLoading(true);
+  try {
+
+    const endpoint =
+  filterType === "deleted"
+    ? "/kyc/deleted-items"
+    : filterType === "dedup"
+    ? "/kyc/find-similar-records"
+    : "/kyc/tracker-data";
+
+    // const endpoint = filterType === "deleted" 
+    //   ? "/kyc/deleted-items" 
+    //   : "/kyc/tracker-data";
     
     const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}${endpoint}`, {
-      params: { role, userId, name }
+      params: { 
+        role, 
+        userId, 
+        name,
+        page,
+        pageSize: size,
+        searchQuery,
+         ...filters,
+        // Pass all filter parameters
+        product: filters.product,
+        productType: filters.productType,
+        status: filters.status,
+        caseStatus: filters.caseStatus,
+        dateInStart: filters.dateInStart,
+        dateInEnd: filters.dateInEnd,
+        dateOutStart: filters.dateOutStart,
+        dateOutEnd: filters.dateOutEnd,
+        sentDate: filters.sentDate,
+        vendorStatus: filters.vendorStatus,
+        priority: filters.priority,
+        clientType: filters.clientType
+      }
     });
 
-    let fetchedData = response.data?.data || response.data || [];
-    setOriginalData(fetchedData); // Store original data
+    // Handle response based on endpoint
+    let fetchedData = [];
+    let paginationData = {
+      total: 0,
+      page: 1,
+      pageSize: size,
+      totalPages: 1
+    };
 
-
-      let columns = response.data?.editableColumns || [];
-
-      if (columns.length > 0) setEditableColumns(columns);
-
-      if (fetchedData.length > 0) {
-        const extractedHeaders = [
-          //"☑",
-          "&nbsp;",
-          "caseId",
-          ...Object.keys(fetchedData[0]).filter(
-            key => key.toLowerCase() !== "caseid" && !key.startsWith("_")
-          ),
-        ];
-
-        const formattedData = fetchedData.map(row => ({
-          attachments: row.attachments || [],
-          ...Object.fromEntries(
-            extractedHeaders
-              .filter(header => header !== "☑")
-              .map(header => [
-                header,
-                ["dateIn", "dateOut", "sentDate", "createdAt", "updatedAt"].includes(header)
-                  ? row[header]
-                    ?  moment(row[header], "DD-MM-YYYY, h:mm:ss A").format("DD-MM-YYYY, h:mm:ss A")
-                    : ""
-                  : row[header] ?? ""
-              ])
-          )
-        }));
-
-        setHeaders(extractedHeaders);
-        setData(formattedData);
-      } else {
-        setHeaders([]);
-        setData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
+    if (filterType === "deleted") {
+      fetchedData = response.data?.deletedItems || [];
+      paginationData = response.data?.pagination || paginationData;
+    } else {
+      fetchedData = response.data?.data || [];
+      paginationData = response.data?.pagination || paginationData;
+      const editableColumns = response.data?.editableColumns || [];
+      if (editableColumns.length > 0) setEditableColumns(editableColumns);
     }
-  };
 
-  useEffect(() => {
-    if (role) fetchTrackerData();
-  }, [role, userId, name, filterType]);
+    if (fetchedData.length > 0) {
+      const extractedHeaders = [
+        "&nbsp;",
+        "caseId",
+        ...Object.keys(fetchedData[0]).filter(
+          key => key.toLowerCase() !== "caseid" && !key.startsWith("_")
+        ),
+      ];
 
+      const formattedData = fetchedData.map(row => ({
+        attachments: row.attachments || [],
+        ...Object.fromEntries(
+          extractedHeaders
+            .filter(header => header !== "&nbsp;")
+            .map(header => [
+              header,
+              ["dateIn", "dateOut", "sentDate", "createdAt", "updatedAt"].includes(header)
+                ? row[header]
+                  ? moment(row[header], "DD-MM-YYYY, h:mm:ss A").format("DD-MM-YYYY, h:mm:ss A")
+                  : ""
+                : row[header] ?? ""
+            ])
+        )
+      }));
   
+      setHeaders(extractedHeaders);
+      setData(formattedData);
+      setPagination(paginationData);
+    } else {
+      setHeaders([]);
+      setData([]);
+      setPagination(paginationData);
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    // toast.error("Failed to fetch data. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+ 
+
+useEffect(() => {
+  if (role) {
+    fetchTrackerData(1, pagination.pageSize); 
+  }
+}, [role, userId, name, filterType]);
+
+
+useEffect(() => {
+  const debounceTimer = setTimeout(() => {
+    fetchTrackerData(1, pagination.pageSize); 
+  }, 500); 
+
+  return () => clearTimeout(debounceTimer);
+}, [searchQuery, filters]);
+
   const handleRowSelection = useCallback((rowIndex, isChecked) => {
   // No need to update `data` here (let Handsontable manage its own state)
   console.log('handleRowSelection called', { rowIndex, isChecked });
@@ -182,30 +241,64 @@ const fetchTrackerData = async () => {
   }, [fetchTrackerData]);
 
   const handleDeduceClick = async () => {
-      try {
-        setdedupLoading(true);
-          // If no rows selected, find duplicates in all "New Data"/"Pending" records
-          const response = await axios.post(
-            `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,{userId}
-       
-          );
-          
-          if (response.data?.success && response.data.duplicates?.length > 0) {
-            setData(response.data.duplicates);
-            // toast.success(`Found ${response.data.duplicates.length} duplicate records`);
-          } else {
-            toast.info("No duplicate records found");
-          }
-          setDeduceMode(true)
-          setdedupLoading(false)
-
-      } catch (error) {
-        console.error("Deduce error:", error);
-        toast.error(error.response?.data?.message || error.message || "Failed to find duplicates");
-      } finally {
-        setIsLoading(false);
+  try {
+    setdedupLoading(true);
+    const response = await axios.post(
+      `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,
+      { 
+        userId,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        searchQuery,
+        ...filters
       }
-    };
+    );
+    
+    if (response.data?.success) {
+      setData(response.data.data || []); // Changed from duplicates to data
+      setPagination(response.data.pagination || {
+        page: 1,
+        pageSize: pagination.pageSize,
+        total: response.data.data?.length || 0,
+        totalPages: 1
+      });
+    } else {
+      toast.info("No duplicate records found");
+    }
+    setDeduceMode(true);
+  } catch (error) {
+    console.error("Deduce error:", error);
+    toast.error(error.response?.data?.message || error.message || "Failed to find duplicates");
+  } finally {
+    setdedupLoading(false);
+  }
+};
+
+  // const handleDeduceClick = async () => {
+  //     try {
+  //       setdedupLoading(true);
+  //         // If no rows selected, find duplicates in all "New Data"/"Pending" records
+  //         const response = await axios.post(
+  //           `${import.meta.env.VITE_Backend_Base_URL}/kyc/find-similar-records`,{userId}
+       
+  //         );
+          
+  //         if (response.data?.success && response.data.duplicates?.length > 0) {
+  //           setData(response.data.duplicates);
+  //           // toast.success(`Found ${response.data.duplicates.length} duplicate records`);
+  //         } else {
+  //           toast.info("No duplicate records found");
+  //         }
+  //         setDeduceMode(true)
+  //         setdedupLoading(false)
+
+  //     } catch (error) {
+  //       console.error("Deduce error:", error);
+  //       toast.error(error.response?.data?.message || error.message || "Failed to find duplicates");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
   const handleMasterReset = useCallback(async () => {
     setFilters({
@@ -290,6 +383,8 @@ const fetchTrackerData = async () => {
               setSelectedRecord={setSelectedRecord}
               handleDeduceClick = {handleDeduceClick}
               isdeduceLoading = {isdeduceLoading}
+              pagination = {pagination}
+              setPagination = {setPagination }
             />
           </div>          
         </div>

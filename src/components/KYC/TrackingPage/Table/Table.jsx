@@ -61,7 +61,9 @@ const Table = ({
   setSelectedRecord,
   setDeduceMode,
   handleDeduceClick,
-  isdeduceLoading
+  isdeduceLoading,
+  pagination,
+  setPagination
   // onRestoreRecords
 }) => {
   const tableRef = useRef(null);
@@ -97,6 +99,9 @@ const [isPermanentlyDeleting, setIsPermanentlyDeleting] = useState(false);
   // const [sourceRecordToCopy, setSourceRecordToCopy] = useState(null);
   const [sourceRecordToCopy, setSourceRecordToCopy] = useState(null);
 const [targetRows, setTargetRows] = useState([]);
+const [endItem,setendItem] = useState(0);
+const [startItem,setstartItem] = useState(0);
+
   
 
   
@@ -141,34 +146,6 @@ const [targetRows, setTargetRows] = useState([]);
     }
   }, []);
 
-
-  
-//   useEffect(() => {
-//     if (!data || data.length === 0) {
-//       setFilteredData([]);
-//       return;
-//     }
-
-// const filtered = data
-//       .filter((row) =>
-//         Object.entries(filters).every(([key, value]) =>
-//           value ? row[key]?.toString().toLowerCase().includes(value.toLowerCase()) : true
-//         )
-//       )
-//       .filter((row) =>
-//         Object.values(row).some((value) =>
-//           value ? value.toString().toLowerCase().includes(searchQuery.toLowerCase()) : false
-//         )
-//       );
-
-//     setFilteredData(filtered);
-//     const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
-//     setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-    
-//     if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
-//       setCurrentPage(1);
-//     }
-//   }, [data, filters, searchQuery, pageSize]);
 
 useEffect(() => {
   if (!data || data.length === 0) {
@@ -244,47 +221,6 @@ useEffect(() => {
     setCurrentPage(1);
   }
 }, [data, filters, searchQuery, pageSize]);
-// useEffect(() => {
-//   if (!data || data.length === 0) {
-//     setFilteredData([]);
-//     return;
-//   }
-
-//   const filtered = data
-//     .filter((row) =>
-//       Object.entries(filters).every(([key, filterValue]) => {
-//         if (!filterValue) return true;
-        
-//         // Handle array filter values (multiple selections)
-//         if (Array.isArray(filterValue)) {
-//           if (filterValue.length === 0) return true;
-//           const rowValue = row[key];
-//           return filterValue.includes(rowValue);
-//         }
-        
-//         // Handle single string filter value
-//         const rowValue = row[key];
-//         if (rowValue === undefined || rowValue === null) return false;
-//         return String(rowValue).toLowerCase().includes(String(filterValue).toLowerCase());
-//       })
-//     )
-//     .filter((row) => {
-//       if (!searchQuery) return true;
-//       return Object.values(row).some((value) => {
-//         if (value === undefined || value === null) return false;
-//         return String(value).toLowerCase().includes(String(searchQuery).toLowerCase());
-//       })
-//     });
-
-//   setFilteredData(filtered);
-//   const calculatedTotalPages = Math.ceil(filtered.length / pageSize);
-//   setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
-  
-//   if (currentPage > calculatedTotalPages && calculatedTotalPages > 0) {
-//     setCurrentPage(1);
-//   }
-// }, [data, filters, searchQuery, pageSize]);
-
 
 const selectRow = useCallback((instance, rowIndex, selected) => {
   console.log('selectRow called', { rowIndex, selected });
@@ -664,9 +600,10 @@ const restoreScrollPosition = () => {
     if (!tableRef.current || !headers || headers.length === 0 || !filteredData) return;
 
     const startIndex = (currentPage - 1) * pageSize;
-    const paginatedData = filteredData
-      .slice(startIndex, startIndex + pageSize)
-      .map((row) => headers.map((key) => row[key] ?? ""));
+    const paginatedData = data.map((row) => headers.map((key) => row[key] ?? ""));
+    // const paginatedData = filteredData
+    //   .slice(startIndex, startIndex + pageSize)
+    //   .map((row) => headers.map((key) => row[key] ?? ""));
 
       saveScrollPosition()
 
@@ -912,8 +849,11 @@ const restoreScrollPosition = () => {
       stretchH: 'none', // Don't stretch columns to fit
       height: "450px",
       rowHeaders: function(row) {
-        return (currentPage - 1) * pageSize + row + 1;
-      },
+  return ((pagination.page - 1) * pagination.pageSize) + row + 1;
+},
+      // rowHeaders: function(row) {
+      //   return (currentPage - 1) * pageSize + row + 1;
+      // },
       manualColumnMove: columnOrder.length > 0 ? columnOrder : true,
       hiddenColumns: {
     columns: headers,
@@ -996,17 +936,12 @@ const restoreScrollPosition = () => {
     "sentDateInDay":"sentDateInDay",
     "Dedup By":"dedupBy"
 
-    
-
-
-    // Add more as needed based on your actual column headers
   };
-
   const updatedFilters = {};
 
   conditionsStack.forEach((condition) => {
     const columnIndex = condition.column;
-    const columnHeader = this.getColHeader(columnIndex); // e.g., "Product"
+    const columnHeader = this.getColHeader(columnIndex); // Gets the display header text
     const conditions = condition.conditions;
 
     conditions.forEach((c) => {
@@ -1015,17 +950,44 @@ const restoreScrollPosition = () => {
         const filterKey = columnToFilterKeyMap[columnHeader];
         
         if (filterKey) {
-          // Store all selected values instead of just the first one
+          // Store all selected values for multi-select filters
           updatedFilters[filterKey] = selectedValues.length > 0 ? selectedValues : "";
         }
       }
     });
   });
 
-  // Update React filters state only once to prevent rerenders per filter
+  // Update React filters state
   if (Object.keys(updatedFilters).length > 0) {
-    setFilters((prev) => ({ ...prev, ...updatedFilters }));
+    setFilters(prev => ({ 
+      ...prev, 
+      ...updatedFilters 
+    }));
   }
+  // const updatedFilters = {};
+
+  // conditionsStack.forEach((condition) => {
+  //   const columnIndex = condition.column;
+  //   const columnHeader = this.getColHeader(columnIndex); // e.g., "Product"
+  //   const conditions = condition.conditions;
+
+  //   conditions.forEach((c) => {
+  //     if (c.name === 'by_value' && Array.isArray(c.args) && Array.isArray(c.args[0])) {
+  //       const selectedValues = c.args[0];
+  //       const filterKey = columnToFilterKeyMap[columnHeader];
+        
+  //       if (filterKey) {
+  //         // Store all selected values instead of just the first one
+  //         updatedFilters[filterKey] = selectedValues.length > 0 ? selectedValues : "";
+  //       }
+  //     }
+  //   });
+  // });
+
+  // // Update React filters state only once to prevent rerenders per filter
+  // if (Object.keys(updatedFilters).length > 0) {
+  //   setFilters((prev) => ({ ...prev, ...updatedFilters }));
+  // }
 },
 //        afterFilter: function (conditionsStack) {
 //   // Map Handsontable column headers to your React filters keys
@@ -2047,11 +2009,18 @@ const handleDeleteSelectedRows = useCallback(async () => {
   //     setIsDeleting(false);
   //   }
   // }, [data, selectedRows, filterType, setData, setFilteredData, setSelectedRows]);
+  // const handlePageChange = (newPage) => {
+  //   setPagination(prev => ({ ...prev, page: newPage }));
+  // fetchTrackerData(newPage, pagination.pageSize);
+  //   // if (newPage > 0 && newPage <= totalPages) {
+  //   //   setCurrentPage(newPage);
+  //   // }
+  // };
+
   const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
+  setPagination(prev => ({ ...prev, page: newPage }));
+  fetchTrackerData(newPage, pagination.pageSize);
+};
     // Export handlers
     const handleExportData = async (shouldExport, columns, format = "excel") => {
       setIsExportModalOpen(false);
@@ -2294,6 +2263,16 @@ const handleDeleteSelectedRows = useCallback(async () => {
 
       }
     };
+
+    const handlePageSizeChange = (newSize) => {
+  const validatedSize = Math.max(1, Math.min(newSize, 1000)); // Add reasonable limits
+  setPagination(prev => ({
+    ...prev,
+    pageSize: validatedSize,
+    page: 1 // Reset to first page when changing size
+  }));
+  fetchTrackerData(1, validatedSize); // Fetch with new size
+};
     
     const handleRestoreRecords = async () => {
       if (selectedRows.length === 0) {
@@ -2368,6 +2347,15 @@ const handleDeleteSelectedRows = useCallback(async () => {
   
   const handleMasterReset = () => {
     // Clear local selected rows state
+    setPagination({
+    page: 1,
+    pageSize: 50,  // Force reset to 50 items per page
+    total: 0,      // Temporary reset during loading
+    totalPages: 1
+  });
+
+  fetchTrackerData(1, 50);
+
     setSelectedRows([]);
     checkboxStateRef.current = {
       selectedRow: null,
@@ -2379,11 +2367,13 @@ const handleDeleteSelectedRows = useCallback(async () => {
       try {
         // Clear all checkboxes
         const data = hotInstanceRef.current.getData();
+
         data.forEach((row, rowIndex) => {
           if (row[0] === true) {
             hotInstanceRef.current.setDataAtCell(rowIndex, 0, false);
           }
         });
+        
         
         // Clear selections
         hotInstanceRef.current.deselectCell();
@@ -2490,6 +2480,28 @@ useEffect(() => {
   window.addEventListener('keydown', handleKeyDown);
   return () => window.removeEventListener('keydown', handleKeyDown);
 }, [handleDeleteSelectedRows, handleMasterReset]);
+
+
+
+// const handlePageSizeChange = (newSize) => {
+//   const validatedSize = Math.max(1, Math.min(newSize, 1000));
+//   setPagination(prev => ({
+//     ...prev,
+//     pageSize: validatedSize,
+//     page: 1 // Reset to first page when changing size
+//   }));
+//   fetchTrackerData(1, validatedSize);
+// };
+
+// const handlePageSizeChange = (newSize) => {
+//   const validatedSize = Math.max(1, Math.min(newSize, 1000)); // Add reasonable limits
+//   setPagination(prev => ({
+//     ...prev,
+//     pageSize: validatedSize,
+//     page: 1 // Reset to first page when changing size
+//   }));
+//   fetchTrackerData(1, validatedSize);
+// };
 
 const handleSaveChanges = () => {
   const instance = hotInstanceRef.current;
@@ -2670,7 +2682,7 @@ const handlePasteSelected = async () => {
     toast.error(error.response?.data?.message || error.message || "Paste failed");
   }
 };
-
+// const { page,  total} = pagination;
 
 
 
@@ -2740,8 +2752,23 @@ const handlePasteSelected = async () => {
   )}
 </button>
 
+<div className="text-sm">
+  {pagination.total > 0 ? (
+    <span>
+      Showing <span className="font-medium">
+        {Math.min((pagination.page - 1) * pagination.pageSize + 1, pagination.total)}
+      </span>-<span className="font-medium">
+        {Math.min(pagination.page * pagination.pageSize, pagination.total)}
+      </span> of{' '}
+      <span className="font-medium">{pagination.total}</span> items
+    </span>
+  ) : (
+    'No items to display'
+  )}
+</div>
+
   
-                <input
+                {/* <input
                   type="text"
                   placeholder="Search"
                   className={`border p-1.5 text-sm rounded w-56 ${
@@ -2751,7 +2778,7 @@ const handlePasteSelected = async () => {
                   }`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                /> */}
               </div>
   
               <div className="flex items-center gap-4">
@@ -3014,50 +3041,47 @@ const handlePasteSelected = async () => {
                     "Reset all"
                   )}
                 </button>
-                <select
+                
+              <select
   className={`border p-1 py-1.5 px-1.5 text-xs rounded ${
     isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"
   }`}
-  value={pageSize}
+  value={pagination.pageSize}
   onChange={(e) => {
     if (e.target.value === 'custom') {
       const inputElement = document.createElement('input');
       inputElement.type = 'number';
       inputElement.className = `border p-1 py-0.5 px-1 text-xs rounded ${isDarkMode ? "bg-gray-800 text-gray-200" : "bg-white text-gray-700"}`;
       inputElement.placeholder = 'Enter size';
-      inputElement.style.width = '75px'; // Adjust width as needed
-      inputElement.style.height = '30px'; // Adjust height as needed
+      inputElement.style.width = '75px';
+      inputElement.style.height = '30px';
 
-            // **Highlight: Add keydown event listener for Enter key**
       inputElement.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
           const customSize = parseInt(inputElement.value);
           if (!isNaN(customSize) && customSize > 0) {
-            setPageSize(customSize);
-            setCurrentPage(1);
+            handlePageSizeChange(customSize);
           } else {
             alert("Invalid page size.");
           }
-          e.target.replaceWith(e.target); // Revert to the select element
+          e.target.replaceWith(e.target);
         }
       });
 
       inputElement.addEventListener('blur', () => {
         const customSize = parseInt(inputElement.value);
         if (!isNaN(customSize) && customSize > 0) {
-          setPageSize(customSize);
-          setCurrentPage(1);
+          handlePageSizeChange(customSize);
         } else {
           alert("Invalid page size.");
-          // Optionally reset the dropdown to a valid value
         }
-        e.target.replaceWith(e.target); // Revert to the select element
+        e.target.replaceWith(e.target);
       });
+      
       e.target.replaceWith(inputElement);
       inputElement.focus();
     } else {
-      setPageSize(Number(e.target.value));
-      setCurrentPage(1);
+      handlePageSizeChange(Number(e.target.value));
     }
   }}
 >
@@ -3090,11 +3114,15 @@ const handlePasteSelected = async () => {
             ></div>
   
             <Pagination
+             pagination = {pagination}
+             handlePageChange = {handlePageChange}
               currentPage={currentPage}
               totalPages={totalPages}
               totalItems={filteredData.length}
               pageSize={pageSize}
-              handlePageChange={handlePageChange}
+              setendItem = {setendItem}
+              setstartItem = {setstartItem}
+              // handlePageChange={handlePageChange}
               isDarkMode={isDarkMode}
             />
             

@@ -29,7 +29,7 @@ const FilterControls = ({
     vendorStatus: '',
     remarks: '',
     status: '',
-    attachment: null
+    attachment: []
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [productOptions, setProductOptions] = useState([]);
@@ -219,24 +219,42 @@ const FilterControls = ({
     }
 
     // Process attachment first if exists
-    if (updateFields.attachment) {
-      const file = updateFields.attachment;
-
+    if (updateFields.attachment.length > 0) {
+  const formData = new FormData();
   
-  // if (file.size > 2 * 1024 * 1024) {
-  //   alert('⚠️ Attachment size must be 2MB or less.');
-  //   return; // Stop further execution
-  // }
-      const formData = new FormData();
-      formData.append('file', file);
-      caseIds.forEach(caseId => formData.append('caseIds', caseId));
+  // Append all files
+  updateFields.attachment.forEach((file, index) => {
+    formData.append(`files`, file); // Note plural 'files'
+  });
+  
+  // Append case IDs
+  caseIds.forEach(caseId => formData.append('caseIds', caseId));
 
-      await axios.post(
-        `${import.meta.env.VITE_Backend_Base_URL}/upload/upload-attachment`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-    }
+  try {
+    await axios.post(
+      `${import.meta.env.VITE_Backend_Base_URL}/upload/upload-attachment`, 
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    
+    toast.success(`Uploaded ${updateFields.attachment.length} file(s) successfully`);
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    toast.error('Failed to upload some files');
+  }
+}
+    // if (updateFields.attachment.length > 0) {
+    //   const file = updateFields.attachment;
+    //   const formData = new FormData();
+    //   formData.append('file', file);
+    //   caseIds.forEach(caseId => formData.append('caseIds', caseId));
+
+    //   await axios.post(
+    //     `${import.meta.env.VITE_Backend_Base_URL}/upload/upload-attachment`,
+    //     formData,
+    //     { headers: { 'Content-Type': 'multipart/form-data' } }
+    //   );
+    // }
 
     // Process other updates
     if (Object.keys(nonEmptyUpdates).length > 0) {
@@ -275,7 +293,7 @@ const FilterControls = ({
       vendorStatus: '',
       remarks: '',
       status: '',
-      attachment: null,
+      attachment: [],
       selectedEmployee:""
     });
     setAttachmentFileName('');
@@ -304,15 +322,25 @@ const FilterControls = ({
   
 
 
-  const handleDateChange = (name, date) => {
-      const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
-      setFilters({ ...filters, [name]: formattedDate });
-    };
+const handleDateChange = (name, date) => {
+  const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
+  setFilters(prev => ({ ...prev, [name]: formattedDate }));
+};
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
-  };
+
+  // const handleDateChange = (name, date) => {
+  //     const formattedDate = date ? format(date, 'dd-MM-yyyy') : '';
+  //     setFilters({ ...filters, [name]: formattedDate });
+  //   };
+    const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  setFilters(prev => ({ ...prev, [name]: value }));
+};
+
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFilters({ ...filters, [name]: value });
+  // };
 
 
 
@@ -1101,9 +1129,9 @@ useEffect(() => {
       )}
     </div> */}
   </div>
-<div className="w-full mb-2 col-span-1 md:col-span-2 lg:col-span-1">
+  <div className="w-full mb-2 col-span-1 md:col-span-2 lg:col-span-1">
   <label className={`block text-sm font-medium mb-1 transition-colors duration-150 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-    Attachment
+    Attachments
   </label>
   <div 
     className={`w-full border-2 border-dashed rounded-lg p-2 sm:p-3 transition-all duration-150 ${
@@ -1132,13 +1160,8 @@ useEffect(() => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        const file = files[0];
-        setUpdateFields({ ...updateFields, attachment: file });
-        setAttachmentFileName(file.name);
-      }
+      const files = Array.from(e.dataTransfer.files);
+      setUpdateFields({ ...updateFields, attachment: [...updateFields.attachment, ...files] });
     }}
   >
     <div className="flex flex-col items-center justify-center text-center space-y-1.5">
@@ -1160,10 +1183,10 @@ useEffect(() => {
       </div>
       <div className="space-y-0.5">
         <p className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-          {isDragging ? 'Drop your file here!' : 'Drag & drop your file here'}
+          {isDragging ? 'Drop your files here!' : 'Drag & drop files here'}
         </p>
         <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          or click to browse
+          or click to browse (multiple files allowed)
         </p>
       </div>
       <label 
@@ -1174,64 +1197,62 @@ useEffect(() => {
             : 'bg-blue-500 hover:bg-blue-600 text-white shadow-md'
         }`}
       >
-        Choose File
+        Choose Files
       </label>
       <input
         id="attachment-upload"
         type="file"
+        multiple
         onChange={(e) => {
-          const file = e.target.files[0];
-          setUpdateFields({ ...updateFields, attachment: file });
-          setAttachmentFileName(file ? file.name : '');
-          setAttachmentFileSize(file?file.size:'')
+          const files = Array.from(e.target.files);
+          setUpdateFields({ ...updateFields, attachment: [...updateFields.attachment, ...files] });
         }}
         className="hidden"
       />
     </div>
   </div>
 
-  {/* Selected file info */}
-  {attachmentFileName && (
-    <div className={`mt-2 p-2 sm:p-2.5 rounded-lg flex items-center justify-between transition-all ${
-      isDarkMode ? 'bg-gray-700 border border-gray-600' : 'bg-blue-50 border border-blue-200'
-    }`}>
-      <div className="flex items-center space-x-2 min-w-0 flex-1">
-        <div className={`p-1 rounded ${isDarkMode ? 'bg-gray-600' : 'bg-blue-100'}`}>
-          <svg 
-            className={`w-4 h-4 ${isDarkMode ? 'text-gray-300' : 'text-blue-500'}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
+  {/* Selected files list */}
+  {updateFields.attachment?.length > 0 && (
+    <div className={`mt-2 space-y-2 max-h-40 overflow-y-auto ${
+      isDarkMode ? 'bg-gray-700' : 'bg-blue-50'
+    } p-2 rounded-lg`}>
+      {updateFields.attachment.map((file, index) => (
+        <div key={index} className={`p-2 rounded flex items-center justify-between ${
+          isDarkMode ? 'bg-gray-600' : 'bg-white'
+        }`}>
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
+            <svg className={`w-4 h-4 flex-shrink-0 ${
+              isDarkMode ? 'text-gray-300' : 'text-blue-500'
+            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span className={`text-xs truncate ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`} title={file.name}>
+              {file.name} ({(file.size / 1024).toFixed(2)} KB)
+            </span>
+          </div>
+          <button 
+            onClick={() => {
+              const newAttachments = [...updateFields.attachment];
+              newAttachments.splice(index, 1);
+              setUpdateFields({ ...updateFields, attachment: newAttachments });
+            }}
+            className={`ml-2 p-1 rounded-full ${
+              isDarkMode ? 'hover:bg-gray-500 text-gray-300' : 'hover:bg-blue-100 text-gray-500'
+            }`}
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
-        <span className={`text-xs sm:text-sm truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`} title={attachmentFileName}>
-          {attachmentFileName}({(attachmentFileSize / 1024).toFixed(2)} KB)
-        </span>
-      </div>
-      <button 
-        onClick={() => {
-          setUpdateFields({ ...updateFields, attachment: null });
-          setAttachmentFileName('');
-        }}
-        className={`ml-2 p-1 rounded-full transition-colors ${
-          isDarkMode ? 'hover:bg-gray-600 text-gray-300 hover:text-white' : 'hover:bg-blue-100 text-gray-500 hover:text-red-500'
-        }`}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+      ))}
     </div>
   )}
 </div>
+
 
     
 
