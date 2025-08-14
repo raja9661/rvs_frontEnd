@@ -1259,31 +1259,7 @@ const downloadRecords = async (name) => {
           return `${type} Cases`;
       }
     };
-
-    // const getModalTitle = () => {
-    //   switch(level) {
-    //     case 'year':
-    //       return `${type} Cases by Year`;
-    //     case 'month':
-    //       return `${type} Cases for ${year} by Month`;
-    //     case 'clientType':
-    //       return type === 'today' 
-    //         ? `Today's Cases by Client Type` 
-    //         : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
-    //     case 'productType':
-    //       return `${type} Cases for ${clientType} by Product Type`;
-    //     case 'clientCode':
-    //       return `${type} Cases for ${productType} by Client Code`;
-    //     case 'product':
-    //       return `${type} Cases for ${clientCode} by Product`;
-    //     case 'productDetails':
-    //       return `${type} Case Details for ${product}`;
-    //     default:
-    //       return `${type} Cases`;
-    //   }
-    // };
-
-    return (
+   return (
       <div className="space-y-4">
         {/* Breadcrumb navigation */}
         <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
