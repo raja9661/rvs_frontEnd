@@ -997,7 +997,7 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today Sent Pending", 
+    title: "Today New Pending", 
     value: dashboardData.stats?.todaySentPending || 0, 
     icon: SendHorizonal,
     color: isDarkMode ? 'text-blue-400' : 'text-blue-500',
@@ -1006,7 +1006,7 @@ const downloadRecords = async (name) => {
     show: role !== 'client'
   },
   { 
-    title: "Today Closed Pending", 
+    title: "Today Status Pending", 
     value: dashboardData.stats?.todayNewPending || 0, 
     icon: Mail,
     color: isDarkMode ? 'text-orange-400' : 'text-orange-500',
@@ -1040,15 +1040,7 @@ const downloadRecords = async (name) => {
     bgColor: isDarkMode ? 'bg-teal-500/10' : 'bg-teal-100',
     show: true
   },
-  { 
-    title: "Monthly Cases", 
-    value: dashboardData.stats?.monthlyCases || 0, 
-    icon: Calendar,
-    color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
-    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
-    onClick: () => fetchCaseDetails('monthly'),
-    show: true
-  },  
+    
   { 
     title: "Total Cases", 
     value: dashboardData.stats?.totalCases || 0, 
@@ -1058,18 +1050,8 @@ const downloadRecords = async (name) => {
     onClick: () => fetchCaseDetails('total'),
     show: true
   },
-  
   { 
-    title: "Total Closed Pending", 
-    value: dashboardData.stats?.totalNewPending || 0, 
-    icon: Inbox,
-    color: isDarkMode ? 'text-orange-500' : 'text-orange-600',
-    bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
-    onClick: () => fetchCaseDetails('totalPending'),
-    show: true
-  },
-  { 
-    title: "Total Sent Pending", 
+    title: "Total New Pending", 
     value: dashboardData.stats?.totalSentPending || 0, 
     icon: Send,
     color: isDarkMode ? 'text-indigo-500' : 'text-indigo-600',
@@ -1077,13 +1059,14 @@ const downloadRecords = async (name) => {
     onClick: () => fetchCaseDetails('totalNewPending'),
     show: true
   },
+  
   { 
-    title: "Total High Priority", 
-    value: dashboardData.stats?.totalHighPriority || 0, 
-    icon: AlertTriangle,
-    color: isDarkMode ? 'text-red-500' : 'text-red-600',
-    bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
-    onClick: () => fetchCaseDetails('totalHighPriority'),
+    title: "Total Status Pending", 
+    value: dashboardData.stats?.totalNewPending || 0, 
+    icon: Inbox,
+    color: isDarkMode ? 'text-orange-500' : 'text-orange-600',
+    bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
+    onClick: () => fetchCaseDetails('totalPending'),
     show: true
   },
   { 
@@ -1095,12 +1078,32 @@ const downloadRecords = async (name) => {
     onClick: () => fetchCaseDetails('totalClosed'),
     show: true
   },
+  
+  { 
+    title: "Total High Priority", 
+    value: dashboardData.stats?.totalHighPriority || 0, 
+    icon: AlertTriangle,
+    color: isDarkMode ? 'text-red-500' : 'text-red-600',
+    bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
+    onClick: () => fetchCaseDetails('totalHighPriority'),
+    show: true
+  },
+  
   { 
     title: "Total Completion Rate", 
     value: dashboardData.stats?.totalCompletionRate ? `${dashboardData.stats.totalCompletionRate}%` : '0%', 
     icon: Activity,
     color: isDarkMode ? 'text-teal-500' : 'text-teal-600',
     bgColor: isDarkMode ? 'bg-teal-500/10' : 'bg-teal-100',
+    show: true
+  },
+  { 
+    title: "Monthly Cases", 
+    value: dashboardData.stats?.monthlyCases || 0, 
+    icon: Calendar,
+    color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
+    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
+    onClick: () => fetchCaseDetails('monthly'),
     show: true
   },  
 

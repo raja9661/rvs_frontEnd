@@ -1496,7 +1496,7 @@ const handleClientIdChange = (e) => {
       <div className="mb-4 w-full">
         <input
           type="text"
-          placeholder="Search by Account Number"
+          placeholder="Type Here for Search Tracker Data"
           value={searchQuery} 
           onChange={(e) => setSearchQuery(e.target.value)}
           className={`border p-2 text-sm rounded w-full ${
