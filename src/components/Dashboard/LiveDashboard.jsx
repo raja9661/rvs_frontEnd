@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { io } from 'socket.io-client';
 import * as XLSX from 'xlsx';
+import moment from "moment-timezone"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 const monthNameToNumber = (monthName) => {
@@ -329,8 +330,7 @@ const LiveDashboard = () => {
   
   // Determine hierarchy level and title based on type
   let level, title;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = moment.tz("Asia/Kolkata").startOf("day");
 
   switch(type) {
     case 'total':
