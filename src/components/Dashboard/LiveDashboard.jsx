@@ -988,60 +988,6 @@ const downloadRecords = async (name) => {
 
   const statsCards = [
   { 
-    title: "Total Cases", 
-    value: dashboardData.stats?.totalCases || 0, 
-    icon: Clock,
-    color: isDarkMode ? 'text-yellow-500' : 'text-purple-500',
-    bgColor: isDarkMode ? 'bg-yellow-500/10' : 'bg-purple-500/10',
-    onClick: () => fetchCaseDetails('total'),
-    show: true
-  },
-  { 
-    title: "Monthly Cases", 
-    value: dashboardData.stats?.monthlyCases || 0, 
-    icon: Calendar,
-    color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
-    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
-    onClick: () => fetchCaseDetails('monthly'),
-    show: true
-  },
-  { 
-    title: "Total Pending", 
-    value: dashboardData.stats?.totalNewPending || 0, 
-    icon: Inbox,
-    color: isDarkMode ? 'text-orange-500' : 'text-orange-600',
-    bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
-    onClick: () => fetchCaseDetails('totalPending'),
-    show: true
-  },
-  { 
-    title: "Total New Pending", 
-    value: dashboardData.stats?.totalSentPending || 0, 
-    icon: Send,
-    color: isDarkMode ? 'text-indigo-500' : 'text-indigo-600',
-    bgColor: isDarkMode ? 'bg-indigo-500/10' : 'bg-indigo-100',
-    onClick: () => fetchCaseDetails('totalNewPending'),
-    show: true
-  },
-  { 
-    title: "Total High Priority", 
-    value: dashboardData.stats?.totalHighPriority || 0, 
-    icon: AlertTriangle,
-    color: isDarkMode ? 'text-red-500' : 'text-red-600',
-    bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
-    onClick: () => fetchCaseDetails('totalHighPriority'),
-    show: true
-  },
-  { 
-    title: "Total Closed", 
-    value: dashboardData.stats?.totalClosed || 0, 
-    icon: CheckCircle,
-    color: isDarkMode ? 'text-green-500' : 'text-green-600',
-    bgColor: isDarkMode ? 'bg-green-500/10' : 'bg-green-100',
-    onClick: () => fetchCaseDetails('totalClosed'),
-    show: true
-  },
-  { 
     title: "Today's Cases", 
     value: dashboardData.stats?.todayCases || 0, 
     icon: Sun,
@@ -1051,7 +997,7 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today New Pending", 
+    title: "Today Sent Pending", 
     value: dashboardData.stats?.todaySentPending || 0, 
     icon: SendHorizonal,
     color: isDarkMode ? 'text-blue-400' : 'text-blue-500',
@@ -1060,7 +1006,7 @@ const downloadRecords = async (name) => {
     show: role !== 'client'
   },
   { 
-    title: "Today Pending", 
+    title: "Today Closed Pending", 
     value: dashboardData.stats?.todayNewPending || 0, 
     icon: Mail,
     color: isDarkMode ? 'text-orange-400' : 'text-orange-500',
@@ -1092,6 +1038,61 @@ const downloadRecords = async (name) => {
     icon: TrendingUp,
     color: isDarkMode ? 'text-teal-400' : 'text-teal-500',
     bgColor: isDarkMode ? 'bg-teal-500/10' : 'bg-teal-100',
+    show: true
+  },
+  { 
+    title: "Monthly Cases", 
+    value: dashboardData.stats?.monthlyCases || 0, 
+    icon: Calendar,
+    color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
+    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
+    onClick: () => fetchCaseDetails('monthly'),
+    show: true
+  },  
+  { 
+    title: "Total Cases", 
+    value: dashboardData.stats?.totalCases || 0, 
+    icon: Clock,
+    color: isDarkMode ? 'text-yellow-500' : 'text-purple-500',
+    bgColor: isDarkMode ? 'bg-yellow-500/10' : 'bg-purple-500/10',
+    onClick: () => fetchCaseDetails('total'),
+    show: true
+  },
+  
+  { 
+    title: "Total Closed Pending", 
+    value: dashboardData.stats?.totalNewPending || 0, 
+    icon: Inbox,
+    color: isDarkMode ? 'text-orange-500' : 'text-orange-600',
+    bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
+    onClick: () => fetchCaseDetails('totalPending'),
+    show: true
+  },
+  { 
+    title: "Total Sent Pending", 
+    value: dashboardData.stats?.totalSentPending || 0, 
+    icon: Send,
+    color: isDarkMode ? 'text-indigo-500' : 'text-indigo-600',
+    bgColor: isDarkMode ? 'bg-indigo-500/10' : 'bg-indigo-100',
+    onClick: () => fetchCaseDetails('totalNewPending'),
+    show: true
+  },
+  { 
+    title: "Total High Priority", 
+    value: dashboardData.stats?.totalHighPriority || 0, 
+    icon: AlertTriangle,
+    color: isDarkMode ? 'text-red-500' : 'text-red-600',
+    bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
+    onClick: () => fetchCaseDetails('totalHighPriority'),
+    show: true
+  },
+  { 
+    title: "Total Closed", 
+    value: dashboardData.stats?.totalClosed || 0, 
+    icon: CheckCircle,
+    color: isDarkMode ? 'text-green-500' : 'text-green-600',
+    bgColor: isDarkMode ? 'bg-green-500/10' : 'bg-green-100',
+    onClick: () => fetchCaseDetails('totalClosed'),
     show: true
   },
   { 
@@ -1258,31 +1259,7 @@ const downloadRecords = async (name) => {
           return `${type} Cases`;
       }
     };
-
-    // const getModalTitle = () => {
-    //   switch(level) {
-    //     case 'year':
-    //       return `${type} Cases by Year`;
-    //     case 'month':
-    //       return `${type} Cases for ${year} by Month`;
-    //     case 'clientType':
-    //       return type === 'today' 
-    //         ? `Today's Cases by Client Type` 
-    //         : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
-    //     case 'productType':
-    //       return `${type} Cases for ${clientType} by Product Type`;
-    //     case 'clientCode':
-    //       return `${type} Cases for ${productType} by Client Code`;
-    //     case 'product':
-    //       return `${type} Cases for ${clientCode} by Product`;
-    //     case 'productDetails':
-    //       return `${type} Case Details for ${product}`;
-    //     default:
-    //       return `${type} Cases`;
-    //   }
-    // };
-
-    return (
+   return (
       <div className="space-y-4">
         {/* Breadcrumb navigation */}
         <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
