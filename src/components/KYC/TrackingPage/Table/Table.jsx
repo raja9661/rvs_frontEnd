@@ -652,7 +652,7 @@ const restoreScrollPosition = () => {
     const dropdownOptions = ["Pending", "Done"];
     // const employeelist = ["KAIF", "UMAR", "SUNIL", "NAWSHAD"];
     const statusDropDown = ["New Data","Closed","Negative","CNV"];
-    const readOnlyColumns = ["name", "accountNumber"];
+    const readOnlyColumns = ["userId"];
     const caseStatusDropDown = ["New Pending","Sent"];
     const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
     const priorityDropdown = ["","Urgent",""]

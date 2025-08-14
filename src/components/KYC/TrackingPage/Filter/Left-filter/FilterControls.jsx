@@ -20,7 +20,8 @@ const FilterControls = ({
   fetchTrackerData,
   setSelectedRows,
   deduceMode,
-  handleDeduceClick
+  handleDeduceClick,
+  pagination
 }) => {
   const [viewMode, setViewMode] = useState('filter');
   const [updateFields, setUpdateFields] = useState({
@@ -302,7 +303,7 @@ const FilterControls = ({
     if(deduceMode){
       handleDeduceClick()
     }else{
-    fetchTrackerData(true);
+    fetchTrackerData(1,pagination.pageSize);
     }
   } catch (error) {
     console.error("Update error:", error);

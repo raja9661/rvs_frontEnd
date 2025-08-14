@@ -368,6 +368,7 @@ useEffect(() => {
                 fetchTrackerData={fetchTrackerData}
                 setSelectedRows={setSelectedRows}
                 handleDeduceClick = {handleDeduceClick}
+                pagination = {pagination}
               />
             </div>
             <div className={`${panelClass} p-4 rounded shadow-md`}>
