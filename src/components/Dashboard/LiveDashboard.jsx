@@ -996,59 +996,59 @@ const downloadRecords = async (name) => {
     onClick: () => fetchCaseDetails('today'),
     show: true
   },
-  { 
-    title: "Today Sent Pending", 
-    value: dashboardData.stats?.todaySentPending || 0, 
-    icon: SendHorizonal,
-    color: isDarkMode ? 'text-blue-400' : 'text-blue-500',
-    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
-    onClick: () => fetchCaseDetails('todayNewPending'),
-    show: role !== 'client'
-  },
-  { 
-    title: "Today Closed Pending", 
-    value: dashboardData.stats?.todayNewPending || 0, 
-    icon: Mail,
-    color: isDarkMode ? 'text-orange-400' : 'text-orange-500',
-    bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
-    onClick: () => fetchCaseDetails('todayPending'),
-    show: true
-  },
-  { 
-    title: "Today Closed", 
-    value: dashboardData.stats?.todayClosed || 0, 
-    icon: CheckCircle2,
-    color: isDarkMode ? 'text-green-400' : 'text-green-500',
-    bgColor: isDarkMode ? 'bg-green-500/10' : 'bg-green-100',
-    onClick: () => fetchCaseDetails('todayClosed'),
-    show: true
-  },
-  { 
-    title: "Today High Priority", 
-    value: dashboardData.stats?.todayHighPriority || 0, 
-    icon: AlertOctagon,
-    color: isDarkMode ? 'text-red-400' : 'text-red-500',
-    bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
-    onClick: () => fetchCaseDetails('todayHighPriority'),
-    show: true
-  },
-  { 
-    title: "Today Completion Rate", 
-    value: dashboardData.stats?.todayCompletionRate ? `${dashboardData.stats.todayCompletionRate}%` : '0%', 
-    icon: TrendingUp,
-    color: isDarkMode ? 'text-teal-400' : 'text-teal-500',
-    bgColor: isDarkMode ? 'bg-teal-500/10' : 'bg-teal-100',
-    show: true
-  },
-  { 
-    title: "Monthly Cases", 
-    value: dashboardData.stats?.monthlyCases || 0, 
-    icon: Calendar,
-    color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
-    bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
-    onClick: () => fetchCaseDetails('monthly'),
-    show: true
-  },  
+  // { 
+  //   title: "Today Sent Pending", 
+  //   value: dashboardData.stats?.todaySentPending || 0, 
+  //   icon: SendHorizonal,
+  //   color: isDarkMode ? 'text-blue-400' : 'text-blue-500',
+  //   bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
+  //   onClick: () => fetchCaseDetails('todayNewPending'),
+  //   show: role !== 'client'
+  // },
+  // { 
+  //   title: "Today Closed Pending", 
+  //   value: dashboardData.stats?.todayNewPending || 0, 
+  //   icon: Mail,
+  //   color: isDarkMode ? 'text-orange-400' : 'text-orange-500',
+  //   bgColor: isDarkMode ? 'bg-orange-500/10' : 'bg-orange-100',
+  //   onClick: () => fetchCaseDetails('todayPending'),
+  //   show: true
+  // },
+  // { 
+  //   title: "Today Closed", 
+  //   value: dashboardData.stats?.todayClosed || 0, 
+  //   icon: CheckCircle2,
+  //   color: isDarkMode ? 'text-green-400' : 'text-green-500',
+  //   bgColor: isDarkMode ? 'bg-green-500/10' : 'bg-green-100',
+  //   onClick: () => fetchCaseDetails('todayClosed'),
+  //   show: true
+  // },
+  // { 
+  //   title: "Today High Priority", 
+  //   value: dashboardData.stats?.todayHighPriority || 0, 
+  //   icon: AlertOctagon,
+  //   color: isDarkMode ? 'text-red-400' : 'text-red-500',
+  //   bgColor: isDarkMode ? 'bg-red-500/10' : 'bg-red-100',
+  //   onClick: () => fetchCaseDetails('todayHighPriority'),
+  //   show: true
+  // },
+  // { 
+  //   title: "Today Completion Rate", 
+  //   value: dashboardData.stats?.todayCompletionRate ? `${dashboardData.stats.todayCompletionRate}%` : '0%', 
+  //   icon: TrendingUp,
+  //   color: isDarkMode ? 'text-teal-400' : 'text-teal-500',
+  //   bgColor: isDarkMode ? 'bg-teal-500/10' : 'bg-teal-100',
+  //   show: true
+  // },
+  // { 
+  //   title: "Monthly Cases", 
+  //   value: dashboardData.stats?.monthlyCases || 0, 
+  //   icon: Calendar,
+  //   color: isDarkMode ? 'text-blue-500' : 'text-blue-600',
+  //   bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
+  //   onClick: () => fetchCaseDetails('monthly'),
+  //   show: true
+  // },  
   { 
     title: "Total Cases", 
     value: dashboardData.stats?.totalCases || 0, 
