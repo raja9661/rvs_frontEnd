@@ -1,183 +1,4 @@
-# name: Deploy Frontend Application
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Source
-#         uses: actions/checkout@v4
-#       - name: Login to Docker Hub
-#         uses: docker/login-action@v3
-#         with:
-#           username: ${{ secrets.DOCKER_USER }}
-#           password: ${{ secrets.DOCKER_PASS }}
-#       - name: Build Docker Image
-#         run: docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL='${{secrets.VITE_Backend_Base_URL}}' .
-#       - name: Publish Image to Docker Hub
-#         run: docker push raja9661/rvs_frontend:latest
-
-#   deploy:
-#     needs: build
-#     runs-on: self-hosted
-#     steps:
-#       - name: Clean unused images
-#         run: docker image prune -af
-
-#       - name: Pull image from Docker Hub
-#         run: docker pull raja9661/rvs_frontend:latest
-
-#       - name: Determine current active frontend container
-#         id: deployment
-#         run: |
-#           # Check which container is currently running on port 5173
-#           if docker ps --format "table {{.Names}}\t{{.Ports}}" | grep -q "reactjs-container.*5173"; then
-#             echo "Current active: reactjs-container on 5173"
-#             echo "active_container=reactjs-container" >> $GITHUB_OUTPUT
-#             echo "inactive_container=reactjs-container-blue" >> $GITHUB_OUTPUT
-#             echo "new_port=5174" >> $GITHUB_OUTPUT
-#             echo "active_port=5173" >> $GITHUB_OUTPUT
-#           elif docker ps --format "table {{.Names}}\t{{.Ports}}" | grep -q "reactjs-container-blue.*5174"; then
-#             echo "Current active: reactjs-container-blue on 5174"
-#             echo "active_container=reactjs-container-blue" >> $GITHUB_OUTPUT
-#             echo "inactive_container=reactjs-container" >> $GITHUB_OUTPUT
-#             echo "new_port=5173" >> $GITHUB_OUTPUT
-#             echo "active_port=5174" >> $GITHUB_OUTPUT
-#           else
-#             echo "No active container found, starting fresh"
-#             echo "active_container=" >> $GITHUB_OUTPUT
-#             echo "inactive_container=reactjs-container" >> $GITHUB_OUTPUT
-#             echo "new_port=5173" >> $GITHUB_OUTPUT
-#             echo "active_port=" >> $GITHUB_OUTPUT
-#           fi
-
-#       - name: Stop and remove inactive container
-#         run: |
-#           if [ -n "${{ steps.deployment.outputs.inactive_container }}" ]; then
-#             docker stop ${{ steps.deployment.outputs.inactive_container }} || true
-#             docker rm ${{ steps.deployment.outputs.inactive_container }} || true
-#           fi
-
-#       - name: Start new frontend container
-#         run: |
-#           echo "Starting new container: ${{ steps.deployment.outputs.inactive_container }} on port ${{ steps.deployment.outputs.new_port }}"
-#           docker run -d \
-#             --name ${{ steps.deployment.outputs.inactive_container }} \
-#             -p ${{ steps.deployment.outputs.new_port }}:80 \
-#             --restart unless-stopped \
-#             raja9661/rvs_frontend:latest
-
-#       - name: Health check new frontend container
-#         run: |
-#           echo "Performing health check on new frontend container..."
-#           sleep 10
-#           for i in {1..20}; do
-#             if curl -f http://localhost:${{ steps.deployment.outputs.new_port }}/ 2>/dev/null; then
-#               echo "✅ New frontend container is healthy!"
-#               break
-#             elif [ $i -eq 20 ]; then
-#               echo "❌ Frontend health check failed after 20 attempts"
-#               docker logs ${{ steps.deployment.outputs.inactive_container }}
-#               docker stop ${{ steps.deployment.outputs.inactive_container }}
-#               docker rm ${{ steps.deployment.outputs.inactive_container }}
-#               exit 1
-#             else
-#               echo "Attempt $i: Waiting for frontend to be ready..."
-#               sleep 5
-#             fi
-#           done
-
-#       - name: Update nginx upstream configuration for frontend
-#         run: |
-#           echo "Updating nginx upstream configuration for frontend..."
-#           cat > /tmp/update_frontend_upstream.sh << 'EOF'
-#           #!/bin/bash
-
-#           NEW_PORT=$1
-#           OLD_PORT=$2
-
-#           # Backup current config
-#           cp /etc/nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf.backup
-
-#           # Read current backend upstream to preserve it
-#           BACKEND_UPSTREAM=$(grep -A3 "upstream api_backend" /etc/nginx/conf.d/upstream.conf)
-
-#           # Update the upstream configuration to prioritize the new frontend port
-#           if [ "$NEW_PORT" = "5173" ]; then
-#             cat > /etc/nginx/conf.d/upstream.conf << UPSTREAM_EOF
-#           upstream frontend_backend {
-#               server localhost:5173 max_fails=2 fail_timeout=10s;
-#               server localhost:5174 backup;
-#           }
-
-#           $BACKEND_UPSTREAM
-#           UPSTREAM_EOF
-#           else
-#             cat > /etc/nginx/conf.d/upstream.conf << UPSTREAM_EOF
-#           upstream frontend_backend {
-#               server localhost:5174 max_fails=2 fail_timeout=10s;
-#               server localhost:5173 backup;
-#           }
-
-#           $BACKEND_UPSTREAM
-#           UPSTREAM_EOF
-#           fi
-
-#           # Test nginx configuration
-#           if nginx -t; then
-#             echo "Nginx config test passed, reloading..."
-#             systemctl reload nginx
-#             echo "Nginx reloaded successfully"
-#           else
-#             echo "Nginx config test failed, rolling back..."
-#             cp /etc/nginx/conf.d/upstream.conf.backup /etc/nginx/conf.d/upstream.conf
-#             exit 1
-#           fi
-#           EOF
-
-#           chmod +x /tmp/update_frontend_upstream.sh
-#           sudo /tmp/update_frontend_upstream.sh ${{ steps.deployment.outputs.new_port }} ${{ steps.deployment.outputs.active_port }}
-
-#       - name: Verify new frontend deployment is receiving traffic
-#         run: |
-#           echo "Verifying frontend deployment..."
-#           sleep 10
-#           for i in {1..5}; do
-#             if curl -f https://rvsdoc.com/ 2>/dev/null; then
-#               echo "✅ New frontend deployment is receiving traffic successfully!"
-#               break
-#             elif [ $i -eq 5 ]; then
-#               echo "❌ New frontend deployment not receiving traffic, rolling back..."
-#               sudo cp /etc/nginx/conf.d/upstream.conf.backup /etc/nginx/conf.d/upstream.conf
-#               sudo systemctl reload nginx
-#               exit 1
-#             else
-#               echo "Attempt $i: Testing frontend traffic routing..."
-#               sleep 5
-#             fi
-#           done
-
-#       - name: Stop old frontend container
-#         run: |
-#           if [ -n "${{ steps.deployment.outputs.active_container }}" ]; then
-#             echo "Stopping old frontend container: ${{ steps.deployment.outputs.active_container }}"
-#             sleep 5  # Brief pause to finish serving current requests
-#             docker stop ${{ steps.deployment.outputs.active_container }} || true
-#             docker rm ${{ steps.deployment.outputs.active_container }} || true
-#             echo "Old frontend container stopped and removed"
-#           fi
-
-#       - name: Final frontend health check
-#         run: |
-#           echo "Final frontend deployment verification..."
-#           curl -f https://rvsdoc.com/ 2>/dev/null
-#           echo "✅ Frontend deployment completed successfully!"
-
-name: Deploy Node App
-
+name: Deploy Frontend Application
 on:
   push:
     branches:
@@ -189,16 +10,13 @@ jobs:
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
-
       - name: Build Docker Image
         run: docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL='${{secrets.VITE_Backend_Base_URL}}' .
-
       - name: Publish Image to Docker Hub
         run: docker push raja9661/rvs_frontend:latest
 
@@ -206,20 +24,202 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Clean Image
-        run: docker system prune -af
+      - name: Clean unused images
+        run: docker image prune -af
 
       - name: Pull image from Docker Hub
         run: docker pull raja9661/rvs_frontend:latest
 
-      - name: Delete Old container
-        run: docker rm -f reactjs-container
-
-      - name: Stop existing container (if running)
+      - name: Determine current active frontend container
+        id: deployment
         run: |
-          docker stop reactjs-container || true
-          docker rm reactjs-container || true
-        continue-on-error: true
+          # Check which container is currently running on port 5173
+          if docker ps --format "table {{.Names}}\t{{.Ports}}" | grep -q "reactjs-container.*5173"; then
+            echo "Current active: reactjs-container on 5173"
+            echo "active_container=reactjs-container" >> $GITHUB_OUTPUT
+            echo "inactive_container=reactjs-container-blue" >> $GITHUB_OUTPUT
+            echo "new_port=5174" >> $GITHUB_OUTPUT
+            echo "active_port=5173" >> $GITHUB_OUTPUT
+          elif docker ps --format "table {{.Names}}\t{{.Ports}}" | grep -q "reactjs-container-blue.*5174"; then
+            echo "Current active: reactjs-container-blue on 5174"
+            echo "active_container=reactjs-container-blue" >> $GITHUB_OUTPUT
+            echo "inactive_container=reactjs-container" >> $GITHUB_OUTPUT
+            echo "new_port=5173" >> $GITHUB_OUTPUT
+            echo "active_port=5174" >> $GITHUB_OUTPUT
+          else
+            echo "No active container found, starting fresh"
+            echo "active_container=" >> $GITHUB_OUTPUT
+            echo "inactive_container=reactjs-container" >> $GITHUB_OUTPUT
+            echo "new_port=5173" >> $GITHUB_OUTPUT
+            echo "active_port=" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Run Docker Container
-        run: docker run -d --name reactjs-container -p 5173:80 raja9661/rvs_frontend:latest
+      - name: Stop and remove inactive container
+        run: |
+          if [ -n "${{ steps.deployment.outputs.inactive_container }}" ]; then
+            docker stop ${{ steps.deployment.outputs.inactive_container }} || true
+            docker rm ${{ steps.deployment.outputs.inactive_container }} || true
+          fi
+
+      - name: Start new frontend container
+        run: |
+          echo "Starting new container: ${{ steps.deployment.outputs.inactive_container }} on port ${{ steps.deployment.outputs.new_port }}"
+          docker run -d \
+            --name ${{ steps.deployment.outputs.inactive_container }} \
+            -p ${{ steps.deployment.outputs.new_port }}:80 \
+            --restart unless-stopped \
+            raja9661/rvs_frontend:latest
+
+      - name: Health check new frontend container
+        run: |
+          echo "Performing health check on new frontend container..."
+          sleep 10
+          for i in {1..20}; do
+            if curl -f http://localhost:${{ steps.deployment.outputs.new_port }}/ 2>/dev/null; then
+              echo "✅ New frontend container is healthy!"
+              break
+            elif [ $i -eq 20 ]; then
+              echo "❌ Frontend health check failed after 20 attempts"
+              docker logs ${{ steps.deployment.outputs.inactive_container }}
+              docker stop ${{ steps.deployment.outputs.inactive_container }}
+              docker rm ${{ steps.deployment.outputs.inactive_container }}
+              exit 1
+            else
+              echo "Attempt $i: Waiting for frontend to be ready..."
+              sleep 5
+            fi
+          done
+
+      - name: Update nginx upstream configuration for frontend
+        run: |
+          echo "Updating nginx upstream configuration for frontend..."
+          cat > /tmp/update_frontend_upstream.sh << 'EOF'
+          #!/bin/bash
+
+          NEW_PORT=$1
+          OLD_PORT=$2
+
+          # Backup current config
+          cp /etc/nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf.backup
+
+          # Read current backend upstream to preserve it
+          BACKEND_UPSTREAM=$(grep -A3 "upstream api_backend" /etc/nginx/conf.d/upstream.conf)
+
+          # Update the upstream configuration to prioritize the new frontend port
+          if [ "$NEW_PORT" = "5173" ]; then
+            cat > /etc/nginx/conf.d/upstream.conf << UPSTREAM_EOF
+          upstream frontend_backend {
+              server localhost:5173 max_fails=2 fail_timeout=10s;
+              server localhost:5174 backup;
+          }
+
+          $BACKEND_UPSTREAM
+          UPSTREAM_EOF
+          else
+            cat > /etc/nginx/conf.d/upstream.conf << UPSTREAM_EOF
+          upstream frontend_backend {
+              server localhost:5174 max_fails=2 fail_timeout=10s;
+              server localhost:5173 backup;
+          }
+
+          $BACKEND_UPSTREAM
+          UPSTREAM_EOF
+          fi
+
+          # Test nginx configuration
+          if nginx -t; then
+            echo "Nginx config test passed, reloading..."
+            systemctl reload nginx
+            echo "Nginx reloaded successfully"
+          else
+            echo "Nginx config test failed, rolling back..."
+            cp /etc/nginx/conf.d/upstream.conf.backup /etc/nginx/conf.d/upstream.conf
+            exit 1
+          fi
+          EOF
+
+          chmod +x /tmp/update_frontend_upstream.sh
+          sudo /tmp/update_frontend_upstream.sh ${{ steps.deployment.outputs.new_port }} ${{ steps.deployment.outputs.active_port }}
+
+      - name: Verify new frontend deployment is receiving traffic
+        run: |
+          echo "Verifying frontend deployment..."
+          sleep 10
+          for i in {1..5}; do
+            if curl -f https://rvsdoc.com/ 2>/dev/null; then
+              echo "✅ New frontend deployment is receiving traffic successfully!"
+              break
+            elif [ $i -eq 5 ]; then
+              echo "❌ New frontend deployment not receiving traffic, rolling back..."
+              sudo cp /etc/nginx/conf.d/upstream.conf.backup /etc/nginx/conf.d/upstream.conf
+              sudo systemctl reload nginx
+              exit 1
+            else
+              echo "Attempt $i: Testing frontend traffic routing..."
+              sleep 5
+            fi
+          done
+
+      - name: Stop old frontend container
+        run: |
+          if [ -n "${{ steps.deployment.outputs.active_container }}" ]; then
+            echo "Stopping old frontend container: ${{ steps.deployment.outputs.active_container }}"
+            sleep 5  # Brief pause to finish serving current requests
+            docker stop ${{ steps.deployment.outputs.active_container }} || true
+            docker rm ${{ steps.deployment.outputs.active_container }} || true
+            echo "Old frontend container stopped and removed"
+          fi
+
+      - name: Final frontend health check
+        run: |
+          echo "Final frontend deployment verification..."
+          curl -f https://rvsdoc.com/ 2>/dev/null
+          echo "✅ Frontend deployment completed successfully!"
+
+# name: Deploy Node App
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Source
+#         uses: actions/checkout@v4
+
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ secrets.DOCKER_USER }}
+#           password: ${{ secrets.DOCKER_PASS }}
+
+#       - name: Build Docker Image
+#         run: docker build -t raja9661/rvs_frontend:latest --build-arg VITE_Backend_Base_URL='${{secrets.VITE_Backend_Base_URL}}' .
+
+#       - name: Publish Image to Docker Hub
+#         run: docker push raja9661/rvs_frontend:latest
+
+#   deploy:
+#     needs: build
+#     runs-on: self-hosted
+#     steps:
+#       - name: Clean Image
+#         run: docker system prune -af
+
+#       - name: Pull image from Docker Hub
+#         run: docker pull raja9661/rvs_frontend:latest
+
+#       - name: Delete Old container
+#         run: docker rm -f reactjs-container
+
+#       - name: Stop existing container (if running)
+#         run: |
+#           docker stop reactjs-container || true
+#           docker rm reactjs-container || true
+#         continue-on-error: true
+
+#       - name: Run Docker Container
+#         run: docker run -d --name reactjs-container -p 5173:80 raja9661/rvs_frontend:latest
