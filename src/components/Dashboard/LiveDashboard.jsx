@@ -334,98 +334,183 @@ const LiveDashboard = () => {
 
   switch(type) {
     case 'total':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' :
+             month ? 'updatedProductName' : 
+             year ? 'month' : 
+             'year';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              month ? 'clientType' : 
              year ? 'month' : 
              'year';
+
+      }
       title = 'Total Cases';
       break;
       
     case 'monthly':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              'clientType';
+      }
       title = 'Monthly Cases';
       break;
       
     case 'totalPending':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' :
+             month ? 'updatedProductName' : 
+             year ? 'month' : 
+             'year';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              month ? 'clientType' : 
              year ? 'month' : 
              'year';
+
+      }
       title = 'Total Pending Cases';
       break;
       
     case 'totalNewPending':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' :
+             month ? 'updatedProductName' : 
+             year ? 'month' : 
+             'year';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              month ? 'clientType' : 
              year ? 'month' : 
              'year';
+
+      }
       title = 'Total New Pending Cases';
       break;
       
     case 'totalHighPriority':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' :
+             month ? 'updatedProductName' : 
+             year ? 'month' : 
+             'year';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              month ? 'clientType' : 
              year ? 'month' : 
              'year';
+
+      }
       title = 'Total High Priority Cases';
       break;
       
     case 'totalClosed':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' :
+             month ? 'updatedProductName' : 
+             year ? 'month' : 
+             'year';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              month ? 'clientType' : 
              year ? 'month' : 
              'year';
+
+      }
       title = 'Total Closed Cases';
       break;
       
     case 'today':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              'clientType';
+      }
+      
       title = "Today's Cases";
       break;
       
+    // case 'todayNewPending':
+    //   level = updatedProductName ? 'productDetails' : 
+    //          vendorName ? 'updatedProductName' : 
+    //          'vendorName';
+    //   title = "Today's New Pending Cases";
+    //   break;
     case 'todayNewPending':
-      level = updatedProductName ? 'productDetails' : 
-             vendorName ? 'updatedProductName' : 
-             'vendorName';
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+      }else{
+        level = clientCode ? 'productDetails' : 
+             updatedProductName ? 'clientCode' : 
+             'updatedProductName';
+      }
+      
       title = "Today's New Pending Cases";
       break;
       
+    // case 'todayPending':
+    //   level = updatedProductName ? 'productDetails' : 
+    //          clientCode ? 'updatedProductName' : 
+    //          'clientCode';
+    //   title = "Today's Pending Cases";
+    //   break;
     case 'todayPending':
+      if (role === 'client') {
       level = updatedProductName ? 'productDetails' : 
-             clientCode ? 'updatedProductName' : 
-             'clientCode';
+             'updatedProductName';
+    }else{
+      level = vendorName ? 'productDetails' : 
+             updatedProductName ? 'vendorName' : 
+             'updatedProductName';
+    }
+      
       title = "Today's Pending Cases";
       break;
       
     case 'todayClosed':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              'clientType';
+      }
       title = "Today's Closed Cases";
       break;
       
     case 'todayHighPriority':
-      level = updatedProductName ? 'productDetails' : 
+      if(role === 'client'){
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+      }else{
+        level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
              'clientType';
+      }
       title = "Today's High Priority Cases";
       break;
       
@@ -997,16 +1082,16 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today New Pending", 
+    title: "Today's New Pending", 
     value: dashboardData.stats?.todaySentPending || 0, 
     icon: SendHorizonal,
     color: isDarkMode ? 'text-blue-400' : 'text-blue-500',
     bgColor: isDarkMode ? 'bg-blue-500/10' : 'bg-blue-100',
     onClick: () => fetchCaseDetails('todayNewPending'),
-    show: role !== 'client'
+    show: true
   },
   { 
-    title: "Today Status Pending", 
+    title: "Today's Sent Pending", 
     value: dashboardData.stats?.todayNewPending || 0, 
     icon: Mail,
     color: isDarkMode ? 'text-orange-400' : 'text-orange-500',
@@ -1015,7 +1100,7 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today Closed", 
+    title: "Today's Closed", 
     value: dashboardData.stats?.todayClosed || 0, 
     icon: CheckCircle2,
     color: isDarkMode ? 'text-green-400' : 'text-green-500',
@@ -1024,7 +1109,7 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today High Priority", 
+    title: "Today's High Priority", 
     value: dashboardData.stats?.todayHighPriority || 0, 
     icon: AlertOctagon,
     color: isDarkMode ? 'text-red-400' : 'text-red-500',
@@ -1033,7 +1118,7 @@ const downloadRecords = async (name) => {
     show: true
   },
   { 
-    title: "Today Completion Rate", 
+    title: "Today's Completion Rate", 
     value: dashboardData.stats?.todayCompletionRate ? `${dashboardData.stats.todayCompletionRate}%` : '0%', 
     icon: TrendingUp,
     color: isDarkMode ? 'text-teal-400' : 'text-teal-500',
@@ -1061,7 +1146,7 @@ const downloadRecords = async (name) => {
   },
   
   { 
-    title: "Total Status Pending", 
+    title: "Total Sent Pending", 
     value: dashboardData.stats?.totalNewPending || 0, 
     icon: Inbox,
     color: isDarkMode ? 'text-orange-500' : 'text-orange-600',
@@ -1370,19 +1455,29 @@ const downloadRecords = async (name) => {
           <table className="w-full">
             <thead>
               <tr className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                {level !== 'productDetails' && (
+                  <>
                 <th className="px-4 py-2 text-left">Name</th>
                 <th className="px-4 py-2 text-left">Count</th>
+                </>
+                )}
                 {level === 'productDetails' && (
                   <>
                     <th className="px-4 py-2 text-left">Case ID</th>
-                    <th className="px-4 py-2 text-left">Client Type</th>
-                    <th className="px-4 py-2 text-left">Client Code</th>
+                    <th className="px-4 py-2 text-left">Name</th>
+                    <th className="px-4 py-2 text-left">Product</th>
+                    <th className="px-4 py-2 text-left">Account Number</th>
                     <th className="px-4 py-2 text-left">Status</th>
+                    <th className="px-4 py-2 text-left">Case Status</th>
                     <th className="px-4 py-2 text-left">Priority</th>
-                    <th className="px-4 py-2 text-left">Date</th>
+                    <th className="px-4 py-2 text-left">Date In</th>
+                    <th className="px-4 py-2 text-left">Sent Date</th>
+                    <th className="px-4 py-2 text-left">Date Out</th>
                   </>
                 )}
+                {level !== 'productDetails' && (
                 <th className="px-4 py-2 text-left">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -1392,12 +1487,16 @@ const downloadRecords = async (name) => {
                     key={index} 
                     className={`${isDarkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-200 hover:bg-gray-50'} border-b`}
                   >
+                    {level !== 'productDetails' && (
+                  <>
                     <td className={`px-4 py-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {level === 'month' ? formatMonth(item.name, year) : (item.name || item.caseId)}
                     </td>
                     <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {item.count || '-'}
                     </td>
+                    </>
+                )}
                     
                     {level === 'productDetails' && (
                       <>
@@ -1405,10 +1504,25 @@ const downloadRecords = async (name) => {
                           {item.caseId}
                         </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {item.clientType}
+                          {item.name}
                         </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {item.clientCode}
+                          {item.updatedProductName}
+                        </td>
+                        <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {item.accountNumber}
+                        </td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            item.status === 'Pending' ? 
+                              (isDarkMode ? 'bg-yellow-500/10 text-yellow-400' : 'bg-yellow-100 text-yellow-800') :
+                            item.status === 'Closed' ?
+                              (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-100 text-blue-800') :
+                              (isDarkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-100 text-green-800')
+                          }`}>
+                            
+                            {item.status}
+                          </span>
                         </td>
                         <td className="px-4 py-2">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -1418,6 +1532,7 @@ const downloadRecords = async (name) => {
                               (isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-100 text-blue-800') :
                               (isDarkMode ? 'bg-green-500/10 text-green-400' : 'bg-green-100 text-green-800')
                           }`}>
+                            
                             {item.caseStatus}
                           </span>
                         </td>
@@ -1430,9 +1545,18 @@ const downloadRecords = async (name) => {
                             {item.priority}
                           </span>
                         </td>
-                        <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {formatDate(item.updatedAt)}
+                        <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {item.dateIn}
                         </td>
+                        <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {item.sentDate}
+                        </td>
+                        <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          {item.dateOut}
+                        </td>
+                        {/* <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {formatDate(item.updatedAt)}
+                        </td> */}
                       </>
                     )}
                     
@@ -1832,8 +1956,15 @@ const downloadRecords = async (name) => {
             Product
           </th>
           <th className={`text-left py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Account Number
+          </th>
+          {
+            role !== 'client' && <th className={`text-left py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Client Code
           </th>
+          }
+          
+          
           <th className={`text-left py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             Case Status
           </th>
@@ -1860,9 +1991,14 @@ const downloadRecords = async (name) => {
             <td className={`py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {item.updatedProductName || item.product}
             </td>
-            <td className={`py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate max-w-xs`}>
+            <td className={`py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              {item.accountNumber}
+            </td>
+            {
+              role !== 'client' && <td className={`py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} truncate max-w-xs`}>
               {item.clientCode || '-'}
             </td>
+            }
             <td className="py-2">
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                 item.caseStatus === 'New Pending' ? 
