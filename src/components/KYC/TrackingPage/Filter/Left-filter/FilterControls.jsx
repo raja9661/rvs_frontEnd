@@ -9,7 +9,7 @@ import { format, parse } from "date-fns";
 import AttachmentManager from "../../../AttachmentManager";
 import Select from "react-select";
 import moment from "moment-timezone"
-
+import FileUploadVerificationModal from "./FileUploadVerificationModal";
 
 const FilterControls = ({ 
   filters, 
@@ -49,6 +49,9 @@ const FilterControls = ({
   const [isLoading, setIsLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+const [uploadedFiles, setUploadedFiles] = useState([]);
+const [uploadCaseIds, setUploadCaseIds] = useState([]);
 
   useEffect(() => {
       const getUser = localStorage.getItem("loginUser");
@@ -232,11 +235,17 @@ const FilterControls = ({
   caseIds.forEach(caseId => formData.append('caseIds', caseId));
 
   try {
-    await axios.post(
+    const response = await axios.post(
       `${import.meta.env.VITE_Backend_Base_URL}/upload/upload-attachment`, 
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
+
+    console.log("response",response)
+
+     setUploadedFiles(response.data.uploadedFiles || []);
+     setUploadCaseIds(response.data.caseIds || []);
+     setShowVerificationModal(true);
     
     toast.success(`Uploaded ${updateFields.attachment.length} file(s) successfully`);
   } catch (error) {
@@ -275,7 +284,9 @@ const FilterControls = ({
             successMessage += ` (${response.data.clientTATUpdates} TATs calculated)`;
           }
         }
+        
         toast.success(successMessage);
+        
         
         if (response.data.errors?.length > 0) {
           response.data.errors.forEach(error => toast.warning(error));
@@ -912,9 +923,10 @@ useEffect(() => {
           isDarkMode
             ? "bg-gray-700 border-gray-600 text-gray-200"
             : "bg-white border-gray-300 text-gray-700"
-        }`}
+        }`} 
       >
         <option value="">Select Status</option>
+        <option value="Pending">Pending</option>
         <option value="Closed">Closed</option>
         <option value="Invalid">Invalid</option>
         <option value="CNV">CNV</option>
@@ -1266,6 +1278,13 @@ useEffect(() => {
 </div>
 
       )}
+      <FileUploadVerificationModal
+  isOpen={showVerificationModal}
+  onClose={() => setShowVerificationModal(false)}
+  uploadedFiles={uploadedFiles}
+  caseIds={uploadCaseIds}
+  isDarkMode={isDarkMode}
+/>
     </div>
   );
 };

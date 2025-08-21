@@ -365,73 +365,51 @@ const LiveDashboard = () => {
       break;
       
     case 'totalPending':
-      if(role === 'client'){
-        level = updatedProductName ? 'productDetails' :
-             month ? 'updatedProductName' : 
-             year ? 'month' : 
-             'year';
-      }else{
-        level = updatedProductName ? 'productDetails' : 
-             clientCode ? 'updatedProductName' : 
-             clientType ? 'clientCode' : 
-             month ? 'clientType' : 
-             year ? 'month' : 
-             'year';
-
-      }
+      if (role === 'client') {
+      level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
+    }else{
+      level = vendorName ? 'productDetails' : 
+             updatedProductName ? 'vendorName' : 
+             'updatedProductName';
+    }
       title = 'Total Pending Cases';
       break;
       
     case 'totalNewPending':
       if(role === 'client'){
-        level = updatedProductName ? 'productDetails' :
-             month ? 'updatedProductName' : 
-             year ? 'month' : 
-             'year';
-      }else{
         level = updatedProductName ? 'productDetails' : 
-             clientCode ? 'updatedProductName' : 
-             clientType ? 'clientCode' : 
-             month ? 'clientType' : 
-             year ? 'month' : 
-             'year';
-
+             'updatedProductName';
+      }else{
+        level = clientCode ? 'productDetails' : 
+             updatedProductName ? 'clientCode' : 
+             'updatedProductName';
       }
       title = 'Total New Pending Cases';
       break;
       
     case 'totalHighPriority':
       if(role === 'client'){
-        level = updatedProductName ? 'productDetails' :
-             month ? 'updatedProductName' : 
-             year ? 'month' : 
-             'year';
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
       }else{
         level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
-             month ? 'clientType' : 
-             year ? 'month' : 
-             'year';
-
+             'clientType';
       }
       title = 'Total High Priority Cases';
       break;
       
     case 'totalClosed':
       if(role === 'client'){
-        level = updatedProductName ? 'productDetails' :
-             month ? 'updatedProductName' : 
-             year ? 'month' : 
-             'year';
+        level = updatedProductName ? 'productDetails' : 
+             'updatedProductName';
       }else{
         level = updatedProductName ? 'productDetails' : 
              clientCode ? 'updatedProductName' : 
              clientType ? 'clientCode' : 
-             month ? 'clientType' : 
-             year ? 'month' : 
-             'year';
-
+             'clientType';
       }
       title = 'Total Closed Cases';
       break;
@@ -1469,7 +1447,7 @@ const downloadRecords = async (name) => {
                     <th className="px-4 py-2 text-left">Account Number</th>
                     <th className="px-4 py-2 text-left">Status</th>
                     <th className="px-4 py-2 text-left">Case Status</th>
-                    <th className="px-4 py-2 text-left">Priority</th>
+                    <th className="px-4 py-2 text-left">Client Code</th>
                     <th className="px-4 py-2 text-left">Date In</th>
                     <th className="px-4 py-2 text-left">Sent Date</th>
                     <th className="px-4 py-2 text-left">Date Out</th>
@@ -1538,11 +1516,11 @@ const downloadRecords = async (name) => {
                         </td>
                         <td className="px-4 py-2">
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            item.priority === 'High' ? 
+                            item.clientCode ? 
                               (isDarkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-100 text-red-800') :
                               (isDarkMode ? 'bg-gray-500/10 text-gray-400' : 'bg-gray-100 text-gray-800')
                           }`}>
-                            {item.priority}
+                            {item.clientCode}
                           </span>
                         </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>

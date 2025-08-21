@@ -651,10 +651,10 @@ const restoreScrollPosition = () => {
 
     const dropdownOptions = ["Pending", "Done"];
     // const employeelist = ["KAIF", "UMAR", "SUNIL", "NAWSHAD"];
-    const statusDropDown = ["New Data","Closed","Negative","CNV"];
+    const statusDropDown = ["New Data","Closed","Invalid","CNV"];
     const readOnlyColumns = ["userId"];
     const caseStatusDropDown = ["New Pending","Sent"];
-    const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
+    const vendorStatus = ["","Pending","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
     const priorityDropdown = ["","Urgent",""]
 
     console.log("paginatedData",paginatedData)
@@ -1923,6 +1923,7 @@ const handleDeleteSelectedRows = useCallback(async () => {
     setSelectedRows([]);
     checkboxStateRef.current.selectedRow = null;
     setCurrentPage(1);
+    fetchTrackerData(1, 50);
     
     toast.success(`${caseIds.length} records ${filterType === "deleted" ? "permanently deleted" : "deleted"} successfully`)
 
@@ -2326,6 +2327,7 @@ const handleDeleteSelectedRows = useCallback(async () => {
           }, 0);
           
           toast.success(`${caseIds.length} records restored successfully`);
+          fetchTrackerData(1, 50);
         }
       } catch (error) {
         console.error("Restore error:", error);
