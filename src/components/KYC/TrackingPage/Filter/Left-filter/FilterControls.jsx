@@ -44,7 +44,7 @@ const FilterControls = ({
   const productRef = useRef(null);
   const [attachmentFileName, setAttachmentFileName] = useState('');
   const [attachmentFileSize, setAttachmentFileSize] = useState('');
-  const [clientTypeOptions] = useState(["Agency","Corporate", "Other", "Unknown"]);
+  const [clientTypeOptions] = useState(["AGENCY","CORPORATE", "OTHER", "UNKNOWN"]);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
@@ -52,6 +52,7 @@ const FilterControls = ({
   const [showVerificationModal, setShowVerificationModal] = useState(false);
 const [uploadedFiles, setUploadedFiles] = useState([]);
 const [uploadCaseIds, setUploadCaseIds] = useState([]);
+const [clientCodes, setClientCodes] = useState([]);
 
   useEffect(() => {
       const getUser = localStorage.getItem("loginUser");
@@ -80,11 +81,22 @@ const [uploadCaseIds, setUploadCaseIds] = useState([]);
     }
   };
 
+  const fetchClientCodes = async () => {
+      
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/getcode`);
+        setClientCodes(response.data);
+      } catch (error) {
+        console.error("Error fetching client codes:", error);
+        
+      }
+    };
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        await Promise.all([fetchProductName(), fetchEmployeeNames(),fetchVendorNames()]);
+        await Promise.all([fetchProductName(), fetchEmployeeNames(),fetchVendorNames(),fetchClientCodes()]);
       } finally {
         setIsLoading(false);
       }
@@ -406,6 +418,8 @@ useEffect(() => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  console.log("clientCodes:",clientCodes)
+
   const toggleButtonClass = (active) => 
     `px-4 py-2 rounded-t-lg transition-colors ${
       active 
@@ -450,6 +464,7 @@ useEffect(() => {
       color: isDarkMode ? '#9CA3AF' : '#6B7280'
     })
   };
+  
 
   return (
     <div className={`${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
@@ -808,6 +823,49 @@ useEffect(() => {
     />
   </div>
 </div>
+
+<div className="mb-2">
+            <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+              Client Type
+            </label>
+            <Select
+              id="client-type-select"
+              name="clientType"
+              value={filters.clientType ? { value: filters.clientType , label: filters.clientType  } : null}
+              onChange={(selectedOption) => {
+                setFilters({ ...filters, clientType: selectedOption ? selectedOption.value : "" });
+              }}
+              options={[
+                { value: "", label: "Client Types" },
+                ...clientTypeOptions.map(type => ({ value: type, label: type }))
+              ]}
+              styles={customStyles}
+              placeholder="All Client Types"
+              isClearable
+              className="text-sm  z-20"
+            />
+          </div>
+                    <div className="mb-2">
+            <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+              Client Code
+            </label>
+            <Select
+              id="client-code-select"
+              name="clientCode"
+              value={filters.clientCode ? { value: filters.clientCode, label: filters.clientCode } : null}
+              onChange={(selectedOption) => {
+                setFilters({ ...filters, clientCode: selectedOption ? selectedOption.value : "" });
+              }}
+              options={[
+                { value: "", label: "All clientCode" },
+                ...clientCodes.map(code => ({ value: code.clientCode || code, label: code.clientCode || code }))
+              ]}
+              styles={customStyles}
+              placeholder="All Client Code"
+              isClearable
+              className="text-sm  z-20"
+            />
+          </div>
   </>
 )}
 
@@ -926,7 +984,6 @@ useEffect(() => {
         }`} 
       >
         <option value="">Select Status</option>
-        <option value="Pending">Pending</option>
         <option value="Closed">Closed</option>
         <option value="Invalid">Invalid</option>
         <option value="CNV">CNV</option>

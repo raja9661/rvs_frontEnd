@@ -123,7 +123,13 @@ const LiveDashboard = () => {
   const [role, setRole] = useState('');
   const [user, setUser] = useState(null);
   const [clientCode, setClientCode] = useState(null);
-  const [levelData,setLevelData] = useState("")
+  const [levelData,setLevelData] = useState("");
+  const [pagination, setPagination] = useState({
+  page: 1,
+  limit: 50,
+  total: 0,
+  pages: 0
+});
   
   const [modalData, setModalData] = useState({
     open: false,
@@ -325,7 +331,7 @@ const LiveDashboard = () => {
 //       break;
 //   }
 // };
-  const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null, vendorName = null) => {
+  const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null, vendorName = null,page = 1) => {
   setSearchTerm('');
   
   // Determine hierarchy level and title based on type
@@ -427,13 +433,7 @@ const LiveDashboard = () => {
       
       title = "Today's Cases";
       break;
-      
-    // case 'todayNewPending':
-    //   level = updatedProductName ? 'productDetails' : 
-    //          vendorName ? 'updatedProductName' : 
-    //          'vendorName';
-    //   title = "Today's New Pending Cases";
-    //   break;
+  
     case 'todayNewPending':
       if(role === 'client'){
         level = updatedProductName ? 'productDetails' : 
@@ -447,12 +447,6 @@ const LiveDashboard = () => {
       title = "Today's New Pending Cases";
       break;
       
-    // case 'todayPending':
-    //   level = updatedProductName ? 'productDetails' : 
-    //          clientCode ? 'updatedProductName' : 
-    //          'clientCode';
-    //   title = "Today's Pending Cases";
-    //   break;
     case 'todayPending':
       if (role === 'client') {
       level = updatedProductName ? 'productDetails' : 
@@ -533,6 +527,11 @@ const LiveDashboard = () => {
       requestBody.code = user?.clientCode;
     }
 
+    
+      params.append('page', page);
+      params.append('limit', pagination.limit);
+    
+
     const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
       method: 'POST',
       headers: {
@@ -548,6 +547,16 @@ const LiveDashboard = () => {
     console.log("data:",data)
 
     if (data.success) {
+
+      if (data.page !== undefined) {
+        setPagination({
+          page: data.page,
+          limit: data.limit || pagination.limit,
+          total: data.total,
+          pages: data.pages
+        });
+      }  
+
       let filteredData = data.data;
       let filteredRecords = data.data;
       
@@ -556,6 +565,7 @@ const LiveDashboard = () => {
         data: filteredData,
         loading: false
       }));
+      
       
       if (level === 'productDetails') {
         setRecords({
@@ -569,6 +579,117 @@ const LiveDashboard = () => {
     setModalData(prev => ({ ...prev, loading: false, data: [] }));
   }
 };
+
+
+// Add this helper function to manage hierarchy transitions
+const getNextHierarchyLevel = (currentLevel, type, role) => {
+  const hierarchyMap = {
+    // year: {
+    //   next: 'month',
+    //   next: (type, role) => {
+    //     if (role === 'client') return 'updatedProductName';
+    //     return 'month';
+    //   }
+    // },
+    year: {
+  next: (type, role) => {
+    // Add your custom logic here
+    if (role === 'client' && type === 'specificType') {
+      return 'updatedProductName';
+    }
+    return 'month';
+  }
+},
+    month: {
+      next: (type, role) => {
+        if (role === 'client') return 'updatedProductName';
+        if (type === 'monthly') return 'clientType';
+        return 'clientType';
+      }
+    },
+    clientType: {
+      next: (type, role) => {
+        if (type === 'todayPending') return 'vendorName';
+        if (type === 'todayNewPending') return 'clientCode';
+        return 'clientCode';
+      }
+    },
+    clientCode: {
+      next: (type, role) => {
+        if (type === 'todayPending') return 'vendorName';
+        if (type === 'todayNewPending') return 'updatedProductName';
+        return 'updatedProductName';
+      }
+    },
+    vendorName: {
+      next: (type, role) => 'updatedProductName'
+    },
+    updatedProductName: {
+      next: (type, role) => 'productDetails'
+    },
+    productDetails: {
+      next: null // Final level
+    }
+  };
+
+  const nextLevelConfig = hierarchyMap[currentLevel];
+  if (!nextLevelConfig) return null;
+  
+  if (typeof nextLevelConfig.next === 'function') {
+    return nextLevelConfig.next(type, role);
+  }
+  
+  return nextLevelConfig.next;
+};
+
+
+
+// Updated handleDrillDown function
+const handleDrillDown = (item) => {
+  const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
+  
+  const nextLevel = getNextHierarchyLevel(level, type, role);
+  
+  if (!nextLevel) {
+    console.log("Reached maximum drill down level");
+    return;
+  }
+
+  // Prepare parameters based on current level and next level
+  let params = {
+    type,
+    year: level === 'year' ? item.name : year,
+    month: level === 'month' ? item.name : month,
+    clientType: level === 'clientType' ? item.name : clientType,
+    clientCode: level === 'clientCode' ? item.name : clientCode,
+    updatedProductName: level === 'updatedProductName' ? item.name : updatedProductName,
+    vendorName: level === 'vendorName' ? item.name : vendorName
+  };
+
+  // Special handling for specific types
+  if (type === 'todayPending' && level === 'clientType') {
+
+    
+    params.vendorName = null;
+    params.clientCode = null;
+  }
+
+  if (type === 'todayNewPending' && level === 'clientCode') {
+
+    params.updatedProductName = updatedProductName;
+  }
+
+  fetchCaseDetails(
+    params.type,
+    params.year,
+    params.month,
+    params.clientType,
+    params.clientCode,
+    params.updatedProductName,
+    params.vendorName
+  );
+};
+
 // const handleDrillDown = (item) => {
 //   const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
   
@@ -594,25 +715,12 @@ const LiveDashboard = () => {
 //       }
 //       break;
 //     case 'vendorName':
-//       // For Today New Pending, drill to products with vendor filter
-//       if (type === 'todayNewPending') {
-//         fetchCaseDetails(type, null, null, null, null, null, item.name);
-//       } else {
-//         // Default behavior for other vendor-based hierarchies
-//         fetchCaseDetails(type, null, null, null, null, null, item.name);
-//       }
+//       fetchCaseDetails(type, null, null, null, null, null, item.name);
 //       break;
 //     case 'updatedProductName':
-//       // For Today New Pending, show cases filtered by both vendor and product
 //       if (type === 'todayNewPending') {
 //         fetchCaseDetails(type, null, null, null, null, item.name, vendorName);
-//       } 
-//       // For Today Pending, show cases filtered by both client code and product
-//       else if (type === 'todayPending') {
-//         fetchCaseDetails(type, null, null, null, clientCode, item.name);
-//       }
-//       // Default behavior for other hierarchies
-//       else {
+//       } else {
 //         fetchCaseDetails(type, null, null, clientType, clientCode, item.name);
 //       }
 //       break;
@@ -621,44 +729,6 @@ const LiveDashboard = () => {
 //   }
 // };
 
-const handleDrillDown = (item) => {
-  const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
-  
-  switch(level) {
-    case 'year':
-      fetchCaseDetails(type, item.name);
-      break;
-    case 'month':
-      fetchCaseDetails(type, year, item.name);
-      break;
-    case 'clientType':
-      if (type === 'monthly' || type === 'today' || type === 'todayClosed' || type === 'todayHighPriority') {
-        fetchCaseDetails(type, null, null, item.name);
-      } else {
-        fetchCaseDetails(type, year, month, item.name);
-      }
-      break;
-    case 'clientCode':
-      if (type === 'todayPending') {
-        fetchCaseDetails(type, null, null, null, item.name);
-      } else {
-        fetchCaseDetails(type, null, null, clientType, item.name);
-      }
-      break;
-    case 'vendorName':
-      fetchCaseDetails(type, null, null, null, null, null, item.name);
-      break;
-    case 'updatedProductName':
-      if (type === 'todayNewPending') {
-        fetchCaseDetails(type, null, null, null, null, item.name, vendorName);
-      } else {
-        fetchCaseDetails(type, null, null, clientType, clientCode, item.name);
-      }
-      break;
-    default:
-      break;
-  }
-};
 
 const downloadRecords = async (name) => {
   setExportLoading(true);
@@ -1301,34 +1371,137 @@ const downloadRecords = async (name) => {
       );
     }
 
-    const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
+    // const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
+    const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
     const displayData = level === 'productDetails' ? filteredRecords : modalData.data;
-     const getModalTitle = () => {
-      switch(level) {
-        case 'year':
-          return `${type} Cases by Year`;
-        case 'month':
-          return `${type} Cases for ${year} by Month`;
-        case 'clientType':
-          return type === 'today' 
-            ? `Today's Cases by Client Type` 
-            : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
-        case 'productType':
-          return `${type} Cases for ${clientType} by Product Type`;
-        case 'clientCode':
-          return `${type} Cases for ${productType} by Client Code`;
-        case 'updatedProductName':
-          return `${type} Cases for ${clientCode} by Updated Product Name`;
-        case 'productDetails':
-          return `${type} Case Details for ${updatedProductName}`;
-        default:
-          return `${type} Cases`;
-      }
-    };
+    const getModalTitle = () => {
+  // const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
+  
+  // Convert type to readable format (e.g., "todayNewPending" -> "Today New Pending")
+  const readableType = type
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase());
+  
+  switch(level) {
+    case 'year':
+      return `${readableType} Cases by Year`;
+    case 'month':
+      return `${readableType} Cases for ${year} by Month`;
+    case 'clientType':
+      return `${readableType} Cases for ${year} ${month ? formatMonth(month, year) : ''} by Client Type`;
+    case 'clientCode':
+      return `${readableType} Cases for ${clientType} by Client Code`;
+    case 'vendorName':
+      return `${readableType} Cases for ${clientCode} by Vendor`;
+    case 'updatedProductName':
+      return `${readableType} Cases for ${vendorName || clientCode} by Product`;
+    case 'productDetails':
+      return `${readableType} Case Details for ${updatedProductName}`;
+    default:
+      return `${readableType} Cases`;
+  }
+};
+    //  const getModalTitle = () => {
+    //   switch(level) {
+    //     case 'year':
+    //       return `${type} Cases by Year`;
+    //     case 'month':
+    //       return `${type} Cases for ${year} by Month`;
+    //     case 'clientType':
+    //       return type === 'today' 
+    //         ? `Today's Cases by Client Type` 
+    //         : `${type} Cases for ${formatMonth(month, year)} by Client Type`;
+    //     case 'productType':
+    //       return `${type} Cases for ${clientType} by Product Type`;
+    //     case 'clientCode':
+    //       return `${type} Cases for ${productType} by Client Code`;
+    //     case 'updatedProductName':
+    //       return `${type} Cases for ${clientCode} by Updated Product Name`;
+    //     case 'productDetails':
+    //       return `${type} Case Details for ${updatedProductName}`;
+    //     default:
+    //       return `${type} Cases`;
+    //   }
+    // };
    return (
       <div className="space-y-4">
         {/* Breadcrumb navigation */}
-        <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
+<div className="flex items-center text-sm mb-4 flex-wrap gap-2">
+  <button 
+    onClick={() => fetchCaseDetails(type)}
+    className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+  >
+    {type.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} Cases
+  </button>
+  
+  {year && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {year}
+      </button>
+    </>
+  )}
+  
+  {month && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {formatMonth(month, year)}
+      </button>
+    </>
+  )}
+  
+  {clientType && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {clientType}
+      </button>
+    </>
+  )}
+  
+  {clientCode && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType, clientCode)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {clientCode}
+      </button>
+    </>
+  )}
+  
+  {vendorName && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <button 
+        onClick={() => fetchCaseDetails(type, year, month, clientType, clientCode, null, vendorName)}
+        className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+      >
+        {vendorName}
+      </button>
+    </>
+  )}
+  
+  {updatedProductName && (
+    <>
+      <ChevronRight className="w-4 h-4 mx-1" />
+      <span>{updatedProductName}</span>
+    </>
+  )}
+</div>
+        {/* <div className="flex items-center text-sm mb-4 flex-wrap gap-2">
           <button 
             onClick={() => fetchCaseDetails(type)}
             className={`flex items-center ${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
@@ -1402,7 +1575,7 @@ const downloadRecords = async (name) => {
               <span>{product}</span>
             </>
           )}
-        </div>
+        </div> */}
 
         {/* Search bar */}
         <div className={`relative ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-2 mb-4`}>
@@ -1441,6 +1614,7 @@ const downloadRecords = async (name) => {
                 )}
                 {level === 'productDetails' && (
                   <>
+                    <th className="px-4 py-2 text-left">S.No</th>
                     <th className="px-4 py-2 text-left">Case ID</th>
                     <th className="px-4 py-2 text-left">Name</th>
                     <th className="px-4 py-2 text-left">Product</th>
@@ -1478,6 +1652,9 @@ const downloadRecords = async (name) => {
                     
                     {level === 'productDetails' && (
                       <>
+                      <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+      {(pagination.page - 1) * pagination.limit + index + 1}
+    </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           {item.caseId}
                         </td>
@@ -1597,6 +1774,176 @@ const downloadRecords = async (name) => {
             </tbody>
           </table>
         </div>
+        
+{modalData.hierarchy.level === 'productDetails' && pagination.pages > 1 && (
+  <div className="flex justify-between items-center mt-4">
+    <div className="flex items-center">
+      <span className={`text-sm mr-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+        Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} records
+      </span>
+      
+      {/* <select
+        value={pagination.limit}
+        onChange={(e) => {
+          const newLimit = parseInt(e.target.value);
+          setPagination(prev => ({ ...prev, limit: newLimit, page: 1 }));
+          fetchCaseDetails(
+            modalData.hierarchy.type,
+            modalData.hierarchy.year,
+            modalData.hierarchy.month,
+            modalData.hierarchy.clientType,
+            modalData.hierarchy.clientCode,
+            modalData.hierarchy.updatedProductName,
+            modalData.hierarchy.vendorName,
+            1 // Reset to page 1 when changing limit
+          );
+        }}
+        className={`px-2 py-1 rounded border ${
+          isDarkMode 
+            ? 'bg-gray-700 text-white border-gray-600' 
+            : 'bg-white text-gray-800 border-gray-300'
+        }`}
+      >
+        <option value="10">10 per page</option>
+        <option value="25">25 per page</option>
+        <option value="50">50 per page</option>
+        <option value="100">100 per page</option>
+      </select> */}
+    </div>
+
+    <div className="flex items-center space-x-1">
+      <button
+        onClick={() => fetchCaseDetails(
+          modalData.hierarchy.type,
+          modalData.hierarchy.year,
+          modalData.hierarchy.month,
+          modalData.hierarchy.clientType,
+          modalData.hierarchy.clientCode,
+          modalData.hierarchy.updatedProductName,
+          modalData.hierarchy.vendorName,
+          1
+        )}
+        disabled={pagination.page === 1}
+        className={`px-3 py-1 rounded ${
+          isDarkMode 
+            ? 'bg-gray-700 text-white hover:bg-gray-600' 
+            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+        } disabled:opacity-50`}
+      >
+        First
+      </button>
+      
+      <button
+        onClick={() => fetchCaseDetails(
+          modalData.hierarchy.type,
+          modalData.hierarchy.year,
+          modalData.hierarchy.month,
+          modalData.hierarchy.clientType,
+          modalData.hierarchy.clientCode,
+          modalData.hierarchy.updatedProductName,
+          modalData.hierarchy.vendorName,
+          pagination.page - 1
+        )}
+        disabled={pagination.page === 1}
+        className={`px-3 py-1 rounded ${
+          isDarkMode 
+            ? 'bg-gray-700 text-white hover:bg-gray-600' 
+            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+        } disabled:opacity-50`}
+      >
+        Previous
+      </button>
+
+      {/* Page number buttons */}
+      {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+        let pageNum;
+        if (pagination.pages <= 5) {
+          pageNum = i + 1;
+        } else if (pagination.page <= 3) {
+          pageNum = i + 1;
+        } else if (pagination.page >= pagination.pages - 2) {
+          pageNum = pagination.pages - 4 + i;
+        } else {
+          pageNum = pagination.page - 2 + i;
+        }
+      
+
+        return (
+          <button
+            key={pageNum}
+            onClick={() => fetchCaseDetails(
+              modalData.hierarchy.type,
+              modalData.hierarchy.year,
+              modalData.hierarchy.month,
+              modalData.hierarchy.clientType,
+              modalData.hierarchy.clientCode,
+              modalData.hierarchy.updatedProductName,
+              modalData.hierarchy.vendorName,
+              pageNum
+            )}
+            className={`px-3 py-1 rounded ${
+              pagination.page === pageNum
+                ? isDarkMode
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-500 text-white'
+                : isDarkMode
+                  ? 'bg-gray-700 text-white hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            }`}
+          >
+            {pageNum}
+          </button>
+        );
+      })}
+
+      {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
+        <span className="px-2 py-1">...</span>
+      )}
+
+      <button
+        onClick={() => fetchCaseDetails(
+          modalData.hierarchy.type,
+          modalData.hierarchy.year,
+          modalData.hierarchy.month,
+          modalData.hierarchy.clientType,
+          modalData.hierarchy.clientCode,
+          modalData.hierarchy.updatedProductName,
+          modalData.hierarchy.vendorName,
+          pagination.page + 1
+        )}
+        disabled={pagination.page === pagination.pages}
+        className={`px-3 py-1 rounded ${
+          isDarkMode 
+            ? 'bg-gray-700 text-white hover:bg-gray-600' 
+            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+        } disabled:opacity-50`}
+      >
+        Next
+      </button>
+      
+      <button
+        onClick={() => fetchCaseDetails(
+          modalData.hierarchy.type,
+          modalData.hierarchy.year,
+          modalData.hierarchy.month,
+          modalData.hierarchy.clientType,
+          modalData.hierarchy.clientCode,
+          modalData.hierarchy.updatedProductName,
+          modalData.hierarchy.vendorName,
+          pagination.pages
+        )}
+        disabled={pagination.page === pagination.pages}
+        className={`px-3 py-1 rounded ${
+          isDarkMode 
+            ? 'bg-gray-700 text-white hover:bg-gray-600' 
+            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+        } disabled:opacity-50`}
+      >
+        Last
+      </button>
+    </div>
+  </div>
+)}
       </div>
     );
   };

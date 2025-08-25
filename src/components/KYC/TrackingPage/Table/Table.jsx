@@ -654,7 +654,7 @@ const restoreScrollPosition = () => {
     const statusDropDown = ["New Data","Closed","Invalid","CNV"];
     const readOnlyColumns = ["userId"];
     const caseStatusDropDown = ["New Pending","Sent"];
-    const vendorStatus = ["","Pending","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
+    const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
     const priorityDropdown = ["","Urgent",""]
 
     console.log("paginatedData",paginatedData)

@@ -45,6 +45,8 @@ const TrackerTable = () => {
   dateOutEnd: "",  
   status: "",
   caseStatus: "",
+  clientCode:"",
+  clientType:""
 });
   // const [filters, setFilters] = useState({
   //   product: "",
@@ -153,7 +155,8 @@ const TrackerTable = () => {
         sentDate: filters.sentDate,
         vendorStatus: filters.vendorStatus,
         priority: filters.priority,
-        clientType: filters.clientType
+        clientType: filters.clientType,
+        clientCode: filters.clientCode
       }
     });
 
@@ -341,6 +344,8 @@ useEffect(() => {
     dateOutEnd: "",
     status: "",
     caseStatus: "",
+    clientCode:"",
+    clientType:""
   });
     setSearchQuery("");
     setPageSize(50);
