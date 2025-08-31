@@ -1067,7 +1067,7 @@ const ProductManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {products.length > 0 ? (
+                {products?.length > 0 ? (
                   products.map((product) => (
                     <tr 
                       key={product._id} 

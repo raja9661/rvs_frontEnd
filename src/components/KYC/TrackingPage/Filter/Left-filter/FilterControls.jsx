@@ -74,7 +74,7 @@ const [clientCodes, setClientCodes] = useState([]);
   const fetchVendorNames = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/getVendorName`);
-      const names = response.data.vendorName.map(item => item.vendorName);
+      const names = response.data.vendorName
       setVendorNames(names);
     } catch (error) {
       console.error("Error fetching vendor names:", error);

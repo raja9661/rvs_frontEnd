@@ -646,7 +646,7 @@ const getNextHierarchyLevel = (currentLevel, type, role) => {
 
 // Updated handleDrillDown function
 const handleDrillDown = (item) => {
-  const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
+  const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName,product } = modalData.hierarchy;
   
   const nextLevel = getNextHierarchyLevel(level, type, role);
   
@@ -662,7 +662,7 @@ const handleDrillDown = (item) => {
     month: level === 'month' ? item.name : month,
     clientType: level === 'clientType' ? item.name : clientType,
     clientCode: level === 'clientCode' ? item.name : clientCode,
-    updatedProductName: level === 'updatedProductName' ? item.name : updatedProductName,
+    updatedProductName: level === 'updatedProductName' ? item.name : updatedProductName ,
     vendorName: level === 'vendorName' ? item.name : vendorName
   };
 
@@ -1372,7 +1372,7 @@ const downloadRecords = async (name) => {
     }
 
     // const { level, type, year, month, clientType, productType, clientCode, product } = modalData.hierarchy;
-    const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
+    const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName,product } = modalData.hierarchy;
     const displayData = level === 'productDetails' ? filteredRecords : modalData.data;
     const getModalTitle = () => {
   // const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
@@ -1396,7 +1396,7 @@ const downloadRecords = async (name) => {
     case 'updatedProductName':
       return `${readableType} Cases for ${vendorName || clientCode} by Product`;
     case 'productDetails':
-      return `${readableType} Case Details for ${updatedProductName}`;
+      return `${readableType} Case Details for ${peoduct || updatedProductName}`;
     default:
       return `${readableType} Cases`;
   }
@@ -1494,10 +1494,10 @@ const downloadRecords = async (name) => {
     </>
   )}
   
-  {updatedProductName && (
+  {updatedProductName || product && (
     <>
       <ChevronRight className="w-4 h-4 mx-1" />
-      <span>{updatedProductName}</span>
+      <span>{product || updatedProductName}</span>
     </>
   )}
 </div>
