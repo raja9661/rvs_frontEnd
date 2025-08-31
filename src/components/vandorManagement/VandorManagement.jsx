@@ -28,7 +28,7 @@ const VendorManagement = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
   const [isDarkMode, setIsDarkMode] = useState(false);
-
+ 
   // Theme detection
   useEffect(() => {
     setIsDarkMode(localStorage.getItem("theme") === "dark");

@@ -722,6 +722,8 @@ import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import Layout from '../Layout/Layout';
 import { FileText, Package, Search, Edit2, Trash2, Plus, RefreshCcw, AlertTriangle, CheckCircle } from 'lucide-react';
+import axios from "axios";
+
 
 const ProductManagement = () => {
   const [productName, setProductName] = useState('');
@@ -743,6 +745,8 @@ const ProductManagement = () => {
   
   // Get theme from localStorage (synced with Layout component)
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+ 
   
   useEffect(() => {
     // Check localStorage for theme
@@ -786,7 +790,6 @@ const ProductManagement = () => {
 
     const productData = {
       productName,
-      updatedProduct,
       correctUPN,
       productType,
     };
@@ -905,22 +908,6 @@ const ProductManagement = () => {
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className={`w-full px-4 py-2 rounded-lg border ${
-                    isDarkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-200 outline-none transition-colors`}
-                  required
-                />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Updated Product
-                </label>
-                <input
-                  type="text"
-                  value={updatedProduct}
-                  onChange={(e) => setUpdatedProduct(e.target.value)}
                   className={`w-full px-4 py-2 rounded-lg border ${
                     isDarkMode 
                       ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
@@ -1073,7 +1060,7 @@ const ProductManagement = () => {
               <thead>
                 <tr className={isDarkMode ? 'border-gray-700' : 'border-gray-200'}>
                   <th className={`py-3 px-4 text-left border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Product Name</th>
-                  <th className={`py-3 px-4 text-left border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Updated Product</th>
+                  {/* <th className={`py-3 px-4 text-left border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Updated Product</th> */}
                   <th className={`py-3 px-4 text-left border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Correct UPN</th>
                   <th className={`py-3 px-4 text-left border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Product Type</th>
                   <th className={`py-3 px-4 text-center border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>Actions</th>
@@ -1091,7 +1078,7 @@ const ProductManagement = () => {
                       } transition-colors`}
                     >
                       <td className={`py-3 px-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>{product.productName}</td>
-                      <td className={`py-3 px-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>{product.updatedProduct}</td>
+                      {/* <td classssName={`py-3 px-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>{product.updatedProduct}</td> */}
                       <td className={`py-3 px-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>{product.correctUPN}</td>
                       <td className={`py-3 px-4 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>{product.productType}</td>
                       <td className={`py-3 px-4 border-b text-center ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>

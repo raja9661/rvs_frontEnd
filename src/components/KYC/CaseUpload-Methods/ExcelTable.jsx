@@ -4399,6 +4399,7 @@ function ExcelTable() {
   // 1. Add new state variable after existing useState declarations
 const [uploadResults, setUploadResults] = useState(null);
 const [totalRecordCount, setTotalRecordCount] = useState(0);
+const [failRecords, setFailRecords] = useState([]);
 
   
   // Get theme from localStorage
@@ -4906,6 +4907,10 @@ const resetTable = () => {
 
 if (response.status === 200) {
   const { stats } = response.data;
+  console.log("data:",response.data)
+  setFailRecords(response.data.stats
+
+  )
   
   // Set results for display
   setUploadResults({
@@ -5259,13 +5264,44 @@ if (response.status === 200) {
         <span className="text-red-600">Failed: <span className="font-medium">{uploadResults.failed}</span></span>
       </div>
     </div>
-    {uploadResults.failed > 0 && (
-      <div className={`mt-3 p-2 rounded text-xs ${
-        isDarkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-700'
-      }`}>
-        Some records failed to upload. Check the console for detailed error information.
-      </div>
-    )}
+  </div>
+)}
+
+{failRecords?.failed > 0 && (
+  <div className={`mt-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-red-50'}`}>
+    <h2 className={`text-lg font-semibold mb-3 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+      Error: {failRecords.failed} records failed to process
+    </h2>
+    
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className={`${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+            <th className="p-2 text-left">Count</th>
+            <th className="p-2 text-left">Name</th>
+            <th className="p-2 text-left">Account Number</th>
+            <th className="p-2 text-left">Product</th>
+            <th className="p-2 text-left">Requirement</th>
+            <th className="p-2 text-left">Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {failRecords.failedRecords?.map((record, index) => (
+            <tr 
+              key={index} 
+              className={`border-t ${isDarkMode ? 'border-gray-600 hover:bg-gray-600' : 'border-gray-200 hover:bg-gray-50'}`}
+            >
+              <td className="p-2">{index + 1}</td>
+              <td className="p-2">{record?.name || '-'}</td>
+              <td className="p-2">{record?.['Account Number'] || record?.accountNumber || '-'}</td>
+              <td className="p-2">{record?.product || '-'}</td>
+              <td className="p-2">{record?.requirement || '-'}</td>
+              <td className="p-2 text-red-500">{record.error}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 )}
 
