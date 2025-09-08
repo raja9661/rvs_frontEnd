@@ -153,6 +153,94 @@ const UserManagement = () => {
       toast.error("Error saving user");
     }
   };
+const loginAsUser = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${baseUrl}/auth/login-as-user`,
+      { userId },
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`
+        }
+      }
+    );
+
+    if (response.data.token) {
+      // Store original admin credentials for restoration (only if not already stored)
+      if (!sessionStorage.getItem('originalAdminToken')) {
+        sessionStorage.setItem('originalAdminToken', sessionStorage.getItem('token'));
+        sessionStorage.setItem('originalAdminRole', sessionStorage.getItem('role'));
+        localStorage.setItem('originalAdminUser', localStorage.getItem('loginUser'));
+      }
+      
+      // Encode credentials for URL safety
+      const encodedToken = encodeURIComponent(response.data.token);
+      const encodedRole = encodeURIComponent(response.data.user.role);
+      const encodedUser = encodeURIComponent(JSON.stringify(response.data.user));
+      
+      // Open new tab with credentials in URL parameters
+      const url = `/live-dashboard?impersonate=true&token=${encodedToken}&role=${encodedRole}&user=${encodedUser}`;
+      window.open(url, '_self');
+      
+      toast.success(`Now viewing as ${response.data.user.name}`);
+    }
+  } catch (error) {
+    console.error("Error logging in as user:", error);
+    toast.error(error.response?.data?.message || "Failed to login as user");
+  }
+};
+//   const loginAsUser = async (userId) => {
+//   try {
+//     const response = await axios.post(
+//       `${baseUrl}/auth/login-as-user`,
+//       { userId },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${sessionStorage.getItem('token')}`
+//         }
+//       }
+//     );
+//     console.log("response:",response)
+
+//     if (response.data.token) {
+//       // Store the new token temporarily
+//       const originalToken = sessionStorage.getItem('token');
+//       const originalRole = sessionStorage.getItem('role');
+//       const originalUser = localStorage.getItem('loginUser');
+      
+//       // Store original admin credentials for restoration
+//       sessionStorage.setItem('originalAdminToken', originalToken);
+//       sessionStorage.setItem('originalAdminRole', originalRole);
+//       localStorage.setItem('originalAdminUser', originalUser);
+      
+//       // Set the new user credentials
+//       sessionStorage.setItem('token', response.data.token);
+//       sessionStorage.setItem('role', response.data.user.role);
+//       localStorage.setItem('loginUser', JSON.stringify(response.data.user));
+      
+//       // Open in new tab
+//       const newWindow = window.open('/live-dashboard', '_blank');
+      
+//       // Restore admin credentials after a short delay
+//       // setTimeout(() => {
+//       //   sessionStorage.setItem('token', originalToken);
+//       //   sessionStorage.setItem('role', originalRole);
+//       //   localStorage.setItem('loginUser', originalUser);
+//       // }, 2000);
+      
+//       toast.success(`Now viewing as ${response.data.user.name}`);
+//     }
+//   } catch (error) {
+//     console.error("Error logging in as user:", error);
+//     toast.error(error.response?.data?.message || "Failed to login as user");
+//   }
+// };
+
+// Add a function to check if the current user is an admin
+const isAdmin = () => {
+  const role = sessionStorage.getItem('role');
+  return role === 'admin' || role === 'root';
+};
 
   // Open delete confirmation modal
   const openDeleteModal = (user) => {
@@ -313,7 +401,50 @@ const UserManagement = () => {
                               {user.isEnable || "enable"}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          
+<td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+  <button
+    onClick={() => toggleUserStatus(user._id, user.isEnable)}
+    className={`px-2 py-1 rounded text-xs ${
+      user.isEnable === "enable"
+        ? isDarkMode
+          ? "bg-red-600 hover:bg-red-700 text-white"
+          : "bg-red-100 hover:bg-red-200 text-red-800"
+        : isDarkMode
+        ? "bg-green-600 hover:bg-green-700 text-white"
+        : "bg-green-100 hover:bg-green-200 text-green-800"
+    }`}
+  >
+    {user.isEnable === "enable" ? "Disable" : "Enable"}
+  </button>
+  <button
+    onClick={() => openUserModal(user)}
+    className={isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-900"}
+  >
+    Edit
+  </button>
+  <button
+    onClick={() => openDeleteModal(user)}
+    className={isDarkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-900"}
+  >
+    Delete
+  </button>
+  {/* Add the Login As button for admins only */}
+  {isAdmin() && (
+    <button
+      onClick={() => loginAsUser(user.userId)}
+      className={`px-2 py-1 rounded text-xs ${
+        isDarkMode 
+          ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+          : "bg-indigo-100 hover:bg-indigo-200 text-indigo-800"
+      }`}
+      title="Login as this user"
+    >
+      Login As
+    </button>
+  )}
+</td>
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                             <button
                               onClick={() => toggleUserStatus(user._id, user.isEnable)}
                               className={`px-2 py-1 rounded text-xs ${
@@ -340,7 +471,7 @@ const UserManagement = () => {
                             >
                               Delete
                             </button>
-                          </td>
+                          </td> */}
                         </tr>
                       ))
                     ) : (

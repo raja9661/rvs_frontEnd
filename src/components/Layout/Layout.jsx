@@ -465,6 +465,7 @@ import {
 import axios from "axios";
 import ProfileHeader from "./ProfileHeader";
 import Logo from "../../assets/logo.jpeg";
+import ImpersonationBanner from "../Auth/ImpersonationBanner";
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -543,7 +544,8 @@ const Layout = ({ children }) => {
           { title: "Access-Management", path: "/column-management", icon: Lock },
           { title: "User-Management", path: "/user-management", icon: UserCheck },
           { title: "Column-Manager", path: "/column-order", icon: Columns },
-          { title: "Help & Support", path: "/support", icon: HelpCircle }
+          { title: "Help & Support", path: "/support", icon: HelpCircle },
+          { title: "Client-Tracker", path: "/client-track", icon: Users },
         ];
       case "client":
         return [
@@ -628,6 +630,7 @@ const Layout = ({ children }) => {
         ? 'bg-gray-900' 
         : 'bg-gradient-to-br from-cyan-300 via-rose-200 to-blue-100'
     }`}>
+      {/* <ImpersonationBanner /> */}
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col h-screen transition-all duration-300 ease-in-out ${sidebarWidth} ${

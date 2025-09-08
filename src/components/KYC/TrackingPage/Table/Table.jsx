@@ -934,7 +934,9 @@ const restoreScrollPosition = () => {
     "NameUploadBy":"NameUploadBy",
     "Sent Date":"sentDate",
     "sentDateInDay":"sentDateInDay",
-    "Dedup By":"dedupBy"
+    "Dedup By":"dedupBy",
+    "month":"month",
+    "year":"year"
 
   };
   const updatedFilters = {};

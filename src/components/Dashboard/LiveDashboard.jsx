@@ -59,7 +59,7 @@ const SEARCH_CONFIG = {
   },
   updatedProductName: {
     fields: ['name', 'updatedProductName'],
-    placeholder: 'Search updated product names...',
+    placeholder: 'Search Correct UPN names...',
     searchInRecords: false
   },
   productDetails: {
@@ -145,7 +145,8 @@ const LiveDashboard = () => {
       clientCode: null,
       product: null,
       productType: null,
-      updatedProductName:null
+      updatedProductName:null,
+      correctUPN:null
     }
   });
 
@@ -1584,7 +1585,7 @@ const downloadRecords = async (name) => {
           </div>
           <input
             type="text"
-            placeholder={`Search ${modalData.hierarchy.level}...`}
+            placeholder={`Search ${modalData.hierarchy.level === 'updatedProductName' ? 'Correct UPN' : modalData.hierarchy.level}...`}
             className={`block w-full pl-10 pr-10 py-2 ${
               isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1662,7 +1663,7 @@ const downloadRecords = async (name) => {
                           {item.name}
                         </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          {item.updatedProductName}
+                          {item.product}
                         </td>
                         <td className={`px-4 py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                           {item.accountNumber}

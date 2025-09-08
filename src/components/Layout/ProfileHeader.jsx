@@ -145,6 +145,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, ChevronDown, LogOut, Settings } from 'lucide-react';
 import axios from 'axios';  // Import axios for logout API request
+import ImpersonationBanner from "../Auth/ImpersonationBanner";
 
  const ProfileHeader = () => {
   const [user, setUser] = useState({
@@ -218,6 +219,7 @@ import axios from 'axios';  // Import axios for logout API request
         <h1 className={`text-xl font-bold ${
           isDarkMode ? 'text-blue-400' : 'text-blue-700'
         }`}>
+          <ImpersonationBanner />
           {/* KYC Tracker */}
         </h1>
       </div>

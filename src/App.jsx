@@ -15,6 +15,7 @@ import About from "./components/About/About";
 import LiveDashboard from "./components/Dashboard/LiveDashboard";
 import HelpSupportPanel from "./components/Auth/HelpSupportPanel";
 import ColumnManager from "./components/ColumnManager";
+import ClientTracker from "./components/ClientTracker";
 import { useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 
@@ -35,6 +36,29 @@ function App() {
       }
     }
   }, []);
+
+  // Add this useEffect to your App component
+useEffect(() => {
+  const checkImpersonation = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isImpersonating = urlParams.get('impersonate');
+    const token = urlParams.get('token');
+    const role = urlParams.get('role');
+    const user = urlParams.get('user');
+    
+    if (isImpersonating && token && role && user) {
+      // Set credentials only in this tab
+      sessionStorage.setItem('token', decodeURIComponent(token));
+      sessionStorage.setItem('role', decodeURIComponent(role));
+      localStorage.setItem('loginUser', decodeURIComponent(user));
+      
+      // Clean up URL (remove parameters)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
+  
+  checkImpersonation();
+}, []);
 
   return (
     <BrowserRouter>
@@ -63,6 +87,7 @@ function App() {
           <Route path="/product-management" element={<ProductManagement />} />
           <Route path="/column-management" element={<ManageEmployeeColumn />} />
           <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/client-track" element={<ClientTracker />} />
         </Route>
       </Routes>
     </BrowserRouter>

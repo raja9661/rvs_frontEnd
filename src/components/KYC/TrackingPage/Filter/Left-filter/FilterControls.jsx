@@ -318,7 +318,8 @@ const [clientCodes, setClientCodes] = useState([]);
       remarks: '',
       status: '',
       attachment: [],
-      selectedEmployee:""
+      selectedEmployee:"",
+      
     });
     setAttachmentFileName('');
     setAttachmentFileSize('')
@@ -997,6 +998,7 @@ useEffect(() => {
         }`} 
       >
         <option value="">Select Status</option>
+        <option value="Pending">Pending</option>
         <option value="Closed">Closed</option>
         <option value="Invalid">Invalid</option>
         <option value="CNV">CNV</option>

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { useEffect } from "react";
 
 const roleRoutes = {
   
@@ -16,7 +17,8 @@ const roleRoutes = {
     "/vandor-management",
     "/product-management",
     "/column-management",
-    "/user-management"
+    "/user-management",
+    "/client-track"
   ],
   employee: [
     "/live-dashboard",
@@ -41,6 +43,26 @@ const ProtectedRoute = () => {
   const role = sessionStorage.getItem("role");
   const location = useLocation();
   const currentPath = location.pathname;
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isImpersonating = urlParams.get('impersonate');
+    const token = urlParams.get('token');
+    const role = urlParams.get('role');
+    const user = urlParams.get('user');
+    
+    if (isImpersonating && token && role && user) {
+      // Set credentials only in this tab
+      sessionStorage.setItem('token', decodeURIComponent(token));
+      sessionStorage.setItem('role', decodeURIComponent(role));
+      localStorage.setItem('loginUser', decodeURIComponent(user));
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.reload(); // Reload to apply new credentials
+    }
+  }, []);
+
 
   // No token found → redirect to login
   if (!token) return <Navigate to="/" replace />;
