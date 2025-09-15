@@ -98,41 +98,111 @@ export default function ClientTracker() {
       setLoading(false);
     }
   }
-
-  async function fetchCases(p = 1, ctx = viewCtx) {
-    setCasesLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: '50', userId: ctx.userId });
-      if (ctx.clientCode) params.append('clientCode', ctx.clientCode);
-      const res = await fetch(`${API_BASE}/mapping/cases?${params.toString()}`);
-      const json = await res.json();
-      setCases(json.items || []);
-      setCasesTotal(json.total || 0);
-      setCasesPage(json.page || p);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setCasesLoading(false);
-    }
+async function fetchCases(p = 1, ctx = viewCtx) {
+  setCasesLoading(true);
+  try {
+    const params = new URLSearchParams({ 
+      page: String(p), 
+      limit: '50', 
+      userId: ctx.userId 
+    });
+    
+    if (ctx.clientCode) params.append('clientCode', ctx.clientCode);
+    if (ctx.year) params.append('year', ctx.year);
+    if (ctx.month) params.append('month', ctx.month);
+    if (ctx.clientCodeFilter) params.append('clientCodeFilter', ctx.clientCodeFilter);
+    
+    const res = await fetch(`${API_BASE}/mapping/cases?${params.toString()}`);
+    const json = await res.json();
+    setCases(json.items || []);
+    setCasesTotal(json.total || 0);
+    setCasesPage(json.page || p);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setCasesLoading(false);
   }
+}
+  // async function fetchCases(p = 1, ctx = viewCtx) {
+  //   setCasesLoading(true);
+  //   try {
+  //     const params = new URLSearchParams({ page: String(p), limit: '50', userId: ctx.userId });
+  //     if (ctx.clientCode) params.append('clientCode', ctx.clientCode);
+  //     const res = await fetch(`${API_BASE}/mapping/cases?${params.toString()}`);
+  //     const json = await res.json();
+  //     setCases(json.items || []);
+  //     setCasesTotal(json.total || 0);
+  //     setCasesPage(json.page || p);
+  //   } catch (e) {
+  //     console.error(e);
+  //   } finally {
+  //     setCasesLoading(false);
+  //   }
+  // }
 
   // Automatically fetch data when filters change (with debounce)
   useEffect(() => {
     fetchSummary(1);
   }, [debouncedFilters, limit]);
 
-  function onDownload(row) {
-    const params = new URLSearchParams({ userId: row.userId });
-    if (row.clientCode) params.append('clientCode', row.clientCode);
-    const url = `${API_BASE}/mapping/download?${params.toString()}`;
-    window.open(url, '_blank');
-  }
+  // In your ClientTracker component, update the onView and onDownload functions:
 
-  function onView(row) {
-    setViewCtx({ userId: row.userId, clientCode: row.clientCode });
-    setViewOpen(true);
-    fetchCases(1, { userId: row.userId, clientCode: row.clientCode });
+function onDownload(row) {
+  // Convert month name to number if needed (same logic as in fetchSummary)
+  let monthValue = filters.month;
+  if (isNaN(monthValue) && monthValue) {
+    const monthNum = MONTH_TO_NUM[monthValue.toLowerCase()];
+    if (monthNum) monthValue = monthNum;
   }
+  
+  const params = new URLSearchParams({ 
+    userId: row.userId, 
+    year: filters.year,
+    month: monthValue,
+    clientCode: row.clientCode, // From the specific row
+    clientCodeFilter: filters.clientCode // From the filter input
+  });
+  
+  const url = `${API_BASE}/mapping/download?${params.toString()}`;
+  window.open(url, '_blank');
+}
+
+function onView(row) {
+  // Convert month name to number if needed
+  let monthValue = filters.month;
+  if (isNaN(monthValue) && monthValue) {
+    const monthNum = MONTH_TO_NUM[monthValue.toLowerCase()];
+    if (monthNum) monthValue = monthNum;
+  }
+  
+  const viewContext = { 
+    userId: row.userId, 
+    clientCode: row.clientCode,
+    year: filters.year,
+    month: monthValue,
+    clientCodeFilter: filters.clientCode // Different name to avoid conflict
+  };
+  
+  setViewCtx(viewContext);
+  setViewOpen(true);
+  fetchCases(1, viewContext);
+}
+
+// Update the fetchCases function to include filters:
+
+
+  // function onDownload(row) {
+  //   const params = new URLSearchParams({ userId: row.userId });
+  //   if (row.clientCode) params.append('clientCode', row.clientCode);
+  //   const url = `${API_BASE}/mapping/download?${params.toString()}`;
+  //   window.open(url, '_blank');
+  // }
+
+  // function onView(row) {
+  //   setViewCtx({ userId: row.userId, clientCode: row.clientCode });
+  //   setViewOpen(true);
+  //   fetchCases(1, { userId: row.userId, clientCode: row.clientCode });
+  // }
 
   // Handle month input with autocomplete
   const handleMonthChange = (e) => {
