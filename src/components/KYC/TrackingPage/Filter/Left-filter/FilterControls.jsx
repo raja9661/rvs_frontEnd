@@ -278,7 +278,7 @@ const [clientCodes, setClientCodes] = useState([]);
     //   );
     // }
 
-    // Process other updates
+    
     if (Object.keys(nonEmptyUpdates).length > 0) {
       const payload = { caseIds, updates: nonEmptyUpdates };
       const response = await axios.post(
