@@ -104,7 +104,7 @@ const AttachmentsModal = ({ visible, caseId, onClose }) => {
         </Spin>
       </Modal>
 
-      {/* Image Preview Modal */}
+      
       <Modal
         visible={!!viewingAttachment}
         onCancel={() => setViewingAttachment(null)}
