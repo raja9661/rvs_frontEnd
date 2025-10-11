@@ -141,9 +141,16 @@ function FileUpload({ isDarkMode }) {
 
   const handleFileUpload = async () => {
     if (!validateInputs()) return;
+  
+  const referBy = ReferBy.trim();
+  if (referBy.length === 0) {
+    toast.error("Refer By cannot be empty or only spaces.");
+    return;
+  }
+
+  setIsUploading(true);
+  setProgress({ ...progress, step: 1, message: "Uploading file..." });
     
-    setIsUploading(true);
-    setProgress({ ...progress, step: 1, message: "Uploading file..." });
     
     try {
       // Step 1: Upload file
@@ -154,6 +161,7 @@ function FileUpload({ isDarkMode }) {
       if (userRole === "employee" || userRole === "admin") {
         formData.append("clientId", clientId);
       }
+      
 
       const uploadResponse = await axios.post(
         `${import.meta.env.VITE_Backend_Base_URL}/kyc/upload-file`,

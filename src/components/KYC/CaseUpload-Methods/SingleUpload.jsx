@@ -160,7 +160,7 @@ function SingleUpload({ isDarkMode }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    
 
     if (!user) {
       showToast("User is not logged in!", "error");
@@ -173,6 +173,22 @@ function SingleUpload({ isDarkMode }) {
       setIsSubmitting(false);
       return;
     }
+
+  const referBy = formData.ReferBy.trim();
+
+   if (referBy.length === 0) {
+    showToast("Refer By cannot be empty or only spaces.");
+    return;
+  } 
+  // const referByRegex = /^[A-Za-z]{3,}$/; 
+
+  // if (!referByRegex.test(referBy)) {
+  //   showToast("Refer By must contain only letters (A–Z) and be at least 3 characters long.", "error");
+  //   setIsSubmitting(false);
+  //   return;
+  // }
+
+  setIsSubmitting(true);
 
     const payload = { 
       ...formData, 
