@@ -54,7 +54,7 @@ const VendorManagement = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_Backend_Base_URL}/mapping/getProducts`
+          `${import.meta.env.VITE_Backend_Base_URL}/kyc/getProductname`
         );
         console.log(response)
         setProducts(response.data);
