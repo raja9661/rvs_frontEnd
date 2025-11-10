@@ -280,7 +280,7 @@ const [clientCodes, setClientCodes] = useState([]);
 
     
     if (Object.keys(nonEmptyUpdates).length > 0) {
-      const payload = { caseIds, updates: nonEmptyUpdates };
+      const payload = { caseIds, updates: nonEmptyUpdates,userName:user.name  };
       const response = await axios.post(
         `${import.meta.env.VITE_Backend_Base_URL}/kyc/batch-update`,
         payload
