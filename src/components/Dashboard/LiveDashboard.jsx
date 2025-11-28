@@ -107,6 +107,7 @@ const SEARCH_CONFIG = {
 //     searchInRecords: true
 //   }
 // };
+
 const LiveDashboard = () => {
   const isDarkMode = localStorage.getItem("theme") === "dark";
   const [dashboardData, setDashboardData] = useState({
@@ -222,117 +223,8 @@ const LiveDashboard = () => {
     return filterRecords(recordsToFilter, searchTerm, modalData.hierarchy.level);
   }, [records.data, modalData.data, searchTerm, modalData.hierarchy.level]);
 
-//   const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null,levelData = null) => {
-//   setSearchTerm('');
-  
-//   // Determine hierarchy level
-//   let level;
-  
-//   if (type === 'today') {
-//     level = updatedProductName ? 'productDetails' : 
-//            clientCode ? 'updatedProductName' : 
-//            clientType ? 'clientCode' : 
-//            'clientType';
-//   } else {
-//     level = updatedProductName ? 'productDetails' : 
-//            clientCode ? 'updatedProductName' : 
-//            clientType ? 'clientCode' : 
-//            month ? 'clientType' :
-//            year ? 'month' :
-//            'year';
-//   }
 
-//   setModalData(prev => ({
-//     ...prev,
-//     open: true,
-//     loading: true,
-//     title: type === 'today' ? "Today's Cases" : `${type} Cases`,
-//     hierarchy: { level, type, year, month, clientType, clientCode, updatedProductName }
-//   }));
-
-//   try {
-//     const params = new URLSearchParams();
-//     params.append('type', type);
-    
-//     if (type !== 'today') {
-//       if (year) params.append('year', year);
-//       if (month) params.append('month', month);
-//     }
-    
-//     if (clientType) params.append('clientType', clientType);
-//     if (clientCode) params.append('clientCode', clientCode);
-//     if (updatedProductName) params.append('updatedProductName', updatedProductName);
-
-//     const requestBody = {
-//       role,
-//       user: user?.name
-//     };
-
-//     if (role === 'client') {
-//       requestBody.code = user?.clientCode;
-//     }
-
-//     const res = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify({ 
-//         requestBody
-//       })
-//     });
-
-//     const data = await res.json();
-
-//     if (data.success) {
-//       console.log("console.log:",data)
-//       let filteredData = data.data;
-//       let filteredRecords = data.data;
-      
-//       setModalData(prev => ({
-//         ...prev,
-//         data: filteredData,
-//         loading: false
-//       }));
-      
-//       if (level === 'productDetails') {
-//         setRecords({
-//           data: filteredRecords,
-//           loading: false
-//         });
-//       }
-//     }
-//   } catch (error) {
-//     console.error("Error fetching case details:", error);
-//     setModalData(prev => ({ ...prev, loading: false, data: [] }));
-//   }
-// };
-// const handleDrillDown = (item) => {
-//   const { level, type, year, month, clientType, clientCode } = modalData.hierarchy;
-//   console.log("item",item)
-  
-//   switch(level) {
-//     case 'year':
-//       fetchCaseDetails(type, item.name);
-//       break;
-//     case 'month':
-//       fetchCaseDetails(type, year, item.name);
-//       break;
-//     case 'clientType':
-//       fetchCaseDetails(type, year, month, item.name);
-//       break;
-//     case 'clientCode':
-//       fetchCaseDetails(type, year, month, clientType, item.name);
-//       break;
-//     case 'updatedProductName':
-//       fetchCaseDetails(type, year, month, clientType, clientCode, item.name);
-//       break;
-//     default:
-//       break;
-//   }
-// };
-  const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null, vendorName = null,page = 1) => {
+const fetchCaseDetails = async (type, year = null, month = null, clientType = null, clientCode = null, updatedProductName = null, vendorName = null,page = 1) => {
   setSearchTerm('');
   
   // Determine hierarchy level and title based on type
@@ -691,45 +583,6 @@ const handleDrillDown = (item) => {
   );
 };
 
-// const handleDrillDown = (item) => {
-//   const { level, type, year, month, clientType, clientCode, updatedProductName, vendorName } = modalData.hierarchy;
-  
-//   switch(level) {
-//     case 'year':
-//       fetchCaseDetails(type, item.name);
-//       break;
-//     case 'month':
-//       fetchCaseDetails(type, year, item.name);
-//       break;
-//     case 'clientType':
-//       if (type === 'monthly' || type === 'today' || type === 'todayClosed' || type === 'todayHighPriority') {
-//         fetchCaseDetails(type, null, null, item.name);
-//       } else {
-//         fetchCaseDetails(type, year, month, item.name);
-//       }
-//       break;
-//     case 'clientCode':
-//       if (type === 'todayPending') {
-//         fetchCaseDetails(type, null, null, null, item.name);
-//       } else {
-//         fetchCaseDetails(type, null, null, clientType, item.name);
-//       }
-//       break;
-//     case 'vendorName':
-//       fetchCaseDetails(type, null, null, null, null, null, item.name);
-//       break;
-//     case 'updatedProductName':
-//       if (type === 'todayNewPending') {
-//         fetchCaseDetails(type, null, null, null, null, item.name, vendorName);
-//       } else {
-//         fetchCaseDetails(type, null, null, clientType, clientCode, item.name);
-//       }
-//       break;
-//     default:
-//       break;
-//   }
-// };
-
 
 const downloadRecords = async (name) => {
   setExportLoading(true);
@@ -863,122 +716,6 @@ const downloadRecords = async (name) => {
   }
 };
 
-//   const downloadRecords = async (name) => {
-//   setExportLoading(true);
-//   try {
-//     const { 
-//       level, 
-//       type, 
-//       year, 
-//       month, 
-//       clientType, 
-//       clientCode, 
-//       productType, 
-//       updatedProductName 
-//     } = modalData.hierarchy;
-
-    
-//     const params = new URLSearchParams();
-//     params.append('type', type);
-//     params.append('download', 'true');
-    
-//     if (type !== 'today') {
-//       if (year) params.append('year', year);
-//       if (month) params.append('month', month);
-//     }
-    
-//     // Add all hierarchy filters
-//     if (clientType) params.append('clientType', clientType);
-//     if (clientCode) params.append('clientCode', clientCode);
-//     if (productType) params.append('productType', productType);
-//     if (updatedProductName) params.append('updatedProductName', updatedProductName);
-    
-//     // Handle download of specific items
-//     if (name) {
-//       switch(level) {
-//         case 'year':
-//           params.append('year', name);
-//           break;
-//         case 'month':
-//           params.append('month', name);
-//           break;
-//         case 'clientType':
-//           params.append('clientType', name);
-//           break;
-//         case 'clientCode':
-//           params.append('clientCode', name);
-//           break;
-//         case 'productType':
-//           params.append('productType', name);
-//           break;
-//         case 'updatedProductName':
-//           params.append('updatedProductName', name);
-//           break;
-//         default:
-//           break;
-//       }
-//     }
-
-//     const requestBody = {
-//       role,
-//       user: user?.name
-//     };
-
-//     if (role === 'client') {
-//       requestBody.code = user?.clientCode;
-//     }
-
-//     const response = await fetch(
-//       `${import.meta.env.VITE_Backend_Base_URL}/dashboard/case-details?${params.toString()}`,
-//       {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${localStorage.getItem('token')}`
-//         },
-//         body: JSON.stringify({ 
-//           requestBody
-//         })
-//       }
-//     );
-    
-//     if (!response.ok) throw new Error('Download failed');
-
-//     const blob = await response.blob();
-//     const url = window.URL.createObjectURL(blob);
-//     const a = document.createElement('a');
-//     a.href = url;
-    
-//     // Build filename with all hierarchy levels
-//     const filenameParts = [type];
-//     if (type !== 'today') {
-//       if (year) filenameParts.push(year);
-//       if (month) filenameParts.push(month);
-//     }
-//     if (clientType) filenameParts.push(clientType);
-//     if (clientCode) filenameParts.push(clientCode);
-//     if (productType) filenameParts.push(productType);
-//     if (updatedProductName) filenameParts.push(updatedProductName);
-//     if (name) filenameParts.push(name);
-    
-//     // Clean filename parts and join with underscores
-//     const cleanFilenameParts = filenameParts
-//       .filter(part => part !== undefined && part !== null)
-//       .map(part => part.toString().replace(/[^a-z0-9]/gi, '_').toLowerCase());
-    
-//     a.download = `${cleanFilenameParts.join('_')}.xlsx`;
-    
-//     document.body.appendChild(a);
-//     a.click();
-//     window.URL.revokeObjectURL(url);
-//     document.body.removeChild(a);
-//   } catch (error) {
-//     console.error('Download error:', error);
-//     alert('Failed to download. Please try again.');
-//   } finally {
-//     setExportLoading(false);
-//   }
-// };
 
   const exportCurrentView = async () => {
     await downloadRecords();
@@ -1044,11 +781,16 @@ const downloadRecords = async (name) => {
   }
 };
 
+useEffect(()=>{
+  if(role && user){
+    fetchData();
+  }
+},[role,user])
+
   // Initialize socket connection
   useEffect(() => {
-    fetchData();
-
-    const socketOptions = {
+    if(role && user){
+      const socketOptions = {
       auth: {
         role,
         user: user?.name,
@@ -1060,7 +802,11 @@ const downloadRecords = async (name) => {
       transports: ['websocket']
     };
 
-    const newSocket = io(import.meta.env.VITE_Backend_Base_URL, socketOptions);
+    const baseURL = import.meta.env.VITE_Backend_Base_URL?.replace(/\/api$/, '');
+
+    const newSocket = io(baseURL, socketOptions);
+
+    console.log("BASEUrl",baseURL)
 
     // Connection established handler
     const handleConnect = () => {
@@ -1115,6 +861,8 @@ const downloadRecords = async (name) => {
       newSocket.off('disconnect', handleDisconnect);
       newSocket.disconnect();
     };
+    }
+    
   }, [user, role, clientCode]);
 
   // Stats cards configuration - hide some cards for clients

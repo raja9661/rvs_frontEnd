@@ -158,7 +158,7 @@
 //     e.dataTransfer.setData("text/uri-list", window.location.origin + item.path);
 //     e.dataTransfer.setData("text/plain", item.title);
 //     e.dataTransfer.setDragImage(dragImageRef.current, 0, 0);
-    
+
 //     // Add visual feedback
 //     e.currentTarget.style.opacity = "0.4";
 //   };
@@ -217,7 +217,7 @@
 //               RVS
 //             </span> */}
 //           </div>
-          
+
 //           <div className="flex items-center space-x-2">
 //             {isSidebarExpanded && (
 //               <button
@@ -231,7 +231,7 @@
 //                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
 //               </button>
 //             )}
-            
+
 //             <button
 //               onClick={toggleSidebar}
 //               className={`p-2 rounded-lg transition-colors ${
@@ -271,14 +271,14 @@
 //                     }`}
 //                   >
 //                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    
+
 //                     <span className={`ml-3 whitespace-nowrap transition-all duration-300 ${
 //                       isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
 //                     }`}>
 //                       {item.title}
 //                     </span>
 //                   </button>
-                  
+
 //                   {/* Tooltip for collapsed state */}
 //                   {sidebarCollapsed && !sidebarHovered && (
 //                     <div className={`absolute left-full ml-2 px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50 
@@ -294,7 +294,7 @@
 //               );
 //             })}
 //           </nav>
-          
+
 //           {/* Theme toggle for collapsed state */}
 //           {sidebarCollapsed && !sidebarHovered && (
 //             <div className="px-2 pb-4">
@@ -432,14 +432,14 @@
 //               }}>
 //             </div>
 //           )}
-          
+
 //           {/* Content with correct z-index layering */}
 //           <div className="relative">
 //             {/* Profile header that works in both themes */}
 //             <div className="mb-2">
 //               <ProfileHeader />
 //             </div>
-            
+
 //             {/* Main children content */}
 //             <div>
 //               {children}
@@ -457,9 +457,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {  
-  UserCircle, LayoutDashboard, Users, CheckSquare, LogOut, 
-  Settings, Sun, Moon, Activity, FileCheck, UserCheck, 
+import {
+  UserCircle, LayoutDashboard, Users, CheckSquare, LogOut,
+  Settings, Sun, Moon, Activity, FileCheck, UserCheck,
   ShoppingCart, Store, Lock, ShieldCheck, Menu, X, ChevronLeft, ChevronRight, Columns, HelpCircle
 } from "lucide-react";
 import axios from "axios";
@@ -474,18 +474,18 @@ const Layout = ({ children }) => {
   const userRole = sessionStorage.getItem("role");
   const [showProfile, setShowProfile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // Gmail-style sidebar state - persistent across navigation
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     const savedState = localStorage.getItem("sidebarExpanded");
     return savedState !== "false"; // Default to expanded
   });
-  
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark";
   });
-  
+
   const [draggedItem, setDraggedItem] = useState(null);
   const dragImageRef = useRef(null);
 
@@ -545,7 +545,7 @@ const Layout = ({ children }) => {
           { title: "User-Management", path: "/user-management", icon: UserCheck },
           { title: "Column-Manager", path: "/column-order", icon: Columns },
           { title: "Help & Support", path: "/support", icon: HelpCircle },
-          { title: "Client-Tracker", path: "/client-track", icon: Users },
+          { title: "Report-Management", path: "/client-track", icon: Users },
         ];
       case "client":
         return [
@@ -600,7 +600,7 @@ const Layout = ({ children }) => {
     e.dataTransfer.setData("text/uri-list", window.location.origin + item.path);
     e.dataTransfer.setData("text/plain", item.title);
     e.dataTransfer.setDragImage(dragImageRef.current, 0, 0);
-    
+
     // Add visual feedback
     e.currentTarget.style.opacity = "0.4";
   };
@@ -625,59 +625,53 @@ const Layout = ({ children }) => {
   const sidebarWidth = sidebarExpanded ? 'w-64' : 'w-16';
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${
-      isDarkMode 
-        ? 'bg-gray-900' 
+    <div className={`flex h-screen transition-colors duration-300 ${isDarkMode
+        ? 'bg-gray-900'
         : 'bg-gradient-to-br from-cyan-300 via-rose-200 to-blue-100'
-    }`}>
+      }`}>
       {/* <ImpersonationBanner /> */}
       {/* Desktop Sidebar */}
-      <div 
-        className={`hidden md:flex flex-col h-screen transition-all duration-300 ease-in-out ${sidebarWidth} ${
-          isDarkMode
+      <div
+        className={`hidden md:flex flex-col h-screen transition-all duration-300 ease-in-out ${sidebarWidth} ${isDarkMode
             ? 'bg-gray-800 text-white'
             : 'bg-white/95 backdrop-blur-sm border-r border-gray-200'
-        } relative z-10 shadow-lg`}
+          } relative z-10 shadow-lg`}
       >
         {/* Sidebar Header - Always visible */}
-        <div className={`flex items-center justify-between h-16 px-4 border-b ${
-          isDarkMode
+        <div className={`flex items-center justify-between h-16 px-4 border-b ${isDarkMode
             ? 'bg-gray-900 border-gray-700'
             : 'bg-gradient-to-tr from-blue-100 via-rose-200 to-cyan-300 border-gray-200'
-        }`}>
+          }`}>
           <div className="flex items-center min-w-0 flex-1">
             {/* Gmail-style hamburger menu */}
             <button
               onClick={toggleSidebar}
-              className={`p-2 rounded-lg transition-colors ${sidebarExpanded ? 'mr-2' : 'mr-0'} ${
-                isDarkMode
+              className={`p-2 rounded-lg transition-colors ${sidebarExpanded ? 'mr-2' : 'mr-0'} ${isDarkMode
                   ? 'text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:bg-white/20'
-              }`}
+                }`}
             >
               <Menu className="w-5 h-5" />
             </button>
-            
+
 
             {/* Logo -*/}
-<img 
-  src={Logo} 
-  alt="RVS Logo" 
-  className={`h-8 w-auto transition-all duration-300 ${
-    sidebarExpanded ?  'block mr-3' : 'hidden'
-  }`}
-/>
+            <img
+              src={Logo}
+              alt="RVS Logo"
+              className={`h-8 w-auto transition-all duration-300 ${sidebarExpanded ? 'block mr-3' : 'hidden'
+                }`}
+            />
           </div>
-          
+
           {/* Theme toggle - Only when expanded */}
           {sidebarExpanded && (
             <button
               onClick={handleThemeToggle}
-              className={`p-2 rounded-lg transition-colors ${
-                isDarkMode
+              className={`p-2 rounded-lg transition-colors ${isDarkMode
                   ? 'text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:bg-white/20'
-              }`}
+                }`}
             >
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -696,18 +690,17 @@ const Layout = ({ children }) => {
                     draggable="true"
                     onDragStart={(e) => handleDragStart(e, item)}
                     onDragEnd={handleDragEnd}
-                    className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      location.pathname === item.path
+                    className={`flex items-center w-full px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${location.pathname === item.path
                         ? isDarkMode
                           ? 'bg-blue-600 text-white shadow-md'
                           : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md'
                         : isDarkMode
                           ? 'text-gray-300 hover:bg-gray-700'
                           : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    
+
                     {/* Text label - Only when expanded */}
                     {sidebarExpanded && (
                       <span className="ml-3 whitespace-nowrap">
@@ -715,15 +708,14 @@ const Layout = ({ children }) => {
                       </span>
                     )}
                   </button>
-                  
+
                   {/* Tooltip for collapsed state */}
                   {!sidebarExpanded && (
                     <div className={`absolute left-full ml-2 px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50 
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${
-                      isDarkMode
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${isDarkMode
                         ? 'bg-gray-700 text-white border border-gray-600'
                         : 'bg-white text-gray-800 border border-gray-200'
-                    }`}>
+                      }`}>
                       {item.title}
                     </div>
                   )}
@@ -731,17 +723,16 @@ const Layout = ({ children }) => {
               );
             })}
           </nav>
-          
+
           {/* Theme toggle for collapsed state */}
           {!sidebarExpanded && (
             <div className="px-2 pb-4">
               <button
                 onClick={handleThemeToggle}
-                className={`w-full p-3 rounded-lg transition-colors ${
-                  isDarkMode
+                className={`w-full p-3 rounded-lg transition-colors ${isDarkMode
                     ? 'text-white hover:bg-gray-700'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -751,38 +742,35 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Mobile header and content */}
-      <div 
+      <div
         className="flex flex-col flex-1 min-w-0"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         {/* Mobile header */}
-        <div className={`md:hidden flex items-center justify-between p-4 z-10 ${
-          isDarkMode
+        <div className={`md:hidden flex items-center justify-between p-4 z-10 ${isDarkMode
             ? 'bg-gray-800'
             : 'bg-white/95 backdrop-blur-sm border-b border-gray-200'
-        }`}>
+          }`}>
           <div className="flex items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`mr-3 p-2 rounded-lg ${
-                isDarkMode
+              className={`mr-3 p-2 rounded-lg ${isDarkMode
                   ? 'text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <img src={Logo} alt="RVS Logo" className="h-8 w-auto"/>
+            <img src={Logo} alt="RVS Logo" className="h-8 w-auto" />
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={handleThemeToggle}
-              className={`p-2 rounded-lg ${
-                isDarkMode
+              className={`p-2 rounded-lg ${isDarkMode
                   ? 'text-white hover:bg-gray-700'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
             >
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -791,33 +779,28 @@ const Layout = ({ children }) => {
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
-          <div className={`md:hidden fixed inset-0 z-50 ${
-            isDarkMode ? 'bg-black/50' : 'bg-gray-600/50'
-          }`} onClick={() => setMobileMenuOpen(false)}>
-            <div 
-              className={`fixed top-0 left-0 h-full w-64 z-60 overflow-y-auto shadow-xl transition-transform duration-300 transform ${
-                mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-              } ${
-                isDarkMode
+          <div className={`md:hidden fixed inset-0 z-50 ${isDarkMode ? 'bg-black/50' : 'bg-gray-600/50'
+            }`} onClick={() => setMobileMenuOpen(false)}>
+            <div
+              className={`fixed top-0 left-0 h-full w-64 z-60 overflow-y-auto shadow-xl transition-transform duration-300 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                } ${isDarkMode
                   ? 'bg-gray-800 text-white'
                   : 'bg-white text-gray-800'
-              }`}
+                }`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Mobile Menu Header */}
-              <div className={`flex items-center justify-between p-4 ${
-                isDarkMode
+              <div className={`flex items-center justify-between p-4 ${isDarkMode
                   ? 'bg-gray-900'
                   : 'bg-gradient-to-tr from-blue-100 via-rose-200 to-cyan-300'
-              }`}>
-                <img src={Logo} alt="RVS Logo" className="h-8 w-auto"/>
+                }`}>
+                <img src={Logo} alt="RVS Logo" className="h-8 w-auto" />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`p-2 rounded-lg ${
-                    isDarkMode
+                  className={`p-2 rounded-lg ${isDarkMode
                       ? 'text-white hover:bg-gray-700'
                       : 'text-gray-600 hover:bg-white/20'
-                  }`}
+                    }`}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -834,15 +817,14 @@ const Layout = ({ children }) => {
                       draggable="true"
                       onDragStart={(e) => handleDragStart(e, item)}
                       onDragEnd={handleDragEnd}
-                      className={`flex items-center w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                        location.pathname === item.path
+                      className={`flex items-center w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${location.pathname === item.path
                           ? isDarkMode
                             ? 'bg-blue-600 text-white shadow-md'
                             : 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md'
                           : isDarkMode
                             ? 'text-gray-300 hover:bg-gray-700'
                             : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-5 h-5 mr-3" />
                       {item.title}
@@ -855,28 +837,27 @@ const Layout = ({ children }) => {
         )}
 
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto p-2 ${
-          isDarkMode
+        <main className={`flex-1 overflow-y-auto p-2 ${isDarkMode
             ? 'bg-gray-900'
             : 'bg-gradient-to-br from-cyan-300 via-rose-200 to-blue-100'
-        } relative transition-all duration-300`}>
+          } relative transition-all duration-300`}>
           {/* Pattern overlay that sits behind content */}
           {!isDarkMode && (
-            <div className="absolute inset-0 bg-repeat opacity-10 pointer-events-none" 
+            <div className="absolute inset-0 bg-repeat opacity-10 pointer-events-none"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23F0F0F0' d='M0 0l24 24M24 0l-24 24'/%3E%3C/svg%3E")`,
                 backgroundSize: '24px 24px'
               }}>
             </div>
           )}
-          
+
           {/* Content with correct z-index layering */}
           <div className="relative">
             {/* Profile header that works in both themes */}
             <div className="mb-2">
               <ProfileHeader />
             </div>
-            
+
             {/* Main children content */}
             <div>
               {children}
