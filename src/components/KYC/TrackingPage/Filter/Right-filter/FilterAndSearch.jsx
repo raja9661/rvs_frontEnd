@@ -28,7 +28,7 @@
 //     requirement: "",
 //   });
 //   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
-  
+
 //   // Ref for product dropdown
 //   const productRef = useRef(null);
 
@@ -36,12 +36,12 @@
 //     const getUser = localStorage.getItem("loginUser");
 //     const role = localStorage.getItem("role");
 //     setUserRole(role);
-    
+
 //     if (getUser) {
 //       const data = JSON.parse(getUser);
 //       setUser(data);
 //     }
-    
+
 //     const handleStorageChange = () => {
 //       setIsDarkMode(localStorage.getItem("theme") === "dark");
 //     };
@@ -79,7 +79,7 @@
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
 //     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
 //     if (name === "product") {
 //       const filtered = productOption.filter(product => 
 //         product.productName.toLowerCase().includes(value.toLowerCase())
@@ -98,7 +98,7 @@
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     // For employee/admin, validate clientId
 //     if ((userRole === "employee" || userRole === "admin") && !clientId) {
 //       alert("Client ID is required!");
@@ -164,7 +164,7 @@
 //         requirement,
 //         ...(userRole === "employee" || userRole === "admin" ? { clientId: rowData.clientCode } : {})
 //       };
-  
+
 //       const response = await axios.post(`${import.meta.env.VITE_Backend_Base_URL}/kyc/recheck`, payload);
 //       setIsRecheckModalOpen(false);
 //       setRequirement('');
@@ -179,7 +179,7 @@
 //       alert(error.response?.data?.message || "Failed to recheck record");
 //     }
 //   };
-  
+
 //   const modalBackdropStyle = {
 //     position: 'fixed',
 //     top: 0,
@@ -586,7 +586,7 @@
 //     requirement: "",
 //   });
 //   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
-  
+
 //   // Ref for product dropdown
 //   const productRef = useRef(null);
 
@@ -594,12 +594,12 @@
 //     const getUser = localStorage.getItem("loginUser");
 //     const role = localStorage.getItem("role");
 //     setUserRole(role);
-    
+
 //     if (getUser) {
 //       const data = JSON.parse(getUser);
 //       setUser(data);
 //     }
-    
+
 //     const handleStorageChange = () => {
 //       setIsDarkMode(localStorage.getItem("theme") === "dark");
 //     };
@@ -637,7 +637,7 @@
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
 //     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
 //     if (name === "product") {
 //       const filtered = productOption.filter(product => 
 //         product.productName.toLowerCase().includes(value.toLowerCase())
@@ -661,7 +661,7 @@
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     // For employee/admin, validate clientId
 //     if ((userRole === "employee" || userRole === "admin") && !clientId) {
 //       alert("Client ID is required!");
@@ -728,13 +728,13 @@
 //         isRechecked: true,
 //         ...(userRole === "employee" || userRole === "admin" ? { clientId: rowData.clientCode } : {})
 //       };
-  
+
 //       const response = await axios.post(`${import.meta.env.VITE_Backend_Base_URL}/kyc/recheck`, payload);
 //       setIsRecheckModalOpen(false);
 //       setRequirement('');   
 //       if (onRecordAdded) {
 //         // Clear the selection before refreshing
-        
+
 //         if (typeof onRecordAdded === 'function') {
 //           onRecordAdded(null, true); 
 //         }
@@ -744,7 +744,7 @@
 //       alert(error.response?.data?.message || "Failed to recheck record");
 //     }
 //   };
-  
+
 //   const modalBackdropStyle = {
 //     position: 'fixed',
 //     top: 0,
@@ -1178,9 +1178,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from "axios";
 
-const FilterAndSearch = ({ 
-  setSearchQuery, 
-  onRecordAdded, 
+const FilterAndSearch = ({
+  setSearchQuery,
+  onRecordAdded,
   rowData,
   onRecheck,
   onFilterTypeChange,
@@ -1203,29 +1203,29 @@ const FilterAndSearch = ({
     product: "",
     accountNumber: "",
     requirement: "",
-    ReferBy:""
+    ReferBy: ""
   });
   const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem("theme") === "dark");
   // Add these state variables after the existing useState declarations:
-const [clientCodes, setClientCodes] = useState([]);
-const [showClientCodes, setShowClientCodes] = useState(false);
-  
+  const [clientCodes, setClientCodes] = useState([]);
+  const [showClientCodes, setShowClientCodes] = useState(false);
+
   // Ref for product dropdown
   const productRef = useRef(null);
 
   // Add this ref after the existing productRef:
-const clientCodeRef = useRef(null);
+  const clientCodeRef = useRef(null);
 
   useEffect(() => {
     const getUser = localStorage.getItem("loginUser");
     const role = sessionStorage.getItem("role");
     setUserRole(role);
-    
+
     if (getUser) {
       const data = JSON.parse(getUser);
       setUser(data);
     }
-    
+
     const handleStorageChange = () => {
       setIsDarkMode(localStorage.getItem("theme") === "dark");
     };
@@ -1247,17 +1247,21 @@ const clientCodeRef = useRef(null);
   }, []);
 
   // Add this useEffect after the existing useEffects for fetching client codes:
-useEffect(() => {
-  const fetchClientCodes = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/clientCodes`);
-      setClientCodes(response.data.data || []);
-    } catch (error) {
-      console.error("Failed to fetch client codes:", error);
+  useEffect(() => {
+    if (!userRole) return;
+    const fetchClientCodes = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/clientCodes`);
+        setClientCodes(response.data.data || []);
+      } catch (error) {
+        console.error("Failed to fetch client codes:", error);
+      }
+    };
+    if (userRole !== "client") {
+      fetchClientCodes();
     }
-  };
-  fetchClientCodes();
-}, []);
+
+  }, [userRole]);
 
   // // Add click outside listener to close dropdown
   // useEffect(() => {
@@ -1274,26 +1278,26 @@ useEffect(() => {
   // }, []);
 
   // Update the existing click outside useEffect to include clientCodeRef:
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (productRef.current && !productRef.current.contains(event.target)) {
-      setShowProducts(false);
-    }
-    if (clientCodeRef.current && !clientCodeRef.current.contains(event.target)) {
-      setShowClientCodes(false);
-    }
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (productRef.current && !productRef.current.contains(event.target)) {
+        setShowProducts(false);
+      }
+      if (clientCodeRef.current && !clientCodeRef.current.contains(event.target)) {
+        setShowClientCodes(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, []);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // const handleChange = (e) => {
   //   const { name, value } = e.target;
   //   setFormData(prev => ({ ...prev, [name]: value }));
-    
+
   //   if (name === "product") {
   //     const filtered = productOption.filter(product => 
   //       product.productName.toLowerCase().includes(value.toLowerCase())
@@ -1304,40 +1308,40 @@ useEffect(() => {
   // };
 
   // Update the handleChange function to include clientId handling:
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData(prev => ({ ...prev, [name]: value }));
-  
-  if (name === "product") {
-    const filtered = productOption.filter(product => 
-      product.productName.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-    setShowProducts(true);
-  }
-};
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === "product") {
+      const filtered = productOption.filter(product =>
+        product.productName.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+      setShowProducts(true);
+    }
+  };
 
   // Add these helper functions after the existing handleChange function:
-const normalizeInput = (input) => {
-  return input.trim().toUpperCase().replace(/\s+/g, "");
-};
+  const normalizeInput = (input) => {
+    return input.trim().toUpperCase().replace(/\s+/g, "");
+  };
 
-const filteredClientCodes = clientCodes.filter(code => 
-  normalizeInput(code).includes(normalizeInput(clientId))
-);
+  const filteredClientCodes = clientCodes.filter(code =>
+    normalizeInput(code).includes(normalizeInput(clientId))
+  );
 
-const handleClientCodeSelect = (code) => {
-  setClientId(code);
-  setShowClientCodes(false);
-  // Focus back on the input after selection
-  setTimeout(() => clientCodeRef.current.querySelector('input').focus(), 0);
-};
+  const handleClientCodeSelect = (code) => {
+    setClientId(code);
+    setShowClientCodes(false);
+    // Focus back on the input after selection
+    setTimeout(() => clientCodeRef.current.querySelector('input').focus(), 0);
+  };
 
-// Add this new function for client ID input changes:
-const handleClientIdChange = (e) => {
-  setClientId(e.target.value);
-  setShowClientCodes(true);
-};
+  // Add this new function for client ID input changes:
+  const handleClientIdChange = (e) => {
+    setClientId(e.target.value);
+    setShowClientCodes(true);
+  };
   const handleProductInputBlur = () => {
     // Close the dropdown when the input loses focus
     setShowProducts(false);
@@ -1352,7 +1356,7 @@ const handleClientIdChange = (e) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // For employee/admin, validate clientId
     if ((userRole === "employee" || userRole === "admin") && !clientId) {
       alert("Client ID is required!");
@@ -1361,7 +1365,7 @@ const handleClientIdChange = (e) => {
 
     try {
       const payload = {
-        ...formData,userId: user.userId,clientId
+        ...formData, userId: user.userId, clientId
       };
 
       await axios.post(`${import.meta.env.VITE_Backend_Base_URL}/kyc/single-upload`, payload);
@@ -1396,7 +1400,7 @@ const handleClientIdChange = (e) => {
   };
 
   const handleFilterChange = (e) => {
-    const newFilterType =e.target.value === "deleted"? "deleted": e.target.value === "dedup"? "dedup": "active";
+    const newFilterType = e.target.value === "deleted" ? "deleted" : e.target.value === "dedup" ? "dedup" : "active";
 
     // const newFilterType = e.target.value === "deleted" ? "deleted" : "active";
     if (onFilterTypeChange) {
@@ -1411,14 +1415,14 @@ const handleClientIdChange = (e) => {
 
   const handleRecheckSubmit = async (e) => {
     e.preventDefault();
-      if(rowData.caseStatus !== "Sent"){
-        alert("Your case is not verified yet")
-        return
-      }
-      if(rowData.status !== "Closed"){
-        alert("Your case is not verified yet")
-        return
-      }
+    if (rowData.caseStatus !== "Sent") {
+      alert("Your case is not verified yet")
+      return
+    }
+    if (rowData.status !== "Closed") {
+      alert("Your case is not verified yet")
+      return
+    }
     try {
       const payload = {
         caseId: rowData.caseId,
@@ -1429,7 +1433,7 @@ const handleClientIdChange = (e) => {
         isRechecked: true,
         ...(userRole === "employee" || userRole === "admin" ? { clientId: rowData.clientCode } : {})
       };
-  
+
       const response = await axios.post(`${import.meta.env.VITE_Backend_Base_URL}/kyc/recheck`, payload);
       setIsRecheckModalOpen(false);
       setRequirement('');
@@ -1448,26 +1452,26 @@ const handleClientIdChange = (e) => {
     const handleKeyDown = (e) => {
       // Check if focus is not in an input/textarea
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-      
+
       // Ctrl+D - Delete selected rows
       if (e.ctrlKey && e.key === 'k') {
         e.preventDefault();
         handleAddRecheckedRecord(true);
       }
-      
+
       // Ctrl+E - Export data
       if (e.ctrlKey && e.key === 'h') {
         e.preventDefault();
         setNewRecord(true);
       }
-      
-      
+
+
     };
-  
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-  
+
   const modalBackdropStyle = {
     position: 'fixed',
     top: 0,
@@ -1497,13 +1501,12 @@ const handleClientIdChange = (e) => {
         <input
           type="text"
           placeholder="Type Here for Search Tracker Data"
-          value={searchQuery} 
+          value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className={`border p-2 text-sm rounded w-full ${
-            isDarkMode
-              ? "bg-gray-700 border-gray-600 text-gray-200"
-              : "bg-white border-gray-300 text-gray-700"
-          }`}
+          className={`border p-2 text-sm rounded w-full ${isDarkMode
+            ? "bg-gray-700 border-gray-600 text-gray-200"
+            : "bg-white border-gray-300 text-gray-700"
+            }`}
         />
       </div>
 
@@ -1514,33 +1517,31 @@ const handleClientIdChange = (e) => {
           <select
             value={filterType}
             onChange={handleFilterChange}
-            className={`border rounded-lg p-2 w-full ${
-              isDarkMode
-                ? "bg-gray-700 border-gray-600 text-gray-200"
-                : "bg-white border-gray-300 text-gray-700"
-            }`}
+            className={`border rounded-lg p-2 w-full ${isDarkMode
+              ? "bg-gray-700 border-gray-600 text-gray-200"
+              : "bg-white border-gray-300 text-gray-700"
+              }`}
           >
             <option value="active">Active Records</option>
             <option value="deleted">Deleted Records</option>
             <option value="dedup">Dedup Records</option>
           </select>
         )}
-  
+
         <select
           value={filters.status || filters.caseStatus || ""}
           onChange={(e) => {
             const value = e.target.value;
             if (["New Pending", "Sent"].includes(value)) {
-              setFilters({...filters, caseStatus: value, status: ""});
+              setFilters({ ...filters, caseStatus: value, status: "" });
             } else {
-              setFilters({...filters, status: value, caseStatus: ""});
+              setFilters({ ...filters, status: value, caseStatus: "" });
             }
           }}
-          className={`border rounded-lg p-2 w-full ${
-            isDarkMode
-              ? "bg-gray-700 border-gray-600 text-gray-200"
-              : "bg-white border-gray-300 text-gray-700"
-          }`}
+          className={`border rounded-lg p-2 w-full ${isDarkMode
+            ? "bg-gray-700 border-gray-600 text-gray-200"
+            : "bg-white border-gray-300 text-gray-700"
+            }`}
         >
           <option value="">All Status</option>
           <option value="Pending">Pending</option>
@@ -1556,21 +1557,19 @@ const handleClientIdChange = (e) => {
       <div className="flex flex-wrap justify-start gap-3">
         <button
           onClick={() => setNewRecord(true)}
-          className={`px-4 py-2 rounded-lg ${
-            isDarkMode
-              ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-              : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-          }`}
+          className={`px-4 py-2 rounded-lg ${isDarkMode
+            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+            : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+            }`}
         >
           Add New Record
         </button>
         <button
           onClick={handleAddRecheckedRecord}
-          className={`px-4 py-2 rounded-lg ${
-            isDarkMode
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-red-500 hover:bg-red-600 text-white'
-          }`}
+          className={`px-4 py-2 rounded-lg ${isDarkMode
+            ? 'bg-red-600 hover:bg-red-700 text-white'
+            : 'bg-red-500 hover:bg-red-600 text-white'
+            }`}
         >
           Add Recheck Record
         </button>
@@ -1578,21 +1577,18 @@ const handleClientIdChange = (e) => {
 
       {newRecord && (
         <div style={modalBackdropStyle}>
-          <div className={`p-6 rounded-lg shadow-lg w-full max-w-md mx-4 relative ${
-            isDarkMode ? "bg-gray-700" : "bg-white"
-          }`}>
-            <button 
-              onClick={handleCloseModal} 
-              className={`absolute top-2 right-2 text-xl ${
-                isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-800"
-              }`}
+          <div className={`p-6 rounded-lg shadow-lg w-full max-w-md mx-4 relative ${isDarkMode ? "bg-gray-700" : "bg-white"
+            }`}>
+            <button
+              onClick={handleCloseModal}
+              className={`absolute top-2 right-2 text-xl ${isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               ✖
             </button>
 
-            <h2 className={`text-xl font-bold mb-4 ${
-              isDarkMode ? "text-white" : "text-gray-800"
-            }`}>
+            <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"
+              }`}>
               Add New Record
             </h2>
 
@@ -1616,49 +1612,45 @@ const handleClientIdChange = (e) => {
                 </div>
               )} */}
 
-{/* // Replace the existing Client ID input section in the form with this: */}
-{(userRole === "employee" || userRole === "admin") && (
-  <div className="relative" ref={clientCodeRef}>
-    <label className={`block mb-1 ${
-      isDarkMode ? "text-gray-300" : "text-gray-700"
-    }`}>
-      Client Code
-    </label>
-    <input
-      type="text"
-      value={clientId}
-      onChange={handleClientIdChange}
-      onFocus={() => setShowClientCodes(true)}
-      placeholder="Enter the Code"
-      className={isDarkMode ? darkInputStyle : lightInputStyle}
-      required
-    />
-    {showClientCodes && clientId && filteredClientCodes.length > 0 && (
-      <div className={`absolute z-10 w-full mt-1 max-h-40 overflow-y-auto shadow-lg ${
-        isDarkMode 
-          ? "bg-gray-800 border border-gray-700" 
-          : "bg-white border border-gray-200"
-      }`}>
-        {filteredClientCodes.map((code, index) => (
-          <div
-            key={index}
-            onMouseDown={(e) => e.preventDefault()} // Prevent input blur
-            onClick={() => handleClientCodeSelect(code)}
-            className={`p-2 cursor-pointer hover:bg-blue-50 ${
-              isDarkMode ? "hover:bg-gray-700" : "hover:bg-blue-50"
-            }`}
-          >
-            {code}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-)}
+              {/* // Replace the existing Client ID input section in the form with this: */}
+              {(userRole === "employee" || userRole === "admin") && (
+                <div className="relative" ref={clientCodeRef}>
+                  <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}>
+                    Client Code
+                  </label>
+                  <input
+                    type="text"
+                    value={clientId}
+                    onChange={handleClientIdChange}
+                    onFocus={() => setShowClientCodes(true)}
+                    placeholder="Enter the Code"
+                    className={isDarkMode ? darkInputStyle : lightInputStyle}
+                    required
+                  />
+                  {showClientCodes && clientId && filteredClientCodes.length > 0 && (
+                    <div className={`absolute z-10 w-full mt-1 max-h-40 overflow-y-auto shadow-lg ${isDarkMode
+                      ? "bg-gray-800 border border-gray-700"
+                      : "bg-white border border-gray-200"
+                      }`}>
+                      {filteredClientCodes.map((code, index) => (
+                        <div
+                          key={index}
+                          onMouseDown={(e) => e.preventDefault()} // Prevent input blur
+                          onClick={() => handleClientCodeSelect(code)}
+                          className={`p-2 cursor-pointer hover:bg-blue-50 ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-blue-50"
+                            }`}
+                        >
+                          {code}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Name
                 </label>
                 <input
@@ -1673,9 +1665,8 @@ const handleClientIdChange = (e) => {
               </div>
 
               <div className="relative" ref={productRef}>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Product
                 </label>
                 {/* <input
@@ -1689,30 +1680,28 @@ const handleClientIdChange = (e) => {
                   required
                 /> */}
                 <input
-  type="text"
-  name="product"
-  placeholder="Enter or select product"
-  value={formData.product}
-  onChange={handleChange}
-  onFocus={() => setShowProducts(true)}
-  onBlur={handleProductInputBlur} // Add this line
-  className={isDarkMode ? darkInputStyle : lightInputStyle}
-  required
-/>
+                  type="text"
+                  name="product"
+                  placeholder="Enter or select product"
+                  value={formData.product}
+                  onChange={handleChange}
+                  onFocus={() => setShowProducts(true)}
+                  onBlur={handleProductInputBlur} // Add this line
+                  className={isDarkMode ? darkInputStyle : lightInputStyle}
+                  required
+                />
                 {showProducts && filteredProducts.length > 0 && (
-                  <div className={`absolute z-10 w-full max-h-40 overflow-y-auto border ${
-                    isDarkMode 
-                      ? "bg-gray-700 border-gray-600 text-gray-200" 
-                      : "bg-white border-gray-300 text-gray-700"
-                  }`}>
+                  <div className={`absolute z-10 w-full max-h-40 overflow-y-auto border ${isDarkMode
+                    ? "bg-gray-700 border-gray-600 text-gray-200"
+                    : "bg-white border-gray-300 text-gray-700"
+                    }`}>
                     {filteredProducts.map((product, index) => (
-                      <div 
+                      <div
                         key={index}
                         onMouseDown={(e) => e.preventDefault()} // Prevent input blur
                         onClick={() => handleProductSelect(product)}
-                        className={`p-2 cursor-pointer ${
-                          isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'
-                        }`}
+                        className={`p-2 cursor-pointer ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'
+                          }`}
                       >
                         {product.productName}
                       </div>
@@ -1722,9 +1711,8 @@ const handleClientIdChange = (e) => {
               </div>
 
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Account Number
                 </label>
                 <input
@@ -1739,9 +1727,8 @@ const handleClientIdChange = (e) => {
               </div>
 
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Requirement
                 </label>
                 <input
@@ -1755,9 +1742,8 @@ const handleClientIdChange = (e) => {
                 />
               </div>
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Refer By
                 </label>
                 <input
@@ -1772,25 +1758,23 @@ const handleClientIdChange = (e) => {
               </div>
 
               <div className="flex justify-between">
-                <button 
-                  type="button" 
-                  onClick={handleReset} 
-                  className={`px-4 py-2 rounded ${
-                    isDarkMode
-                      ? "bg-gray-600 hover:bg-gray-500 text-white"
-                      : "bg-gray-400 hover:bg-gray-500 text-white"
-                  }`}
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className={`px-4 py-2 rounded ${isDarkMode
+                    ? "bg-gray-600 hover:bg-gray-500 text-white"
+                    : "bg-gray-400 hover:bg-gray-500 text-white"
+                    }`}
                 >
                   Reset
                 </button>
 
-                <button 
-                  type="submit" 
-                  className={`px-4 py-2 rounded ${
-                    isDarkMode
-                      ? "bg-green-600 hover:bg-green-500 text-white"
-                      : "bg-green-500 hover:bg-green-600 text-white"
-                  }`}
+                <button
+                  type="submit"
+                  className={`px-4 py-2 rounded ${isDarkMode
+                    ? "bg-green-600 hover:bg-green-500 text-white"
+                    : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
                 >
                   Submit
                 </button>
@@ -1802,29 +1786,25 @@ const handleClientIdChange = (e) => {
 
       {isRecheckModalOpen && (
         <div style={modalBackdropStyle}>
-          <div className={`p-6 rounded-lg shadow-lg w-full max-w-md mx-4 relative ${
-            isDarkMode ? "bg-gray-700" : "bg-white"
-          }`}>
-            <button 
-              onClick={() => setIsRecheckModalOpen(false)} 
-              className={`absolute top-2 right-2 text-xl ${
-                isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-800"
-              }`}
+          <div className={`p-6 rounded-lg shadow-lg w-full max-w-md mx-4 relative ${isDarkMode ? "bg-gray-700" : "bg-white"
+            }`}>
+            <button
+              onClick={() => setIsRecheckModalOpen(false)}
+              className={`absolute top-2 right-2 text-xl ${isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-800"
+                }`}
             >
               ✖
             </button>
 
-            <h2 className={`text-xl font-bold mb-4 ${
-              isDarkMode ? "text-white" : "text-gray-800"
-            }`}>
+            <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"
+              }`}>
               Add Recheck Record
             </h2>
 
             <form onSubmit={handleRecheckSubmit} className="space-y-4">
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Name
                 </label>
                 <input
@@ -1832,16 +1812,14 @@ const handleClientIdChange = (e) => {
                   name="name"
                   value={rowData?.name || ''}
                   readOnly
-                  className={`w-full border p-2 rounded ${
-                    isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
-                  }`}
+                  className={`w-full border p-2 rounded ${isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
+                    }`}
                 />
               </div>
 
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Product
                 </label>
                 <input
@@ -1849,16 +1827,14 @@ const handleClientIdChange = (e) => {
                   name="product"
                   value={rowData?.product || ''}
                   readOnly
-                  className={`w-full border p-2 rounded ${
-                    isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
-                  }`}
+                  className={`w-full border p-2 rounded ${isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
+                    }`}
                 />
               </div>
 
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Account Number
                 </label>
                 <input
@@ -1866,16 +1842,14 @@ const handleClientIdChange = (e) => {
                   name="accountNumber"
                   value={rowData?.accountNumber || ''}
                   readOnly
-                  className={`w-full border p-2 rounded ${
-                    isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
-                  }`}
+                  className={`w-full border p-2 rounded ${isDarkMode ? "bg-gray-600 text-white" : "bg-gray-100"
+                    }`}
                 />
               </div>
 
               <div>
-                <label className={`block mb-1 ${
-                  isDarkMode ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label className={`block mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"
+                  }`}>
                   Requirement
                 </label>
                 <input
@@ -1889,13 +1863,12 @@ const handleClientIdChange = (e) => {
                 />
               </div>
 
-              <button 
-                type="submit" 
-                className={`w-full px-4 py-2 rounded ${
-                  isDarkMode
-                    ? "bg-green-600 hover:bg-green-500 text-white"
-                    : "bg-green-500 hover:bg-green-600 text-white"
-                }`}
+              <button
+                type="submit"
+                className={`w-full px-4 py-2 rounded ${isDarkMode
+                  ? "bg-green-600 hover:bg-green-500 text-white"
+                  : "bg-green-500 hover:bg-green-600 text-white"
+                  }`}
               >
                 Submit
               </button>

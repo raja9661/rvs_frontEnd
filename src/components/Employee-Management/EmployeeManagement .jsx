@@ -227,8 +227,8 @@ const EmployeeManagement = () => {
                     onChange={(e) => setSelectedEmployee(e.target.value)}
                   >
                     <option value="">Select an Employee</option>
-                    {employees.map((emp) => (
-                      <option key={emp._id} value={emp.name}>{emp.name}</option>
+                    {employees.map((emp,index) => (
+                      <option key={index} value={emp}>{emp}</option>
                     ))}
                   </select>
                 </div>

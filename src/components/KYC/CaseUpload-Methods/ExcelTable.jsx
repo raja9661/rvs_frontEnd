@@ -3514,6 +3514,7 @@ const [failRecords, setFailRecords] = useState([]);
 
   // Fetch client codes
   useEffect(() => {
+    if (!userRole) return;
     const fetchClientCodes = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/clientCodes`);

@@ -92,17 +92,44 @@ const [clientCodes, setClientCodes] = useState([]);
       }
     };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        await Promise.all([fetchProductName(), fetchEmployeeNames(),fetchVendorNames(),fetchClientCodes()]);
-      } finally {
-        setIsLoading(false);
+    useEffect(() => {
+  if (!role) return; 
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const requests = [fetchProductName()];
+      if (role !== "client") {
+        requests.push(
+          fetchEmployeeNames(),
+          fetchVendorNames(),
+          fetchClientCodes()
+        );
       }
-    };
-    loadData();
-  }, []);
+
+      await Promise.all(requests);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  loadData();
+}, [role]);
+
+
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       await Promise.all([fetchProductName(), fetchEmployeeNames(),fetchVendorNames(),fetchClientCodes()]);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   loadData();
+  // }, []);
 
   const fetchEmployeeNames = async () => {
       try {
@@ -253,7 +280,7 @@ const [clientCodes, setClientCodes] = useState([]);
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
 
-    console.log("response",response)
+    // console.log("response",response)
 
      setUploadedFiles(response.data.uploadedFiles || []);
      setUploadCaseIds(response.data.caseIds || []);
@@ -419,7 +446,7 @@ useEffect(() => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  console.log("clientCodes:",clientCodes)
+  // console.log("clientCodes:",clientCodes)
 
   const toggleButtonClass = (active) => 
     `px-4 py-2 rounded-t-lg transition-colors ${
@@ -1002,6 +1029,7 @@ useEffect(() => {
         <option value="Closed">Closed</option>
         <option value="Invalid">Invalid</option>
         <option value="CNV">CNV</option>
+        <option value="NOT OPEN">NOT OPEN</option>
         <option value="Account Closed">Account Closed</option>
         <option value="Restricted Account">Restricted Account</option>
         <option value="Staff Account">Staff Account</option>
@@ -1077,8 +1105,8 @@ useEffect(() => {
     options={[
       { value: "", label: "Select an Employee" },
       ...employees.map(emp => ({ 
-        value: emp.name, 
-        label: emp.name 
+        value: emp, 
+        label: emp
       }))
     ]}
     styles={customStyles}

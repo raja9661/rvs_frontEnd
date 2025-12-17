@@ -34,7 +34,7 @@ function FileUpload({ isDarkMode }) {
     if (getUser) setUser(JSON.parse(getUser));
 
     // Fetch client codes
-    fetchClientCodes();
+    // fetchClientCodes();
 
     // Clean up event listeners when component unmounts
     return () => {
@@ -42,6 +42,14 @@ function FileUpload({ isDarkMode }) {
       document.removeEventListener('drop', preventDefaults);
     };
   }, []);
+
+  useEffect(() => {
+    if (!userRole) return;
+    if (userRole !== "client") {
+      fetchClientCodes();
+    }
+
+  }, [userRole]);
 
   const preventDefaults = (e) => {
     e.preventDefault();

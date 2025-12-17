@@ -15,7 +15,7 @@ function SingleUpload({ isDarkMode }) {
     accountNumber: "",
     requirement: "",
     clientId: "",
-    ReferBy:""
+    ReferBy: ""
   });
 
   const [user, setUser] = useState(null);
@@ -26,7 +26,7 @@ function SingleUpload({ isDarkMode }) {
   const [clientCodes, setClientCodes] = useState([]);
   const [showClientCodes, setShowClientCodes] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
-  
+
   // Toast state
   const [toast, setToast] = useState({
     show: false,
@@ -51,7 +51,7 @@ function SingleUpload({ isDarkMode }) {
     fetchProductName();
     const role = sessionStorage.getItem("role");
     setUserRole(role);
-    
+
     const getUser = localStorage.getItem("loginUser");
     if (getUser) {
       const data = JSON.parse(getUser);
@@ -60,6 +60,7 @@ function SingleUpload({ isDarkMode }) {
   }, []);
 
   useEffect(() => {
+    if (!userRole) return;
     const fetchClientCodes = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_Backend_Base_URL}/mapping/clientCodes`);
@@ -69,8 +70,11 @@ function SingleUpload({ isDarkMode }) {
         showToast("Failed to load client codes", "error");
       }
     };
-    fetchClientCodes();
-  }, []);
+    if (userRole !== "client") {
+      fetchClientCodes();
+    }
+    // fetchClientCodes();
+  }, [userRole]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -109,8 +113,8 @@ function SingleUpload({ isDarkMode }) {
   const normalizeInput = (input) => {
     return input.trim().toUpperCase().replace(/\s+/g, "");
   };
-  
-  const filteredClientCodes = clientCodes.filter(code => 
+
+  const filteredClientCodes = clientCodes.filter(code =>
     normalizeInput(code).includes(normalizeInput(formData.clientId))
   );
 
@@ -119,13 +123,13 @@ function SingleUpload({ isDarkMode }) {
     setFormData({ ...formData, [name]: value });
 
     if (name === "product") {
-      const filtered = productOptions.filter(product => 
+      const filtered = productOptions.filter(product =>
         product.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredProducts(filtered);
       setShowProducts(true);
     }
-    
+
     if (name === "clientId") {
       setShowClientCodes(true);
     }
@@ -146,12 +150,12 @@ function SingleUpload({ isDarkMode }) {
   };
 
   const handleReset = () => {
-    setFormData({ 
-      name: "", 
-      product: "", 
-      accountNumber: "", 
+    setFormData({
+      name: "",
+      product: "",
+      accountNumber: "",
       requirement: "",
-      clientId: "" 
+      clientId: ""
     });
     setShowClientCodes(false);
     setShowProducts(false);
@@ -160,7 +164,7 @@ function SingleUpload({ isDarkMode }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
 
     if (!user) {
       showToast("User is not logged in!", "error");
@@ -174,27 +178,27 @@ function SingleUpload({ isDarkMode }) {
       return;
     }
 
-  const referBy = formData.ReferBy.trim();
+    const referBy = formData.ReferBy.trim();
 
-   if (referBy.length === 0) {
-    showToast("Refer By cannot be empty or only spaces.");
-    return;
-  } 
-  // const referByRegex = /^[A-Za-z]{3,}$/; 
+    if (referBy.length === 0) {
+      showToast("Refer By cannot be empty or only spaces.");
+      return;
+    }
+    // const referByRegex = /^[A-Za-z]{3,}$/; 
 
-  // if (!referByRegex.test(referBy)) {
-  //   showToast("Refer By must contain only letters (A–Z) and be at least 3 characters long.", "error");
-  //   setIsSubmitting(false);
-  //   return;
-  // }
+    // if (!referByRegex.test(referBy)) {
+    //   showToast("Refer By must contain only letters (A–Z) and be at least 3 characters long.", "error");
+    //   setIsSubmitting(false);
+    //   return;
+    // }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-    const payload = { 
-      ...formData, 
+    const payload = {
+      ...formData,
       userId: user.userId
     };
-    console.log("formData",formData)
+    console.log("formData", formData)
 
     try {
       const response = await axios.post(
@@ -205,13 +209,13 @@ function SingleUpload({ isDarkMode }) {
 
       if (response.status === 200) {
         showToast("KYC data uploaded successfully!", "success");
-        setFormData({ 
-          name: "", 
-          product: "", 
-          accountNumber: "", 
+        setFormData({
+          name: "",
+          product: "",
+          accountNumber: "",
           requirement: "",
-          clientId: "" ,
-          ReferBy:""
+          clientId: "",
+          ReferBy: ""
         });
       } else {
         showToast(response.data.message || "Failed to upload data.", "error");
@@ -224,11 +228,10 @@ function SingleUpload({ isDarkMode }) {
     }
   };
 
-  const inputStyles = `w-full px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 ${
-    isDarkMode 
-      ? 'bg-gray-700 border border-gray-600 text-white focus:ring-blue-500 placeholder-gray-400' 
-      : 'bg-white border border-gray-200 text-gray-900 focus:ring-blue-400 placeholder-gray-500'
-  }`;
+  const inputStyles = `w-full px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 ${isDarkMode
+    ? 'bg-gray-700 border border-gray-600 text-white focus:ring-blue-500 placeholder-gray-400'
+    : 'bg-white border border-gray-200 text-gray-900 focus:ring-blue-400 placeholder-gray-500'
+    }`;
 
   // Check if form has any data to determine if reset button should be enabled
   const hasFormData = Object.values(formData).some(value => value.trim() !== "");
@@ -237,12 +240,11 @@ function SingleUpload({ isDarkMode }) {
     <div className="space-y-5 relative">
       {/* Toast Notification */}
       {toast.show && (
-        <div 
-          className={`fixed top-4 right-4 z-50 max-w-md rounded-lg shadow-lg transition-all duration-300 transform translate-y-0 animate-fade-in-down ${
-            toast.type === "success" 
-              ? (isDarkMode ? 'bg-green-800 text-green-100' : 'bg-green-100 border-l-4 border-green-500 text-green-800')
-              : (isDarkMode ? 'bg-red-800 text-red-100' : 'bg-red-100 border-l-4 border-red-500 text-red-800')
-          }`}
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md rounded-lg shadow-lg transition-all duration-300 transform translate-y-0 animate-fade-in-down ${toast.type === "success"
+            ? (isDarkMode ? 'bg-green-800 text-green-100' : 'bg-green-100 border-l-4 border-green-500 text-green-800')
+            : (isDarkMode ? 'bg-red-800 text-red-100' : 'bg-red-100 border-l-4 border-red-500 text-red-800')
+            }`}
         >
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
@@ -253,7 +255,7 @@ function SingleUpload({ isDarkMode }) {
               )}
               <p className="text-sm font-medium">{toast.message}</p>
             </div>
-            <button 
+            <button
               onClick={() => setToast({ ...toast, show: false })}
               className="text-gray-400 hover:text-gray-600 transition-colors ml-4"
             >
@@ -264,11 +266,10 @@ function SingleUpload({ isDarkMode }) {
       )}
 
       {user && (
-        <div className={`p-3 rounded-lg ${
-          isDarkMode 
-            ? 'bg-gray-700/50 text-gray-300' 
-            : 'bg-blue-50 text-gray-700'
-        }`}>
+        <div className={`p-3 rounded-lg ${isDarkMode
+          ? 'bg-gray-700/50 text-gray-300'
+          : 'bg-blue-50 text-gray-700'
+          }`}>
           <span className="text-sm">Logged in as: <span className="font-medium">{user.name}</span> ({userRole})</span>
         </div>
       )}
@@ -287,19 +288,17 @@ function SingleUpload({ isDarkMode }) {
               className={inputStyles}
             />
             {showClientCodes && formData.clientId && filteredClientCodes.length > 0 && (
-              <div className={`absolute z-10 w-full mt-1 max-h-40 overflow-y-auto shadow-lg ${
-                isDarkMode 
-                  ? "bg-gray-800 border border-gray-700" 
-                  : "bg-white border border-gray-200"
-              }`}>
+              <div className={`absolute z-10 w-full mt-1 max-h-40 overflow-y-auto shadow-lg ${isDarkMode
+                ? "bg-gray-800 border border-gray-700"
+                : "bg-white border border-gray-200"
+                }`}>
                 {filteredClientCodes.map((code, index) => (
                   <div
                     key={index}
                     onMouseDown={(e) => e.preventDefault()} // Prevent input blur
                     onClick={() => handleClientCodeSelect(code)}
-                    className={`p-2 cursor-pointer hover:bg-blue-50 ${
-                      isDarkMode ? "hover:bg-gray-700" : "hover:bg-blue-50"
-                    }`}
+                    className={`p-2 cursor-pointer hover:bg-blue-50 ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-blue-50"
+                      }`}
                   >
                     {code}
                   </div>
@@ -333,19 +332,17 @@ function SingleUpload({ isDarkMode }) {
             className={inputStyles}
           />
           {showProducts && filteredProducts.length > 0 && (
-            <div className={`absolute z-10 w-full max-h-40 overflow-y-auto ${
-              isDarkMode 
-                ? 'bg-gray-700 border border-gray-600 text-white' 
-                : 'bg-white border border-gray-200 text-gray-900'
-            }`}>
+            <div className={`absolute z-10 w-full max-h-40 overflow-y-auto ${isDarkMode
+              ? 'bg-gray-700 border border-gray-600 text-white'
+              : 'bg-white border border-gray-200 text-gray-900'
+              }`}>
               {filteredProducts.map((product, index) => (
-                <div 
+                <div
                   key={index}
                   onMouseDown={(e) => e.preventDefault()} // Prevent input blur
                   onClick={() => handleProductSelect(product)}
-                  className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                    isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'
-                  }`}
+                  className={`p-2 cursor-pointer hover:bg-gray-100 ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-100'
+                    }`}
                 >
                   {product}
                 </div>
@@ -392,27 +389,25 @@ function SingleUpload({ isDarkMode }) {
 
         {/* Button Container */}
         <div className="flex gap-3">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isSubmitting}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-              isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-800 disabled:text-gray-300'
-                : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 text-white disabled:from-blue-400 disabled:to-indigo-400 disabled:opacity-70'
-            }`}
+            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${isDarkMode
+              ? 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-800 disabled:text-gray-300'
+              : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 text-white disabled:from-blue-400 disabled:to-indigo-400 disabled:opacity-70'
+              }`}
           >
             {isSubmitting ? "Uploading..." : "Upload"}
           </button>
 
-          <button 
+          <button
             type="button"
             onClick={handleReset}
             disabled={!hasFormData || isSubmitting}
-            className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center ${
-              isDarkMode
-                ? 'bg-gray-600 hover:bg-gray-700 text-white disabled:bg-gray-800 disabled:text-gray-500'
-                : 'bg-gray-500 hover:bg-gray-600 text-white disabled:bg-gray-300 disabled:text-gray-500'
-            } disabled:cursor-not-allowed`}
+            className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center ${isDarkMode
+              ? 'bg-gray-600 hover:bg-gray-700 text-white disabled:bg-gray-800 disabled:text-gray-500'
+              : 'bg-gray-500 hover:bg-gray-600 text-white disabled:bg-gray-300 disabled:text-gray-500'
+              } disabled:cursor-not-allowed`}
             title="Reset form fields"
           >
             <RotateCcw className="w-5 h-5" />

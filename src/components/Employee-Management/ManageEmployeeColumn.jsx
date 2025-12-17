@@ -39,9 +39,9 @@ const ManageAccessColumns = () => {
         axios.get(`${import.meta.env.VITE_Backend_Base_URL}/access/assigned-${accessType}s`)
       ]);
 
-      console.log("columnsRes:",columnsRes)
-      console.log("usersRes:",usersRes)
-      console.log("assignedRes:",assignedRes)
+      // console.log("columnsRes:",columnsRes)
+      // console.log("usersRes:",usersRes)
+      // console.log("assignedRes:",assignedRes)
       
       setColumns(columnsRes.data);
       setUsers(usersRes.data.data);

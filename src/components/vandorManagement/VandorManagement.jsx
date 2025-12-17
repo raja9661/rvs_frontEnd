@@ -56,7 +56,7 @@ const VendorManagement = () => {
         const response = await axios.get(
           `${import.meta.env.VITE_Backend_Base_URL}/kyc/getProductname`
         );
-        console.log(response)
+        // console.log(response)
         setProducts(response.data);
       } catch (err) {
         console.error("Error fetching products:", err);

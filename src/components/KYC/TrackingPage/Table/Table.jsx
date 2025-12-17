@@ -120,6 +120,7 @@ const [startItem,setstartItem] = useState(0);
 
   useEffect(() => {
     const fetchEmployees = async () => {
+      if (!role) return;
         try {
             const response = await fetch(`${import.meta.env.VITE_Backend_Base_URL}/mapping/getEmpName`);
             const data = await response.json();
@@ -128,15 +129,17 @@ const [startItem,setstartItem] = useState(0);
                 // Extract just the EmployeeName from each object
                 const names = data.map(employee => employee.name);
       
-                setEmployeeList(names);
+                setEmployeeList(data);
             }
         } catch (error) {
             console.error("Error fetching employees:", error);
         }
     };
+    if(role !== "client"){
+      fetchEmployees();
+    }
     
-    fetchEmployees();
-}, []);
+}, [role]);
 
   useEffect(() => {
     const getUser = localStorage.getItem("loginUser");
@@ -223,7 +226,7 @@ useEffect(() => {
 }, [data, filters, searchQuery, pageSize]);
 
 const selectRow = useCallback((instance, rowIndex, selected) => {
-  console.log('selectRow called', { rowIndex, selected });
+  // console.log('selectRow called', { rowIndex, selected });
   if (checkboxStateRef.current.isProcessing) return;
   checkboxStateRef.current.isProcessing = true;
 
@@ -654,11 +657,11 @@ const restoreScrollPosition = () => {
     const statusDropDown = ["New Data","Closed","Invalid","CNV"];
     const readOnlyColumns = ["userId"];
     const caseStatusDropDown = ["New Pending","Sent"];
-    const vendorStatus = ["","Closed","Invalid","CNN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
+    const vendorStatus = ["","Closed","Invalid","CNN","NOT OPEN","Account Closed","Restricted Account","Staff Account","Large File","Records Not Updated","Not Found","Records Not Found"]
     const priorityDropdown = ["","Urgent",""]
 
-    console.log("paginatedData",paginatedData)
-    console.log("headers",headers)
+    // console.log("paginatedData",paginatedData)
+    // console.log("headers",headers)
     
     const formattedHeaders = formatHeaderDisplay(headers);
     const attachmentRenderer = createAttachmentRenderer();
@@ -1793,7 +1796,7 @@ const mapSelectedRowToCurrentPage = () => {
     setUpdateStatus(`${updates.length} updates successful`);
     setTimeout(() => setUpdateStatus(null), 3000);
   } catch (error) {
-    console.error("Batch update error:", error);
+    // console.error("Batch update error:", error);
     setUpdateStatus(`Error: ${error.message}`);
     setTimeout(() => setUpdateStatus(null), 5000);
   }
@@ -2658,7 +2661,7 @@ const handlePasteSelected = async () => {
     toast.warning("No valid target rows selected");
     return;
   }
-  console.log("sourceRecordToCopy:",sourceRecordToCopy)
+  // console.log("sourceRecordToCopy:",sourceRecordToCopy)
 
   try {
     const response = await axios.post(
