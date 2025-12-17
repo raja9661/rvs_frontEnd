@@ -162,7 +162,7 @@ const LiveDashboard = () => {
     }
   }, []);
 
-  // Formatting functions
+  
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { 
     weekday: 'short', month: 'short', day: 'numeric' 
   });
@@ -787,7 +787,7 @@ useEffect(()=>{
   }
 },[role,user])
 
-  // Initialize socket connection
+  
   useEffect(() => {
     if(role && user){
       const socketOptions = {
