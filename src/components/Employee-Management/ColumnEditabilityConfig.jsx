@@ -5,7 +5,6 @@ const ColumnEditabilityConfig = ({ headers, onSave }) => {
   const [editableColumns, setEditableColumns] = useState([]);
 
   useEffect(() => {
-    // Initialize editable columns as all editable by default
     const initialEditable = headers.map(() => true);
     setEditableColumns(initialEditable);
   }, [headers]);
