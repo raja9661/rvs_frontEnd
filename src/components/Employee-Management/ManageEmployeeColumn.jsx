@@ -708,7 +708,6 @@ export default ManageAccessColumns;
 //         showToast("Access assigned successfully!");
 //         setSelectedEmployee("");
 //         setEditableColumns([]);
-//         // Refresh assigned employees list
 //         fetchAssignedEmployees();
 //       })
 //       .catch((error) => {
