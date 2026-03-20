@@ -20,7 +20,7 @@ const ColumnEditabilityConfig = ({ headers, onSave }) => {
   const handleSave = async () => {
     try {
       await axios.post("/api/save-editable-columns", {
-        editableColumns, // Send the updated column editability configuration
+        editableColumns,
       });
       alert("Column editability settings saved!");
       if (onSave) onSave(editableColumns);
