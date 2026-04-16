@@ -928,6 +928,7 @@ const restoreScrollPosition = () => {
     "Role": "role",
     "Name": "name",
     "Account Number": "accountNumber",
+    "Requirement":"requirement",
     "Account Number Digit":"accountNumberDigit",
     "Date In Date":"dateInDate",
     "Date Out":"dateOut",
@@ -939,7 +940,11 @@ const restoreScrollPosition = () => {
     "sentDateInDay":"sentDateInDay",
     "Dedup By":"dedupBy",
     "month":"month",
-    "year":"year"
+    "year":"year",
+    "Is Rechecked":"isRechecked",
+    "ModifyedAt":"ModifyedAt",
+    "IP Address":"ipAddress",
+    "ReferBy":"ReferBy"
 
   };
   const updatedFilters = {};

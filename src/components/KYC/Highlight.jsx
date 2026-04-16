@@ -5,49 +5,49 @@ export const createEnhancedHighlightRenderer = (searchQuery, isDarkMode) => {
   return function (instance, td, row, col, prop, value, cellProperties) {
     // Default rendering
     Handsontable.renderers.TextRenderer.apply(this, arguments);
-    
+
     // Skip highlighting for empty values or empty search query
     if (!value || !searchQuery || value === "") {
       return td;
     }
-    
+
     // Check if the value contains the search query (case-insensitive)
     const lowerValue = value.toString().toLowerCase();
     const lowerQuery = searchQuery.toLowerCase();
-    
+
     if (lowerValue.includes(lowerQuery)) {
       // Create HTML with highlighted text
       const textValue = value.toString();
       let highlightedText = "";
       let lastIndex = 0;
-      
+
       // Find all occurrences of the search query
       const regex = new RegExp(lowerQuery, 'gi');
       let match;
-      
+
       while ((match = regex.exec(lowerValue)) !== null) {
         // Add text before the match
         highlightedText += textValue.substring(lastIndex, match.index);
-        
+
         // Add the highlighted match - more vibrant yellow with better contrast
-        highlightedText += '<span style="background-color: #FFDD00; color: #000000; font-weight: bold; padding: 2px; border-radius: 2px;">' + 
-          textValue.substring(match.index, match.index + match[0].length) + 
+        highlightedText += '<span style="background-color: #FFDD00; color: #000000; font-weight: bold; padding: 2px; border-radius: 2px;">' +
+          textValue.substring(match.index, match.index + match[0].length) +
           '</span>';
-        
+
         // Update the lastIndex
         lastIndex = match.index + match[0].length;
       }
-      
+
       // Add any remaining text
       highlightedText += textValue.substring(lastIndex);
-      
+
       // Set the inner HTML
       td.innerHTML = highlightedText;
-      
+
       // Add a subtle background color to the entire cell
       td.style.backgroundColor = isDarkMode ? "#3B3B00" : "#FFFFCC";
     }
-    
+
     return td;
   };
 };
@@ -91,25 +91,25 @@ export const createImprovedCellRenderer = (searchQuery, enhancedHighlightRendere
       td.innerHTML = "";
       return td;
     }
-    
+
     const textValue = String(value);
-    
+
     // Set tooltip
     td.setAttribute('title', textValue);
-    
+
     // Create a span with ellipsis
     const contentSpan = document.createElement('span');
     contentSpan.className = 'cell-content-ellipsis';
     contentSpan.textContent = textValue;
-    
+
     td.innerHTML = '';
     td.appendChild(contentSpan);
-    
+
     // Apply highlighting if there's a search query
     if (searchQuery && textValue.toLowerCase().includes(searchQuery.toLowerCase())) {
       return enhancedHighlightRenderer(instance, td, row, col, prop, value, cellProperties);
     }
-    
+
     return td;
   };
 };
@@ -119,24 +119,24 @@ export const createTableStyles = (isDarkMode) => {
   // Theme-specific styles for the table
   const themeStyles = isDarkMode
     ? {
-        // Dark theme
-        background: "#1F2937",
-        text: "#E5E7EB",
-        headerBg: "#111827",
-        headerText: "#9CA3AF",
-        rowHighlight: "#374151",
-        border: "#4B5563",
-        // hover: "#374151",
-      }
+      // Dark theme
+      background: "#1F2937",
+      text: "#E5E7EB",
+      headerBg: "#111827",
+      headerText: "#9CA3AF",
+      rowHighlight: "#374151",
+      border: "#4B5563",
+      // hover: "#374151",
+    }
     : {
-        // Light theme
-        background: "#FFFFFF",
-        text: "#111827",
-        headerBg: "#F3F4F6",
-        headerText: "#374151",
-        rowHighlight: "#EFF6FF",
-        border: "#E5E7EB",
-      };
+      // Light theme
+      background: "#FFFFFF",
+      text: "#111827",
+      headerBg: "#F3F4F6",
+      headerText: "#374151",
+      rowHighlight: "#EFF6FF",
+      border: "#E5E7EB",
+    };
 
   const styleEl = document.createElement("style");
   styleEl.innerHTML = `
@@ -167,8 +167,7 @@ export const createTableStyles = (isDarkMode) => {
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .handsontable-${
-      isDarkMode ? "dark" : "light"
+    .handsontable-${isDarkMode ? "dark" : "light"
     } .handsontable .ht_master .wtHolder {
       background-color: ${themeStyles.background};
     }
@@ -178,13 +177,11 @@ export const createTableStyles = (isDarkMode) => {
     .handsontable-${isDarkMode ? "dark" : "light"} .handsontable .current {
       background-color: ${themeStyles.rowHighlight};
     }
-    .handsontable-${
-      isDarkMode ? "dark" : "light"
+    .handsontable-${isDarkMode ? "dark" : "light"
     } .handsontable tbody tr:hover {
       background-color: ${themeStyles.rowHighlight};
     }
-    .handsontable-${
-      isDarkMode ? "dark" : "light"
+    .handsontable-${isDarkMode ? "dark" : "light"
     } .handsontable tbody tr:nth-child(even) {
       background-color: ${isDarkMode ? "#2D3748" : "#F9FAFB"};
     }
@@ -231,7 +228,7 @@ export const createTableStyles = (isDarkMode) => {
     }
   `;
   document.head.appendChild(styleEl);
-  
+
   return styleEl;
 };
 
@@ -243,7 +240,7 @@ export const formatHeaderDisplay = (headers) => {
 
     const headerMapping = {
       caseId: "Case Id",
-      attachments:"Attachments",
+      attachments: "Attachments",
       updatedProductName: "Updated Product Name",
       remarks: "Remarks",
       name: "Name",
@@ -260,11 +257,11 @@ export const formatHeaderDisplay = (headers) => {
       clientCode: "Client Code",
       vendorName: "Vendor Name",
       dateIn: "Date In",
-      dateOutInDay:"Date Out In Day",
-      sentDateInDay:"Sent Date In Day",
-      vendorStatus:"Vendor Status",
+      dateOutInDay: "Date Out In Day",
+      sentDateInDay: "Sent Date In Day",
+      vendorStatus: "Vendor Status",
       dateInDate: "Date In Date",
-      isRechecked:"Is Rechecked",
+      isRechecked: "Is Rechecked",
       status: "Status",
       caseStatus: "Case Status",
       productType: "Product Type",
@@ -278,9 +275,9 @@ export const formatHeaderDisplay = (headers) => {
       sentDate: "Sent Date",
       clientType: "Client Type",
       dedupBy: "Dedup By",
-      ipAddress:"IP Address"
-    };     
-    
+      ipAddress: "IP Address"
+    };
+
     return headerMapping[header] || header;
   });
 };

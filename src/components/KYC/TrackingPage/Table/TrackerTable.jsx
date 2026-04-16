@@ -138,7 +138,7 @@ const TrackerTable = () => {
         params: {
           role,
           userId,
-          name,
+          empName: name,
           page,
           pageSize: size,
           searchQuery,
